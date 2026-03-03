@@ -1,0 +1,11 @@
+├── database/                       # Database first - your starting point
+│   ├── migrations/                 # SQL migration scripts
+│   │   ├── 001_initial_schema.sql
+│   │   ├── 002_add_users.sql
+│   │   └── ...
+│   ├── scripts/
+│   │   ├── seed-data/              # Test/demo data
+│   │   ├── stored-procedures/
+│   │   └── functions/
+│   ├── models/                     # ER diagrams, schema designs
+│   └── README.md
