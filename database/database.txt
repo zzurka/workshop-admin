@@ -6,12 +6,9 @@ Folder Structure
 database/
     database.txt                    <-- This file
     scripts/                        <-- All .sql migration files (flat)
-    initial_setup/                  <-- One-time database setup
-        setup_database.sh           <-- DB + user setup (Bash)
-        setup_database.ps1          <-- DB + user setup (PowerShell)
     script_runners/                 <-- Runner scripts and config
-        run_migrations.sh           <-- Bash migration runner
-        run_migrations.ps1          <-- PowerShell migration runner
+        run_migrations.sh           <-- Bash runner
+        run_migrations.ps1          <-- PowerShell runner
         .env.example                <-- Connection parameter template
         .env                        <-- Local config (git-ignored)
 
@@ -71,16 +68,7 @@ Running Migrations
     --dry-run    Show what would run without executing
     --verbose    Detailed output (Bash) / -Verbose (PowerShell)
 
-Initial Setup (run once as PostgreSQL superuser):
-  Bash:        cd database/initial_setup && ./setup_database.sh
-  PowerShell:  cd database\initial_setup && .\setup_database.ps1
-
-  This creates:
-    - 'workshopadmin' database
-    - 'workshopadmin_admin' user (owner, runs migrations)
-    - 'workshopadmin_app' user (backend, DML only)
-
-Running Migrations (after setup):
+Setup:
   1. Copy .env.example to .env
   2. Fill in your PostgreSQL connection parameters
   3. Run the migration script

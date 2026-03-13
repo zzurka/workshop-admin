@@ -8,14 +8,8 @@
 
 BEGIN;
 
--- Create dedicated schema for migration tracking, owned by the admin user
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT 1 FROM information_schema.schemata WHERE schema_name = 'migration') THEN
-        CREATE SCHEMA migration AUTHORIZATION workshopadmin_admin;
-    END IF;
-END
-$$;
+-- Create dedicated schema for migration tracking
+CREATE SCHEMA IF NOT EXISTS migration;
 
 -- Create the migration history tracking table
 CREATE TABLE IF NOT EXISTS migration.migration_history (
