@@ -1,11 +1,74 @@
-├── database/                       # Database first - your starting point
-│   ├── migrations/                 # SQL migration scripts
-│   │   ├── 001_initial_schema.sql
-│   │   ├── 002_add_users.sql
-│   │   └── ...
-│   ├── scripts/
-│   │   ├── seed-data/              # Test/demo data
-│   │   ├── stored-procedures/
-│   │   └── functions/
-│   ├── models/                     # ER diagrams, schema designs
-│   └── README.md
+Database Migration Conventions
+===============================
+
+Folder Structure
+----------------
+database/
+    database.txt                    <-- This file
+    scripts/                        <-- All .sql migration files (flat)
+    script_runners/                 <-- Runner scripts and config
+        run_migrations.sh           <-- Bash runner
+        run_migrations.ps1          <-- PowerShell runner
+        .env.example                <-- Connection parameter template
+        .env                        <-- Local config (git-ignored)
+
+Naming Convention
+-----------------
+Format: yyyymmdd_hhmm_X_object_name_Y.sql
+
+  X (object type):
+    S    = schema
+    T    = table
+    F    = function
+    SP   = stored procedure
+    V    = view
+    IX   = index
+    TR   = trigger
+    SQ   = sequence
+    E    = enum / custom type
+    SEED = seed data
+
+  Y (statement type):
+    DDL  = schema changes (CREATE, ALTER, DROP)
+    DML  = data changes (INSERT, UPDATE, DELETE)
+
+Examples:
+  20260313_1400_S_migration_DDL.sql
+  20260313_1500_T_workshops_DDL.sql
+  20260314_0900_T_workshops_DDL.sql          (ALTER - add column)
+  20260314_1000_F_get_active_workshops_DDL.sql
+  20260314_1100_SEED_workshops_DML.sql
+
+Idempotency Rules
+-----------------
+All scripts MUST be safe to run multiple times:
+
+  Tables:     CREATE TABLE IF NOT EXISTS
+  Columns:    DO $$ IF NOT EXISTS (SELECT FROM information_schema.columns ...) END $$
+  Functions:  CREATE OR REPLACE FUNCTION
+  Indexes:    CREATE INDEX IF NOT EXISTS
+  Seed data:  INSERT ... ON CONFLICT DO NOTHING
+  All:        Wrap in BEGIN; ... COMMIT;
+
+Migration Tracking
+------------------
+The migration.migration_history table tracks executed scripts with SHA-256
+checksums. The runner:
+  - Skips scripts that were already executed successfully
+  - Aborts if a previously executed script was modified (checksum mismatch)
+  - Retries scripts that previously failed
+  - Stops on first failure
+
+Running Migrations
+------------------
+  Bash:        cd database/script_runners && ./run_migrations.sh
+  PowerShell:  cd database\script_runners && .\run_migrations.ps1
+
+  Options:
+    --dry-run    Show what would run without executing
+    --verbose    Detailed output (Bash) / -Verbose (PowerShell)
+
+Setup:
+  1. Copy .env.example to .env
+  2. Fill in your PostgreSQL connection parameters
+  3. Run the migration script
