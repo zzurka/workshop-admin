@@ -1,0 +1,9 @@
+Ispravi setup_database.ps1 (i setup_database.sh). Greska (trazi windows user-a umesto postgres):
+
+psql.exe : psql: error: connection to server at "localhost" (::1), port 5432 failed: FATAL:  password authentication fa
+iled for user "zeljk"
+At D:\Dev\Projects\GitHub\WorkshopAdmin\database\initial_setup\setup_database.ps1:57 char:15
++ ...   $result = & psql -h $PgHost -p $PgPort -d $Database -t -A -c $Query ...
++                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (psql: error: co...or user "zeljk":String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
