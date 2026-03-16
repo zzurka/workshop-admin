@@ -63,13 +63,13 @@ function Invoke-Psql {
         [switch]$TuplesOnly
     )
 
-    $args = @()
+    $psqlArgs = @()
     if ($TuplesOnly) {
-        $args += "-t", "-A"
+        $psqlArgs += "-t", "-A"
     }
-    $args += "-c", $Query
+    $psqlArgs += "-c", $Query
 
-    $result = & psql @args 2>&1
+    $result = & psql @psqlArgs 2>&1
     if ($LASTEXITCODE -ne 0) {
         return $null
     }
@@ -157,7 +157,7 @@ function Initialize-TrackingTable {
 # Main migration loop
 # ---------------------------------------------------------------------------
 function Start-Migrations {
-    $sqlFiles = Get-ChildItem -Path $SqlDir -Filter "*.sql" | Sort-Object Name
+    $sqlFiles = @(Get-ChildItem -Path $SqlDir -Filter "*.sql" | Sort-Object Name)
     $total = $sqlFiles.Count
     $executed = 0
     $skipped = 0
