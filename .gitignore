@@ -42,57 +42,7 @@ artifacts/
 # Angular / Node.js
 # ==========================================================
 node_modules/
-.npm/
-dist/
-tmp/
-out-tsc/
-bazel-out/
-
-# Angular CLI cache
-.angular/
-
-# Documentation
-documentation/
-
-# Logs
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-logs/
-*.log
-
-# ==========================================================
-# Testing & Coverage
-# ==========================================================
-# .NET Coverage
-TestResults/
-*.trx
-*.coveragereport
-*.coverage
-
-# Angular Coverage
-coverage/
-
-# Playwright/Cypress/Protractor
-/test-results/
-/playwright-report/
-/blob-report/
-/playwright/.cache
-
-# ==========================================================
-# Environment & Secrets (CRITICAL)
-# ==========================================================
-.env
-.env.*
-!.env.example
-appsettings.Development.json
-appsettings.Local.json
-secrets.json
-.usersecrets
-
-# ==========================================================
-# Operating System
-# ==========================================================
-.DS_Store
-Thumbs.db
-desktop.ini
+.vs/
+obj/
+.claude/worktrees/
+database/script_runners/.env
