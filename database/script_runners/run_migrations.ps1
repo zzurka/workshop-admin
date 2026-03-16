@@ -69,8 +69,13 @@ function Invoke-Psql {
     }
     $psqlArgs += "-c", $Query
 
+    $prevPref = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
     $result = & psql @psqlArgs 2>&1
-    if ($LASTEXITCODE -ne 0) {
+    $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $prevPref
+
+    if ($exitCode -ne 0) {
         return $null
     }
     return ($result | Out-String).Trim()
@@ -79,8 +84,12 @@ function Invoke-Psql {
 function Invoke-PsqlFile {
     param([string]$FilePath)
 
+    $prevPref = $ErrorActionPreference
+    $ErrorActionPreference = "Continue"
     $result = & psql -v ON_ERROR_STOP=1 -f $FilePath 2>&1
     $exitCode = $LASTEXITCODE
+    $ErrorActionPreference = $prevPref
+
     return @{
         Output   = ($result | Out-String).Trim()
         ExitCode = $exitCode
