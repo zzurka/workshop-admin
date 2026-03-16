@@ -1,4 +1,5 @@
 node_modules/
 .vs/
 obj/
+.claude/worktrees/
 database/script_runners/.env
