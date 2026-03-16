@@ -20,6 +20,9 @@
 .PARAMETER PgSuperUser
     PostgreSQL superuser to connect as (default: postgres).
 
+.PARAMETER PgSuperPassword
+    Password for the PostgreSQL superuser. Prompted securely if omitted.
+
 .PARAMETER PgHost
     PostgreSQL host (default: localhost).
 
@@ -37,6 +40,7 @@ param(
     [string]$AdminPassword,
     [string]$AppPassword,
     [string]$PgSuperUser = "postgres",
+    [string]$PgSuperPassword,
     [string]$PgHost = "localhost",
     [string]$PgPort = "5432"
 )
@@ -94,6 +98,10 @@ function Read-SecurePassword {
 # ---------------------------------------------------------------------------
 # Prompt for passwords if not provided
 # ---------------------------------------------------------------------------
+if ([string]::IsNullOrWhiteSpace($PgSuperPassword)) {
+    $PgSuperPassword = Read-SecurePassword -UserName $PgSuperUser
+}
+
 if ([string]::IsNullOrWhiteSpace($AdminPassword)) {
     $AdminPassword = Read-SecurePassword -UserName $AdminUser
 }
@@ -101,6 +109,9 @@ if ([string]::IsNullOrWhiteSpace($AdminPassword)) {
 if ([string]::IsNullOrWhiteSpace($AppPassword)) {
     $AppPassword = Read-SecurePassword -UserName $AppUser
 }
+
+# Set PGPASSWORD so psql doesn't prompt on every call
+$env:PGPASSWORD = $PgSuperPassword
 
 # ---------------------------------------------------------------------------
 # Create admin user (database owner, runs migrations)
@@ -172,6 +183,9 @@ Invoke-PsqlCommand -Query "GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO $A
 Invoke-PsqlCommand -Query "ALTER DEFAULT PRIVILEGES FOR ROLE $AdminUser IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO $AppUser;" -Database $DbName
 Invoke-PsqlCommand -Query "ALTER DEFAULT PRIVILEGES FOR ROLE $AdminUser IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO $AppUser;" -Database $DbName
 Invoke-PsqlCommand -Query "ALTER DEFAULT PRIVILEGES FOR ROLE $AdminUser IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO $AppUser;" -Database $DbName
+
+# Clear superuser password from environment
+$env:PGPASSWORD = $null
 
 Write-Log "Setup complete."
 Write-Host ""

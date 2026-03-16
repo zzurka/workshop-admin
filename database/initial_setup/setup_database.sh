@@ -17,6 +17,7 @@
 #   --admin-password <pw>   Password for workshopadmin_admin (prompted if omitted)
 #   --app-password <pw>     Password for workshopadmin_app (prompted if omitted)
 #   --superuser <user>      PostgreSQL superuser to connect as (default: postgres)
+#   --superuser-password    Password for the PostgreSQL superuser (prompted if omitted)
 #   --host <host>           PostgreSQL host (default: localhost)
 #   --port <port>           PostgreSQL port (default: 5432)
 #   --help                  Show this help message
@@ -31,6 +32,7 @@ DB_NAME="workshopadmin"
 ADMIN_USER="workshopadmin_admin"
 APP_USER="workshopadmin_app"
 PG_SUPERUSER="postgres"
+PG_SUPERPASSWORD=""
 PG_HOST="localhost"
 PG_PORT="5432"
 ADMIN_PASSWORD=""
@@ -43,7 +45,8 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --admin-password) ADMIN_PASSWORD="$2"; shift 2 ;;
         --app-password)   APP_PASSWORD="$2"; shift 2 ;;
-        --superuser)      PG_SUPERUSER="$2"; shift 2 ;;
+        --superuser)          PG_SUPERUSER="$2"; shift 2 ;;
+        --superuser-password) PG_SUPERPASSWORD="$2"; shift 2 ;;
         --host)           PG_HOST="$2"; shift 2 ;;
         --port)           PG_PORT="$2"; shift 2 ;;
         --help)
@@ -55,6 +58,18 @@ while [[ $# -gt 0 ]]; do
 done
 
 # Prompt for passwords if not provided
+if [[ -z "$PG_SUPERPASSWORD" ]]; then
+    read -rsp "Enter password for $PG_SUPERUSER: " PG_SUPERPASSWORD
+    echo
+    if [[ -z "$PG_SUPERPASSWORD" ]]; then
+        echo "ERROR: Password cannot be empty."
+        exit 1
+    fi
+fi
+
+# Set PGPASSWORD so psql doesn't prompt on every call
+export PGPASSWORD="$PG_SUPERPASSWORD"
+
 if [[ -z "$ADMIN_PASSWORD" ]]; then
     read -rsp "Enter password for $ADMIN_USER: " ADMIN_PASSWORD
     echo
@@ -149,6 +164,9 @@ $DB_PSQL -c "GRANT EXECUTE ON ALL FUNCTIONS IN SCHEMA public TO $APP_USER;" >/de
 $DB_PSQL -c "ALTER DEFAULT PRIVILEGES FOR ROLE $ADMIN_USER IN SCHEMA public GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO $APP_USER;" >/dev/null
 $DB_PSQL -c "ALTER DEFAULT PRIVILEGES FOR ROLE $ADMIN_USER IN SCHEMA public GRANT USAGE, SELECT ON SEQUENCES TO $APP_USER;" >/dev/null
 $DB_PSQL -c "ALTER DEFAULT PRIVILEGES FOR ROLE $ADMIN_USER IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO $APP_USER;" >/dev/null
+
+# Clear superuser password from environment
+unset PGPASSWORD
 
 log "Setup complete."
 echo ""
