@@ -1,3 +1,46 @@
+# ==========================================================
+# .NET / Visual Studio
+# ==========================================================
+bin/
+obj/
+out/
+.vs/
+.vscode/
+*.user
+*.userosscache
+*.sln.docstates
+.vsconfig
+
+# User-specific files
+*.rsuser
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+
+# Build results
+[Dd]ebug/
+[Rr]elease/
+x64/
+x86/
+bld/
+[Bb]in/
+[Oo]bj/
+
+# Publishing
+publish/
+*.pubxml
+
+# .NET Tooling
+.dotnet/
+.tools/
+project.lock.json
+project.fragment.lock.json
+artifacts/
+
+# ==========================================================
+# Angular / Node.js
+# ==========================================================
 node_modules/
 .vs/
 obj/
