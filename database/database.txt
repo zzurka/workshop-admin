@@ -75,10 +75,7 @@ Initial Setup (run once as PostgreSQL superuser):
   Bash:        cd database/initial_setup && ./setup_database.sh
   PowerShell:  cd database\initial_setup && .\setup_database.ps1
 
-  This creates:
-    - 'workshopadmin' database
-    - 'workshopadmin_admin' user (owner, runs migrations)
-    - 'workshopadmin_app' user (backend, DML only)
+  This creates the 'workshopadmin' database and 'workshopadmin_app' user.
 
 Running Migrations (after setup):
   1. Copy .env.example to .env
