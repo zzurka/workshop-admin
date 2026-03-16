@@ -17,6 +17,9 @@
 .PARAMETER AppPassword
     Password for workshopadmin_app. Prompted securely if omitted.
 
+.PARAMETER PgSuperUser
+    PostgreSQL superuser to connect as (default: postgres).
+
 .PARAMETER PgHost
     PostgreSQL host (default: localhost).
 
@@ -26,12 +29,14 @@
 .EXAMPLE
     .\setup_database.ps1
     .\setup_database.ps1 -AdminPassword "admin123" -AppPassword "app123"
+    .\setup_database.ps1 -PgSuperUser "myadmin" -PgHost "db.example.com"
 #>
 
 [CmdletBinding()]
 param(
     [string]$AdminPassword,
     [string]$AppPassword,
+    [string]$PgSuperUser = "postgres",
     [string]$PgHost = "localhost",
     [string]$PgPort = "5432"
 )
@@ -54,7 +59,7 @@ function Invoke-Psql {
         [string]$Query,
         [string]$Database = "postgres"
     )
-    $result = & psql -h $PgHost -p $PgPort -d $Database -t -A -c $Query 2>&1
+    $result = & psql -h $PgHost -p $PgPort -U $PgSuperUser -d $Database -t -A -c $Query 2>&1
     if ($LASTEXITCODE -ne 0) {
         return $null
     }
@@ -66,7 +71,7 @@ function Invoke-PsqlCommand {
         [string]$Query,
         [string]$Database = "postgres"
     )
-    & psql -h $PgHost -p $PgPort -d $Database -c $Query 2>&1 | Out-Null
+    & psql -h $PgHost -p $PgPort -U $PgSuperUser -d $Database -c $Query 2>&1 | Out-Null
     if ($LASTEXITCODE -ne 0) {
         Write-Error "Failed to execute: $Query"
         exit 1

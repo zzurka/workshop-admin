@@ -16,6 +16,7 @@
 # Options:
 #   --admin-password <pw>   Password for workshopadmin_admin (prompted if omitted)
 #   --app-password <pw>     Password for workshopadmin_app (prompted if omitted)
+#   --superuser <user>      PostgreSQL superuser to connect as (default: postgres)
 #   --host <host>           PostgreSQL host (default: localhost)
 #   --port <port>           PostgreSQL port (default: 5432)
 #   --help                  Show this help message
@@ -29,6 +30,7 @@ set -euo pipefail
 DB_NAME="workshopadmin"
 ADMIN_USER="workshopadmin_admin"
 APP_USER="workshopadmin_app"
+PG_SUPERUSER="postgres"
 PG_HOST="localhost"
 PG_PORT="5432"
 ADMIN_PASSWORD=""
@@ -41,6 +43,7 @@ while [[ $# -gt 0 ]]; do
     case "$1" in
         --admin-password) ADMIN_PASSWORD="$2"; shift 2 ;;
         --app-password)   APP_PASSWORD="$2"; shift 2 ;;
+        --superuser)      PG_SUPERUSER="$2"; shift 2 ;;
         --host)           PG_HOST="$2"; shift 2 ;;
         --port)           PG_PORT="$2"; shift 2 ;;
         --help)
@@ -70,7 +73,7 @@ if [[ -z "$APP_PASSWORD" ]]; then
     fi
 fi
 
-PSQL="psql -h $PG_HOST -p $PG_PORT"
+PSQL="psql -h $PG_HOST -p $PG_PORT -U $PG_SUPERUSER"
 
 log() {
     echo "[$(date '+%Y-%m-%d %H:%M:%S')] $*"
@@ -120,7 +123,7 @@ fi
 # ---------------------------------------------------------------------------
 # Configure privileges
 # ---------------------------------------------------------------------------
-DB_PSQL="psql -h $PG_HOST -p $PG_PORT -d $DB_NAME"
+DB_PSQL="psql -h $PG_HOST -p $PG_PORT -U $PG_SUPERUSER -d $DB_NAME"
 
 log "Configuring admin privileges..."
 
