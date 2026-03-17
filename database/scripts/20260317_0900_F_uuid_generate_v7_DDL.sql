@@ -13,7 +13,7 @@ BEGIN;
 
 CREATE OR REPLACE FUNCTION public.uuid_generate_v7()
 RETURNS uuid
-LANGUAGE sql
+LANGUAGE sql VOLATILE
 AS $$
     SELECT encode(
         set_bit(
