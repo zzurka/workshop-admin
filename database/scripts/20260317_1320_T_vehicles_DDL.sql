@@ -67,6 +67,4 @@ CREATE INDEX IF NOT EXISTS ix_customer_vehicles_is_deleted
 CREATE INDEX IF NOT EXISTS ix_customer_vehicles_vin
     ON customer.vehicles (vin);
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON customer.vehicles TO workshopadmin_app;
-
 COMMIT;
