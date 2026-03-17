@@ -9,9 +9,9 @@
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS tenant.tenants (
-    id                UUID        	NOT NULL DEFAULT uuid_generate_v7(),
-    name              VARCHAR(255) 	NOT NULL,
-    slug              VARCHAR(100) 	NOT NULL,
+    id                UUID         NOT NULL DEFAULT uuidv7(),
+    name              VARCHAR(255) NOT NULL,
+    slug              VARCHAR(100) NOT NULL,
     contact_email     VARCHAR(255),
     contact_phone     VARCHAR(50),
     subscription_plan VARCHAR(50)  	NOT NULL DEFAULT 'free',

@@ -12,7 +12,7 @@
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS auth.mfa_recovery_codes (
-    id         UUID         NOT NULL DEFAULT uuid_generate_v7(),
+    id         UUID         NOT NULL DEFAULT uuidv7(),
     user_id    UUID         NOT NULL,
     code_hash  VARCHAR(255) NOT NULL,
     is_used    BOOLEAN      NOT NULL DEFAULT FALSE,

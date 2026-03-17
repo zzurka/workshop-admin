@@ -11,7 +11,7 @@
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS auth.users (
-    id            UUID         NOT NULL DEFAULT uuid_generate_v7(),
+    id            UUID         NOT NULL DEFAULT uuidv7(),
     email         VARCHAR(255) NOT NULL,
     password_hash TEXT,
     first_name    VARCHAR(100),

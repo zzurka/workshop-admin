@@ -9,7 +9,7 @@
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS customer.customers (
-    id            UUID         NOT NULL DEFAULT uuid_generate_v7(),
+    id            UUID         NOT NULL DEFAULT uuidv7(),
     tenant_id     UUID         NOT NULL,
     first_name    VARCHAR(100) NOT NULL,
     last_name     VARCHAR(100) NOT NULL,
