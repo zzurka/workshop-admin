@@ -10,7 +10,7 @@
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS auth.login_history (
-    id             UUID         NOT NULL DEFAULT uuid_generate_v7(),
+    id             UUID         NOT NULL DEFAULT uuidv7(),
     user_id        UUID         NOT NULL,
     login_method   VARCHAR(50)  NOT NULL,
     ip_address     INET,

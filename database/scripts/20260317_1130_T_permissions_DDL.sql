@@ -9,7 +9,7 @@
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS auth.permissions (
-    id          UUID         NOT NULL DEFAULT uuid_generate_v7(),
+    id          UUID         NOT NULL DEFAULT uuidv7(),
     name        VARCHAR(100) NOT NULL,
     resource    VARCHAR(100) NOT NULL,
     action      VARCHAR(50)  NOT NULL,

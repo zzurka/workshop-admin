@@ -11,7 +11,7 @@
 BEGIN;
 
 CREATE TABLE IF NOT EXISTS customer.vehicles (
-    id                  UUID         NOT NULL DEFAULT uuid_generate_v7(),
+    id                  UUID         NOT NULL DEFAULT uuidv7(),
     customer_id         UUID         NOT NULL,
     tenant_id           UUID         NOT NULL,
     make                VARCHAR(100) NOT NULL,
