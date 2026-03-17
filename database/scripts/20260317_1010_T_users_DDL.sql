@@ -13,7 +13,7 @@ BEGIN;
 CREATE TABLE IF NOT EXISTS auth.users (
     id            UUID         NOT NULL DEFAULT uuid_generate_v7(),
     email         VARCHAR(255) NOT NULL,
-    password_hash TEXT         NOT NULL,
+    password_hash TEXT,
     first_name    VARCHAR(100),
     last_name     VARCHAR(100),
     ad_object_id  UUID,
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS auth.users (
 COMMENT ON TABLE  auth.users                IS 'All principals that can authenticate: staff, admins, and future customer portal users.';
 COMMENT ON COLUMN auth.users.id             IS 'UUID v7 primary key (time-ordered).';
 COMMENT ON COLUMN auth.users.email          IS 'Unique login identifier.';
-COMMENT ON COLUMN auth.users.password_hash  IS 'Hashed password (bcrypt or Argon2). Never store plaintext.';
+COMMENT ON COLUMN auth.users.password_hash  IS 'Hashed password (bcrypt or Argon2). Never store plaintext. NULL for external auth (AD, Google, etc.).';
 COMMENT ON COLUMN auth.users.ad_object_id  IS 'Active Directory objectGUID — immutable unique identifier. NULL for non-AD users.';
 COMMENT ON COLUMN auth.users.ad_upn        IS 'Active Directory User Principal Name (e.g. jsmith@domain.local). Can change if user is renamed. NULL for non-AD users.';
 COMMENT ON COLUMN auth.users.is_active      IS 'FALSE = account suspended (still exists, cannot log in).';
