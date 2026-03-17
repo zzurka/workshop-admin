@@ -53,6 +53,4 @@ CREATE INDEX IF NOT EXISTS ix_customer_customers_is_deleted
 CREATE INDEX IF NOT EXISTS ix_customer_customers_email
     ON customer.customers (email);
 
-GRANT SELECT, INSERT, UPDATE, DELETE ON customer.customers TO workshopadmin_app;
-
 COMMIT;
