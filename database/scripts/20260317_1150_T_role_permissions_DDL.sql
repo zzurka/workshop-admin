@@ -17,11 +17,11 @@ CREATE TABLE IF NOT EXISTS auth.role_permissions (
     updated_by    UUID,
     is_deleted    BOOLEAN     NOT NULL DEFAULT FALSE,
 
-    CONSTRAINT pk_auth_role_permissions             PRIMARY KEY (role_id, permission_id),
-    CONSTRAINT fk_auth_role_permissions_role_id     FOREIGN KEY (role_id)       REFERENCES auth.roles(id),
-    CONSTRAINT fk_auth_role_permissions_permission_id FOREIGN KEY (permission_id) REFERENCES auth.permissions(id),
-    CONSTRAINT fk_auth_role_permissions_created_by  FOREIGN KEY (created_by)    REFERENCES auth.users(id),
-    CONSTRAINT fk_auth_role_permissions_updated_by  FOREIGN KEY (updated_by)    REFERENCES auth.users(id)
+    CONSTRAINT pk_auth_role_permissions             	PRIMARY KEY (role_id, permission_id),
+    CONSTRAINT fk_auth_role_permissions_role_id     	FOREIGN KEY (role_id)       REFERENCES auth.roles(id),
+    CONSTRAINT fk_auth_role_permissions_permission_id 	FOREIGN KEY (permission_id) REFERENCES auth.permissions(id),
+    CONSTRAINT fk_auth_role_permissions_created_by  	FOREIGN KEY (created_by)    REFERENCES auth.users(id),
+    CONSTRAINT fk_auth_role_permissions_updated_by  	FOREIGN KEY (updated_by)    REFERENCES auth.users(id)
 );
 
 COMMENT ON TABLE  auth.role_permissions            IS 'Assigns permissions to roles. Soft-deleted rows are kept for audit purposes.';
