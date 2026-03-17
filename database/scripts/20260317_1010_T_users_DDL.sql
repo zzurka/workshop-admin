@@ -1,6 +1,6 @@
 -- Migration: 20260317_1010_T_users_DDL.sql
 -- Description: Create the auth.users table. Stores login credentials, profile,
---              and optional Active Directory linkage for all principals
+--              Active Directory linkage, and MFA configuration for all principals
 --              (staff, admins, future customer portal users).
 --              Tenant membership is managed via auth.user_tenants (not a column here).
 -- Author: WorkshopAdmin Team
@@ -18,6 +18,10 @@ CREATE TABLE IF NOT EXISTS auth.users (
     last_name     VARCHAR(100),
     ad_object_id  UUID,
     ad_upn        VARCHAR(255),
+    phone_number  VARCHAR(50),
+    mfa_enabled   BOOLEAN      NOT NULL DEFAULT FALSE,
+    mfa_method    VARCHAR(20),
+    mfa_secret    TEXT,
     is_active     BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     created_by    UUID,
@@ -38,6 +42,10 @@ COMMENT ON COLUMN auth.users.email          IS 'Unique login identifier.';
 COMMENT ON COLUMN auth.users.password_hash  IS 'Hashed password (bcrypt or Argon2). Never store plaintext. NULL for external auth (AD, Google, etc.).';
 COMMENT ON COLUMN auth.users.ad_object_id  IS 'Active Directory objectGUID — immutable unique identifier. NULL for non-AD users.';
 COMMENT ON COLUMN auth.users.ad_upn        IS 'Active Directory User Principal Name (e.g. jsmith@domain.local). Can change if user is renamed. NULL for non-AD users.';
+COMMENT ON COLUMN auth.users.phone_number  IS 'Phone number for SMS-based MFA and user profile.';
+COMMENT ON COLUMN auth.users.mfa_enabled   IS 'TRUE if two-factor authentication is active for this user.';
+COMMENT ON COLUMN auth.users.mfa_method    IS 'Active MFA method: totp, sms, or email. NULL if MFA not configured.';
+COMMENT ON COLUMN auth.users.mfa_secret    IS 'Encrypted TOTP shared secret for authenticator apps. Must be AES-256 encrypted at application level, never plaintext.';
 COMMENT ON COLUMN auth.users.is_active      IS 'FALSE = account suspended (still exists, cannot log in).';
 COMMENT ON COLUMN auth.users.created_by     IS 'User who created this record. NULL for bootstrap/seed records (self-referential).';
 COMMENT ON COLUMN auth.users.updated_at     IS 'NULL on creation. Set on any update, including soft-delete.';
