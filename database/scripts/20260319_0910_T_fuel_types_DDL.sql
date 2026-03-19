@@ -30,12 +30,12 @@ CREATE INDEX IF NOT EXISTS ix_codebook_fuel_types_is_active
     ON codebook.fuel_types (is_active);
 
 INSERT INTO codebook.fuel_types (code, label, sort_order) VALUES
-    ('gasoline', '{"en": "Gasoline", "hr": "Benzin"}',     1),
-    ('diesel',   '{"en": "Diesel",   "hr": "Dizel"}',      2),
-    ('electric', '{"en": "Electric", "hr": "Električni"}', 3),
-    ('hybrid',   '{"en": "Hybrid",   "hr": "Hibrid"}',     4),
-    ('lpg',      '{"en": "LPG",      "hr": "UNP"}',        5),
-    ('cng',      '{"en": "CNG",      "hr": "SPP"}',        6)
+    ('gasoline', '{"en": "Gasoline", "sr": "Benzin"}',     1),
+    ('diesel',   '{"en": "Diesel",   "sr": "Dizel"}',      2),
+    ('electric', '{"en": "Electric", "sr": "Električni"}', 3),
+    ('hybrid',   '{"en": "Hybrid",   "sr": "Hibrid"}',     4),
+    ('lpg',      '{"en": "LPG",      "sr": "LPG"}',        5),
+    ('cng',      '{"en": "CNG",      "sr": "CNG"}',        6)
 ON CONFLICT (code) DO NOTHING;
 
 COMMIT;
