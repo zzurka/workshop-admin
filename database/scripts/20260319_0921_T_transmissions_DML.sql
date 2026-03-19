@@ -8,10 +8,10 @@
 BEGIN;
 
 INSERT INTO codebook.transmissions (code, label, sort_order) VALUES
-    ('automatic', '{"en": "Automatic", "hr": "Automatski"}', 1),
-    ('manual',    '{"en": "Manual",    "hr": "Ručni"}',      2),
-    ('cvt',       '{"en": "CVT",       "hr": "CVT"}',        3),
-    ('dct',       '{"en": "DCT",       "hr": "DCT"}',        4)
+    ('automatic', '{"en": "Automatic", "sr": "Automatski"}', 1),
+    ('manual',    '{"en": "Manual",    "sr": "Ručni"}',      2),
+    ('cvt',       '{"en": "CVT",       "sr": "CVT"}',        3),
+    ('dct',       '{"en": "DCT",       "sr": "DCT"}',        4)
 ON CONFLICT (code) DO NOTHING;
 
 COMMIT;

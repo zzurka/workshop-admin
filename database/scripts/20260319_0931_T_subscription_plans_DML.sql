@@ -8,9 +8,9 @@
 BEGIN;
 
 INSERT INTO codebook.subscription_plans (code, label, sort_order) VALUES
-    ('free',  '{"en": "Free",  "hr": "Besplatno"}', 1),
-    ('trial', '{"en": "Trial", "hr": "Probno"}',    2),
-    ('paid',  '{"en": "Paid",  "hr": "Plaćeno"}',   3)
+    ('free',  '{"en": "Free",  "sr": "Besplatni"}', 1),
+    ('trial', '{"en": "Trial", "sr": "Probni"}',    2),
+    ('paid',  '{"en": "Paid",  "sr": "Plaćen"}',    3)
 ON CONFLICT (code) DO NOTHING;
 
 COMMIT;
