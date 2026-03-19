@@ -11,6 +11,7 @@ BEGIN;
 CREATE TABLE IF NOT EXISTS customer.customers (
     id            UUID         NOT NULL DEFAULT uuidv7(),
     tenant_id     UUID         NOT NULL,
+    user_id       UUID,
     first_name    VARCHAR(100) NOT NULL,
     last_name     VARCHAR(100) NOT NULL,
     email         VARCHAR(255),
@@ -29,7 +30,9 @@ CREATE TABLE IF NOT EXISTS customer.customers (
     is_deleted    BOOLEAN      NOT NULL DEFAULT FALSE,
 
     CONSTRAINT pk_customer_customers               PRIMARY KEY (id),
+    CONSTRAINT uq_customer_customers_user_id       UNIQUE (user_id),
     CONSTRAINT fk_customer_customers_tenant_id     FOREIGN KEY (tenant_id)  REFERENCES tenant.tenants(id),
+    CONSTRAINT fk_customer_customers_user_id       FOREIGN KEY (user_id)    REFERENCES auth.users(id),
     CONSTRAINT fk_customer_customers_created_by    FOREIGN KEY (created_by) REFERENCES auth.users(id),
     CONSTRAINT fk_customer_customers_updated_by    FOREIGN KEY (updated_by) REFERENCES auth.users(id)
 );
@@ -37,6 +40,7 @@ CREATE TABLE IF NOT EXISTS customer.customers (
 COMMENT ON TABLE  customer.customers               IS 'Workshop clients. Each customer belongs to exactly one tenant (workshop).';
 COMMENT ON COLUMN customer.customers.id            IS 'UUID v7 primary key (time-ordered).';
 COMMENT ON COLUMN customer.customers.tenant_id     IS 'The tenant (workshop) this customer belongs to.';
+COMMENT ON COLUMN customer.customers.user_id       IS 'Optional link to auth.users. Set when the customer is granted portal access. UNIQUE — one auth account per customer.';
 COMMENT ON COLUMN customer.customers.email         IS 'Customer email address. Nullable — some customers may not have one.';
 COMMENT ON COLUMN customer.customers.notes         IS 'Internal workshop notes about this customer. Not visible to the customer.';
 COMMENT ON COLUMN customer.customers.is_active     IS 'FALSE = customer record suspended / inactive.';
