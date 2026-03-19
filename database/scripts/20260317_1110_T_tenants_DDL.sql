@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS tenant.tenants (
     slug              VARCHAR(100) NOT NULL,
     contact_email     VARCHAR(255),
     contact_phone     VARCHAR(50),
-    subscription_plan VARCHAR(50)  	NOT NULL DEFAULT 'free',
+    subscription_plan_id SMALLINT   NOT NULL,
     address_line1     VARCHAR(255),
     address_line2     VARCHAR(255),
     city              VARCHAR(100),
@@ -27,16 +27,17 @@ CREATE TABLE IF NOT EXISTS tenant.tenants (
     updated_by        UUID,
     is_deleted        BOOLEAN      	NOT NULL DEFAULT FALSE,
 
-    CONSTRAINT pk_tenant_tenants            PRIMARY KEY (id),
-    CONSTRAINT uq_tenant_tenants_slug       UNIQUE (slug),
-    CONSTRAINT fk_tenant_tenants_created_by FOREIGN KEY (created_by) REFERENCES auth.users(id),
-    CONSTRAINT fk_tenant_tenants_updated_by FOREIGN KEY (updated_by) REFERENCES auth.users(id)
+    CONSTRAINT pk_tenant_tenants                        PRIMARY KEY (id),
+    CONSTRAINT uq_tenant_tenants_slug                   UNIQUE (slug),
+    CONSTRAINT fk_tenant_tenants_subscription_plan_id   FOREIGN KEY (subscription_plan_id) REFERENCES codebook.subscription_plans(id),
+    CONSTRAINT fk_tenant_tenants_created_by             FOREIGN KEY (created_by) REFERENCES auth.users(id),
+    CONSTRAINT fk_tenant_tenants_updated_by             FOREIGN KEY (updated_by) REFERENCES auth.users(id)
 );
 
 COMMENT ON TABLE  tenant.tenants                    IS 'Each row represents one workshop / organization (tenant) using the system.';
 COMMENT ON COLUMN tenant.tenants.id                 IS 'UUID v7 primary key (time-ordered).';
-COMMENT ON COLUMN tenant.tenants.slug               IS 'URL-friendly unique identifier, e.g. ''workshop-kragujevac''.';
-COMMENT ON COLUMN tenant.tenants.subscription_plan  IS 'Current subscription tier, e.g. free, basic, pro.';
+COMMENT ON COLUMN tenant.tenants.slug               IS 'URL-friendly unique identifier, e.g. ''workshop-zagreb''.';
+COMMENT ON COLUMN tenant.tenants.subscription_plan_id IS 'FK to codebook.subscription_plans. Current subscription tier.';
 COMMENT ON COLUMN tenant.tenants.is_active          IS 'FALSE = tenant suspended. Active users of this tenant cannot log in.';
 COMMENT ON COLUMN tenant.tenants.updated_at         IS 'NULL on creation. Set on any update, including soft-delete.';
 COMMENT ON COLUMN tenant.tenants.is_deleted         IS 'Soft delete flag. When TRUE, updated_at holds the deletion timestamp.';
