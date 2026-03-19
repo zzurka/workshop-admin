@@ -29,11 +29,4 @@ COMMENT ON COLUMN codebook.transmissions.is_active  IS 'FALSE = hidden from UI b
 CREATE INDEX IF NOT EXISTS ix_codebook_transmissions_is_active
     ON codebook.transmissions (is_active);
 
-INSERT INTO codebook.transmissions (code, label, sort_order) VALUES
-    ('automatic', '{"en": "Automatic", "hr": "Automatski"}', 1),
-    ('manual',    '{"en": "Manual",    "hr": "Ručni"}',      2),
-    ('cvt',       '{"en": "CVT",       "hr": "CVT"}',        3),
-    ('dct',       '{"en": "DCT",       "hr": "DCT"}',        4)
-ON CONFLICT (code) DO NOTHING;
-
 COMMIT;
