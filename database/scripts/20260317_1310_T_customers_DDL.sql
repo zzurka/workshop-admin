@@ -11,9 +11,9 @@ BEGIN;
 CREATE TABLE IF NOT EXISTS customer.customers (
     id            UUID         NOT NULL DEFAULT uuidv7(),
     tenant_id     UUID         NOT NULL,
-    user_id       UUID,
     first_name    VARCHAR(100) NOT NULL,
     last_name     VARCHAR(100) NOT NULL,
+	user_id       UUID,
     email         VARCHAR(255),
     phone_number  VARCHAR(50),
     address_line1 VARCHAR(255),
