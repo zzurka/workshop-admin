@@ -19,8 +19,8 @@ INSERT INTO codebook.service_types (code, label, sort_order) VALUES
     ('brake_fluid',         '{"en": "Brake Fluid Change",      		"sr": "Zamena kočione tečnosti"}',  		9),    
     ('brake_pads_front',    '{"en": "Front Brake Pads Replacement", "sr": "Zamena kočionih pločica napred"}',	10),
     ('brake_discs_front',   '{"en": "Front Brake Discs Replacement","sr": "Zamena kočionih diskova napred"}',	11),
-	('brake_pads_rear',    	'{"en": "Rear Brake Pads Replacement", "sr": "Zamena kočionih pločica pozadi"}',	12),
-    ('brake_discs_rear',   	'{"en": "Rear Brake Discs Replacement","sr": "Zamena kočionih diskova pozadi"}',	13)
+	('brake_pads_rear',    	'{"en": "Rear Brake Pads Replacement",  "sr": "Zamena kočionih pločica pozadi"}',	12),
+    ('brake_discs_rear',   	'{"en": "Rear Brake Discs Replacement", "sr": "Zamena kočionih diskova pozadi"}',	13)
 ON CONFLICT (code) DO NOTHING;
 
 COMMIT;
