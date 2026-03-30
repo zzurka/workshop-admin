@@ -8,18 +8,19 @@
 BEGIN;
 
 INSERT INTO codebook.service_types (code, label, sort_order) VALUES
-    ('oil_change',          '{"en": "Oil Change",              "sr": "Zamena ulja"}',              1),
-    ('timing_belt',         '{"en": "Timing Belt Replacement", "sr": "Zamena zupčastog kaiša"}',   2),
-    ('timing_chain',        '{"en": "Timing Chain Replacement","sr": "Zamena lanaca"}',             3),
-    ('brake_fluid',         '{"en": "Brake Fluid Change",      "sr": "Zamena kočione tečnosti"}',  4),
-    ('transmission_fluid',  '{"en": "Transmission Fluid Change","sr": "Zamena ulja u mjenjaču"}',  5),
-    ('coolant',             '{"en": "Coolant Change",           "sr": "Zamena rashladne tečnosti"}',6),
-    ('fuel_filter',         '{"en": "Fuel Filter Replacement",  "sr": "Zamena filtera goriva"}',   7),
-    ('air_filter',          '{"en": "Air Filter Replacement",   "sr": "Zamena filtera vazduha"}',  8),
-    ('cabin_filter',        '{"en": "Cabin Filter Replacement", "sr": "Zamena filtera kabine"}',   9),
-    ('spark_plugs',         '{"en": "Spark Plugs Replacement",  "sr": "Zamena svećica"}',         10),
-    ('brake_pads',          '{"en": "Brake Pads Replacement",   "sr": "Zamena kočionih pločica"}',11),
-    ('brake_discs',         '{"en": "Brake Discs Replacement",  "sr": "Zamena kočionih diskova"}',12)
+    ('oil_change',          '{"en": "Oil Change",              		"sr": "Zamena ulja"}',              		1),
+    ('air_filter',          '{"en": "Air Filter Replacement",   	"sr": "Zamena filtera vazduha"}',  			2),
+	('fuel_filter',         '{"en": "Fuel Filter Replacement",  	"sr": "Zamena filtera goriva"}',   			3),
+	('cabin_filter',        '{"en": "Cabin Filter Replacement", 	"sr": "Zamena filtera kabine"}',   			4),
+	('spark_plugs',         '{"en": "Spark Plugs Replacement",  	"sr": "Zamena svećica"}',         			5),
+	('transmission_fluid',  '{"en": "Transmission Fluid Change",	"sr": "Zamena ulja u menjaču"}',  			6),
+	('timing_belt_chain',   '{"en": "Timing Belt/Chain Replacement","sr": "Zamena zupčastog kaiša/lanca"}', 	7),	
+    ('coolant',             '{"en": "Coolant Change",           	"sr": "Zamena rashladne tečnosti"}',		8),
+    ('brake_fluid',         '{"en": "Brake Fluid Change",      		"sr": "Zamena kočione tečnosti"}',  		9),    
+    ('brake_pads_front',    '{"en": "Front Brake Pads Replacement", "sr": "Zamena kočionih pločica napred"}',	10),
+    ('brake_discs_front',   '{"en": "Front Brake Discs Replacement","sr": "Zamena kočionih diskova napred"}',	11),
+	('brake_pads_rear',    	'{"en": "Rear Brake Pads Replacement", "sr": "Zamena kočionih pločica pozadi"}',	12),
+    ('brake_discs_rear',   	'{"en": "Rear Brake Discs Replacement","sr": "Zamena kočionih diskova pozadi"}',	13)
 ON CONFLICT (code) DO NOTHING;
 
 COMMIT;
