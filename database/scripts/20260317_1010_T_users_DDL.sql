@@ -2,7 +2,7 @@
 -- Description: Create the auth.users table. Stores login credentials, profile,
 --              Active Directory linkage, and MFA configuration for all principals
 --              (staff, admins, future customer portal users).
---              Tenant membership is managed via auth.user_tenants (not a column here).
+--              tenant_id is NULL for platform-level super admins.
 -- Author: WorkshopAdmin Team
 -- Date: 2026-03-17
 --
@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS auth.users (
     mfa_enabled   BOOLEAN      NOT NULL DEFAULT FALSE,
     mfa_method    VARCHAR(20),
     mfa_secret    TEXT,
+    tenant_id     UUID,
     is_active     BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     created_by    UUID,
@@ -32,6 +33,7 @@ CREATE TABLE IF NOT EXISTS auth.users (
     CONSTRAINT pk_auth_users               PRIMARY KEY (id),
     CONSTRAINT uq_auth_users_email         UNIQUE (email),
     CONSTRAINT uq_auth_users_ad_object_id  UNIQUE (ad_object_id),
+    CONSTRAINT fk_auth_users_tenant_id     FOREIGN KEY (tenant_id)  REFERENCES tenant.tenants(id),
     CONSTRAINT fk_auth_users_created_by    FOREIGN KEY (created_by) REFERENCES auth.users(id),
     CONSTRAINT fk_auth_users_updated_by    FOREIGN KEY (updated_by) REFERENCES auth.users(id)
 );
@@ -46,6 +48,7 @@ COMMENT ON COLUMN auth.users.phone_number  	IS 'Phone number for SMS-based MFA a
 COMMENT ON COLUMN auth.users.mfa_enabled   	IS 'TRUE if two-factor authentication is active for this user.';
 COMMENT ON COLUMN auth.users.mfa_method    	IS 'Active MFA method: totp, sms, or email. NULL if MFA not configured.';
 COMMENT ON COLUMN auth.users.mfa_secret    	IS 'Encrypted TOTP shared secret for authenticator apps. Must be AES-256 encrypted at application level, never plaintext.';
+COMMENT ON COLUMN auth.users.tenant_id      IS 'FK to tenant.tenants. NULL for platform-level super admins who are not bound to any tenant.';
 COMMENT ON COLUMN auth.users.is_active      IS 'FALSE = account suspended (still exists, cannot log in).';
 COMMENT ON COLUMN auth.users.created_by     IS 'User who created this record. NULL for bootstrap/seed records (self-referential).';
 COMMENT ON COLUMN auth.users.updated_at     IS 'NULL on creation. Set on any update, including soft-delete.';
@@ -53,6 +56,9 @@ COMMENT ON COLUMN auth.users.is_deleted     IS 'Soft delete flag. When TRUE, upd
 
 CREATE INDEX IF NOT EXISTS ix_auth_users_email
     ON auth.users (email);
+
+CREATE INDEX IF NOT EXISTS ix_auth_users_tenant_id
+    ON auth.users (tenant_id);
 
 CREATE INDEX IF NOT EXISTS ix_auth_users_is_deleted
     ON auth.users (is_deleted);

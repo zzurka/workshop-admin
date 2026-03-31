@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS auth.user_roles (
     CONSTRAINT fk_auth_user_roles_updated_by  FOREIGN KEY (updated_by) REFERENCES auth.users(id)
 );
 
-COMMENT ON TABLE  auth.user_roles            IS 'Assigns roles to users. Soft-deleted rows are kept for audit purposes.';
+COMMENT ON TABLE  auth.user_roles            IS 'Assigns roles to users. Roles are implicitly scoped to the user''s tenant. Soft-deleted rows are kept for audit purposes.';
 COMMENT ON COLUMN auth.user_roles.updated_at IS 'NULL on creation. Set on any update, including soft-delete.';
 COMMENT ON COLUMN auth.user_roles.is_deleted IS 'Soft delete flag. When TRUE, updated_at holds the deletion timestamp.';
 
