@@ -33,7 +33,13 @@ INSERT INTO auth.permissions (name, resource, action, description) VALUES
     ('invoices:update',    'invoices', 'update',    'Edit invoices and line items'),
     ('invoices:delete',    'invoices', 'delete',    'Soft-delete invoices'),
     ('invoices:issue',     'invoices', 'issue',     'Issue invoices to customers'),
-    ('invoices:mark_paid', 'invoices', 'mark_paid', 'Mark invoices as paid')
+    ('invoices:mark_paid', 'invoices', 'mark_paid', 'Mark invoices as paid'),
+
+    -- Expenses
+    ('expenses:read',   'expenses', 'read',   'View expenses'),
+    ('expenses:create', 'expenses', 'create', 'Create new expenses'),
+    ('expenses:update', 'expenses', 'update', 'Edit expenses'),
+    ('expenses:delete', 'expenses', 'delete', 'Soft-delete expenses')
 ON CONFLICT (name) DO NOTHING;
 
 COMMIT;
