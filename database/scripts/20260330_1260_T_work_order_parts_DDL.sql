@@ -11,6 +11,7 @@ BEGIN;
 CREATE TABLE IF NOT EXISTS workshop.work_order_parts (
     id              UUID          NOT NULL DEFAULT uuidv7(),
     work_order_id   UUID          NOT NULL,
+    catalog_part_id UUID,
     supplier_id     UUID,
     part_status_id  SMALLINT      NOT NULL,
     part_name       VARCHAR(255)  NOT NULL,
@@ -28,6 +29,7 @@ CREATE TABLE IF NOT EXISTS workshop.work_order_parts (
     CONSTRAINT pk_workshop_work_order_parts                PRIMARY KEY (id),
     CONSTRAINT fk_workshop_work_order_parts_work_order_id  FOREIGN KEY (work_order_id)  REFERENCES workshop.work_orders(id),
     CONSTRAINT fk_workshop_work_order_parts_supplier_id    FOREIGN KEY (supplier_id)    REFERENCES workshop.suppliers(id),
+    -- catalog_part_id FK added in 20260402_1060_T_work_order_parts_catalog_fk_DDL.sql (warehouse schema created later)
     CONSTRAINT fk_workshop_work_order_parts_part_status_id FOREIGN KEY (part_status_id) REFERENCES codebook.part_statuses(id),
     CONSTRAINT fk_workshop_work_order_parts_created_by     FOREIGN KEY (created_by)     REFERENCES auth.users(id),
     CONSTRAINT fk_workshop_work_order_parts_updated_by     FOREIGN KEY (updated_by)     REFERENCES auth.users(id),
@@ -37,7 +39,8 @@ CREATE TABLE IF NOT EXISTS workshop.work_order_parts (
 COMMENT ON TABLE  workshop.work_order_parts                 IS 'Parts needed for a work order. Tracks part details, supplier, availability status, and pricing.';
 COMMENT ON COLUMN workshop.work_order_parts.id              IS 'UUID v7 primary key (time-ordered).';
 COMMENT ON COLUMN workshop.work_order_parts.work_order_id   IS 'The work order this part belongs to.';
-COMMENT ON COLUMN workshop.work_order_parts.supplier_id     IS 'FK to workshop.suppliers. NULL if supplier not yet determined or part is in stock.';
+COMMENT ON COLUMN workshop.work_order_parts.catalog_part_id IS 'FK to warehouse.parts_catalog. Set when part comes from warehouse stock. NULL if externally sourced.';
+COMMENT ON COLUMN workshop.work_order_parts.supplier_id     IS 'FK to workshop.suppliers. NULL if supplier not yet determined or part is from warehouse.';
 COMMENT ON COLUMN workshop.work_order_parts.part_status_id  IS 'FK to codebook.part_statuses (in_stock, ordered, received).';
 COMMENT ON COLUMN workshop.work_order_parts.part_name       IS 'Human-readable part name (e.g. "Oil filter for BMW 320d").';
 COMMENT ON COLUMN workshop.work_order_parts.part_number     IS 'Manufacturer or supplier part number. NULL if unknown.';
