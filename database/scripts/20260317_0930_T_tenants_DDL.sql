@@ -29,9 +29,8 @@ CREATE TABLE IF NOT EXISTS tenant.tenants (
 
     CONSTRAINT pk_tenant_tenants                        PRIMARY KEY (id),
     CONSTRAINT uq_tenant_tenants_slug                   UNIQUE (slug),
-    CONSTRAINT fk_tenant_tenants_subscription_plan_id   FOREIGN KEY (subscription_plan_id) REFERENCES codebook.subscription_plans(id),
-    CONSTRAINT fk_tenant_tenants_created_by             FOREIGN KEY (created_by) REFERENCES auth.users(id),
-    CONSTRAINT fk_tenant_tenants_updated_by             FOREIGN KEY (updated_by) REFERENCES auth.users(id)
+    CONSTRAINT fk_tenant_tenants_subscription_plan_id   FOREIGN KEY (subscription_plan_id) REFERENCES codebook.subscription_plans(id)
+    -- created_by / updated_by FKs added in 20260317_1020_T_users_tenants_fk_DDL.sql (circular dependency)
 );
 
 COMMENT ON TABLE  tenant.tenants                    	IS 'Each row represents one workshop / organization (tenant) using the system.';

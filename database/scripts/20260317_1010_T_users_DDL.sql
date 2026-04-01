@@ -33,9 +33,9 @@ CREATE TABLE IF NOT EXISTS auth.users (
     CONSTRAINT pk_auth_users               PRIMARY KEY (id),
     CONSTRAINT uq_auth_users_email         UNIQUE (email),
     CONSTRAINT uq_auth_users_ad_object_id  UNIQUE (ad_object_id),
-    CONSTRAINT fk_auth_users_tenant_id     FOREIGN KEY (tenant_id)  REFERENCES tenant.tenants(id),
     CONSTRAINT fk_auth_users_created_by    FOREIGN KEY (created_by) REFERENCES auth.users(id),
     CONSTRAINT fk_auth_users_updated_by    FOREIGN KEY (updated_by) REFERENCES auth.users(id)
+    -- tenant_id FK added in 20260317_1020_T_users_tenants_fk_DDL.sql (circular dependency)
 );
 
 COMMENT ON TABLE  auth.users                IS 'All principals that can authenticate: staff, admins, and future customer portal users.';
