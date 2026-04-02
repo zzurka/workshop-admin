@@ -4,7 +4,7 @@ Database Migration Conventions
 Folder Structure
 ----------------
 database/
-    database.txt                    <-- This file
+    DATABASE.md                     <-- This file
     scripts/                        <-- All .sql migration files (flat)
     initial_setup/                  <-- One-time database setup
         setup_database.sh           <-- DB + user setup (Bash)
