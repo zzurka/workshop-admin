@@ -17,7 +17,6 @@ CREATE TABLE IF NOT EXISTS hr.employees (
     termination_date   DATE,
     hourly_rate        NUMERIC(10,2),
     notes              TEXT,
-    is_active          BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at         TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     created_by         UUID,
     updated_at         TIMESTAMPTZ,
@@ -42,7 +41,6 @@ COMMENT ON COLUMN hr.employees.hire_date          IS 'Date the employee started 
 COMMENT ON COLUMN hr.employees.termination_date   IS 'Date the employee left. NULL if still employed.';
 COMMENT ON COLUMN hr.employees.hourly_rate        IS 'Hourly rate for hourly employees. NULL for salaried employees. Used for time entry cost calculations.';
 COMMENT ON COLUMN hr.employees.notes              IS 'Internal HR notes about this employee. Not visible to the employee.';
-COMMENT ON COLUMN hr.employees.is_active          IS 'FALSE = employee record suspended / inactive.';
 COMMENT ON COLUMN hr.employees.created_by         IS 'User who created this record. NULL for system/seed records.';
 COMMENT ON COLUMN hr.employees.updated_at         IS 'NULL on creation. Set on any update, including soft-delete.';
 COMMENT ON COLUMN hr.employees.is_deleted         IS 'Soft delete flag. When TRUE, updated_at holds the deletion timestamp.';

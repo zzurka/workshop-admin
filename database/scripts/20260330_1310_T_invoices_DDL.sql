@@ -19,7 +19,6 @@ CREATE TABLE IF NOT EXISTS workshop.invoices (
     issued_at           TIMESTAMPTZ,
     paid_at             TIMESTAMPTZ,
     notes               TEXT,
-    is_active           BOOLEAN       NOT NULL DEFAULT TRUE,
     created_at          TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
     created_by          UUID,
     updated_at          TIMESTAMPTZ,
@@ -46,7 +45,6 @@ COMMENT ON COLUMN workshop.invoices.invoice_status_id     IS 'FK to codebook.inv
 COMMENT ON COLUMN workshop.invoices.issued_at             IS 'Timestamp when the invoice was issued to the customer. NULL while draft.';
 COMMENT ON COLUMN workshop.invoices.paid_at               IS 'Timestamp when the invoice was paid. NULL until paid.';
 COMMENT ON COLUMN workshop.invoices.notes                 IS 'Internal notes about this invoice.';
-COMMENT ON COLUMN workshop.invoices.is_active             IS 'FALSE = invoice voided / inactive.';
 COMMENT ON COLUMN workshop.invoices.created_by            IS 'User who created this record. NULL for system/seed records.';
 COMMENT ON COLUMN workshop.invoices.updated_at            IS 'NULL on creation. Set on any update, including soft-delete.';
 COMMENT ON COLUMN workshop.invoices.is_deleted            IS 'Soft delete flag. When TRUE, updated_at holds the deletion timestamp.';

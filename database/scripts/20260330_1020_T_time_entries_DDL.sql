@@ -15,7 +15,6 @@ CREATE TABLE IF NOT EXISTS hr.time_entries (
     clock_out           TIMESTAMPTZ,
     break_duration_min  SMALLINT     NOT NULL DEFAULT 0,
     notes               TEXT,
-    is_active           BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     created_by          UUID,
     updated_at          TIMESTAMPTZ,
@@ -39,7 +38,6 @@ COMMENT ON COLUMN hr.time_entries.clock_in            IS 'Timestamp when the emp
 COMMENT ON COLUMN hr.time_entries.clock_out           IS 'Timestamp when the employee clocked out. NULL if still clocked in.';
 COMMENT ON COLUMN hr.time_entries.break_duration_min  IS 'Total break time in minutes during this entry. Default 0.';
 COMMENT ON COLUMN hr.time_entries.notes               IS 'Optional notes about the time entry (e.g. task description).';
-COMMENT ON COLUMN hr.time_entries.is_active           IS 'FALSE = time entry voided / inactive.';
 COMMENT ON COLUMN hr.time_entries.created_by          IS 'User who created this record. NULL for system/seed records.';
 COMMENT ON COLUMN hr.time_entries.updated_at          IS 'NULL on creation. Set on any update, including soft-delete.';
 COMMENT ON COLUMN hr.time_entries.is_deleted          IS 'Soft delete flag. When TRUE, updated_at holds the deletion timestamp.';

@@ -21,7 +21,7 @@ DDL (structure) and DML (seed data) are always separate files.
 - UUID v7 primary keys: `id UUID NOT NULL DEFAULT uuidv7()`
 - Audit columns: `created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()`, `created_by UUID`, `updated_at TIMESTAMPTZ`, `updated_by UUID`
 - Soft delete: `is_deleted BOOLEAN NOT NULL DEFAULT FALSE`
-- Active flag: `is_active BOOLEAN NOT NULL DEFAULT TRUE`
+- Active flag: `is_active BOOLEAN NOT NULL DEFAULT TRUE` — only on entities with a lifecycle (users, tenants, customers, suppliers, parts_catalog) and codebook tables. Not on transactional records, child tables, or tables with status workflows
 - `updated_at` is NULL on creation, set on any update including soft-delete
 - All timestamps use `TIMESTAMPTZ`
 

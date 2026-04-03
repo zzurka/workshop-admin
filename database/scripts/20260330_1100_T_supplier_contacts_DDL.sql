@@ -18,7 +18,6 @@ CREATE TABLE IF NOT EXISTS workshop.supplier_contacts (
     phone_number  VARCHAR(50),
     is_primary    BOOLEAN      NOT NULL DEFAULT FALSE,
     notes         TEXT,
-    is_active     BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at    TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     created_by    UUID,
     updated_at    TIMESTAMPTZ,
@@ -40,7 +39,6 @@ COMMENT ON COLUMN workshop.supplier_contacts.email         IS 'Contact email add
 COMMENT ON COLUMN workshop.supplier_contacts.phone_number  IS 'Contact phone number.';
 COMMENT ON COLUMN workshop.supplier_contacts.is_primary    IS 'TRUE = primary contact for this supplier. Enforced at application level (at most one per supplier).';
 COMMENT ON COLUMN workshop.supplier_contacts.notes         IS 'Notes about this contact (e.g. role, availability).';
-COMMENT ON COLUMN workshop.supplier_contacts.is_active     IS 'FALSE = contact deactivated.';
 COMMENT ON COLUMN workshop.supplier_contacts.created_by    IS 'User who created this record. NULL for system/seed records.';
 COMMENT ON COLUMN workshop.supplier_contacts.updated_at    IS 'NULL on creation. Set on any update, including soft-delete.';
 COMMENT ON COLUMN workshop.supplier_contacts.is_deleted    IS 'Soft delete flag. When TRUE, updated_at holds the deletion timestamp.';

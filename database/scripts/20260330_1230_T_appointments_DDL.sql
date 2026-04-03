@@ -20,7 +20,6 @@ CREATE TABLE IF NOT EXISTS workshop.appointments (
     scheduled_at            TIMESTAMPTZ,
     description             TEXT,
     notes                   TEXT,
-    is_active               BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at              TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     created_by              UUID,
     updated_at              TIMESTAMPTZ,
@@ -46,7 +45,6 @@ COMMENT ON COLUMN workshop.appointments.preferred_date         IS 'Date the cust
 COMMENT ON COLUMN workshop.appointments.scheduled_at           IS 'Confirmed date/time. NULL until the workshop confirms a slot.';
 COMMENT ON COLUMN workshop.appointments.description            IS 'Free-text description of what the customer needs — written during intake (phone call or walk-in).';
 COMMENT ON COLUMN workshop.appointments.notes                  IS 'Internal workshop notes about this appointment.';
-COMMENT ON COLUMN workshop.appointments.is_active              IS 'FALSE = appointment voided / inactive.';
 COMMENT ON COLUMN workshop.appointments.created_by             IS 'User who created this record. NULL for system/seed records.';
 COMMENT ON COLUMN workshop.appointments.updated_at             IS 'NULL on creation. Set on any update, including soft-delete.';
 COMMENT ON COLUMN workshop.appointments.is_deleted             IS 'Soft delete flag. When TRUE, updated_at holds the deletion timestamp.';

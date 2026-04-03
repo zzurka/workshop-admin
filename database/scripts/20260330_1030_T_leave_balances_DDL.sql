@@ -16,7 +16,6 @@ CREATE TABLE IF NOT EXISTS hr.leave_balances (
     year           SMALLINT      NOT NULL,
     total_days     NUMERIC(5,2)  NOT NULL,
     used_days      NUMERIC(5,2)  NOT NULL DEFAULT 0,
-    is_active      BOOLEAN       NOT NULL DEFAULT TRUE,
     created_at     TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
     created_by     UUID,
     updated_at     TIMESTAMPTZ,
@@ -42,7 +41,6 @@ COMMENT ON COLUMN hr.leave_balances.leave_type_id     IS 'FK to codebook.leave_t
 COMMENT ON COLUMN hr.leave_balances.year              IS 'Calendar year this balance applies to (e.g. 2026).';
 COMMENT ON COLUMN hr.leave_balances.total_days        IS 'Total days allocated for this year. Supports half-days (e.g. 20.5).';
 COMMENT ON COLUMN hr.leave_balances.used_days         IS 'Days consumed so far. Updated when leave requests are approved. Supports half-days.';
-COMMENT ON COLUMN hr.leave_balances.is_active         IS 'FALSE = balance record suspended / inactive.';
 COMMENT ON COLUMN hr.leave_balances.created_by        IS 'User who created this record. NULL for system/seed records.';
 COMMENT ON COLUMN hr.leave_balances.updated_at        IS 'NULL on creation. Set on any update, including soft-delete.';
 COMMENT ON COLUMN hr.leave_balances.is_deleted        IS 'Soft delete flag. When TRUE, updated_at holds the deletion timestamp.';

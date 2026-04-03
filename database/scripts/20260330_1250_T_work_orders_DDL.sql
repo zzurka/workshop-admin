@@ -19,7 +19,6 @@ CREATE TABLE IF NOT EXISTS workshop.work_orders (
     started_at             TIMESTAMPTZ,
     completed_at           TIMESTAMPTZ,
     notes                  TEXT,
-    is_active              BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at             TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     created_by             UUID,
     updated_at             TIMESTAMPTZ,
@@ -46,7 +45,6 @@ COMMENT ON COLUMN workshop.work_orders.description           IS 'Description of 
 COMMENT ON COLUMN workshop.work_orders.started_at            IS 'Timestamp when work actually started. NULL until in_progress.';
 COMMENT ON COLUMN workshop.work_orders.completed_at          IS 'Timestamp when work was completed. NULL until completed.';
 COMMENT ON COLUMN workshop.work_orders.notes                 IS 'Internal notes about this work order.';
-COMMENT ON COLUMN workshop.work_orders.is_active             IS 'FALSE = work order voided / inactive.';
 COMMENT ON COLUMN workshop.work_orders.created_by            IS 'User who created this record. NULL for system/seed records.';
 COMMENT ON COLUMN workshop.work_orders.updated_at            IS 'NULL on creation. Set on any update, including soft-delete.';
 COMMENT ON COLUMN workshop.work_orders.is_deleted            IS 'Soft delete flag. When TRUE, updated_at holds the deletion timestamp.';

@@ -20,7 +20,6 @@ CREATE TABLE IF NOT EXISTS hr.leave_requests (
     notes            TEXT,
     reviewed_by      UUID,
     reviewed_at      TIMESTAMPTZ,
-    is_active        BOOLEAN       NOT NULL DEFAULT TRUE,
     created_at       TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
     created_by       UUID,
     updated_at       TIMESTAMPTZ,
@@ -51,7 +50,6 @@ COMMENT ON COLUMN hr.leave_requests.total_days         IS 'Number of leave days 
 COMMENT ON COLUMN hr.leave_requests.notes              IS 'Optional reason or details for the leave request.';
 COMMENT ON COLUMN hr.leave_requests.reviewed_by        IS 'Employee (manager) who approved or rejected the request. NULL while pending.';
 COMMENT ON COLUMN hr.leave_requests.reviewed_at        IS 'Timestamp of the approval/rejection. NULL while pending.';
-COMMENT ON COLUMN hr.leave_requests.is_active          IS 'FALSE = request voided / inactive.';
 COMMENT ON COLUMN hr.leave_requests.created_by         IS 'User who created this record. NULL for system/seed records.';
 COMMENT ON COLUMN hr.leave_requests.updated_at         IS 'NULL on creation. Set on any update, including soft-delete.';
 COMMENT ON COLUMN hr.leave_requests.is_deleted         IS 'Soft delete flag. When TRUE, updated_at holds the deletion timestamp.';

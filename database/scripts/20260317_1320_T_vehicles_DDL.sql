@@ -26,7 +26,6 @@ CREATE TABLE IF NOT EXISTS customer.vehicles (
     mileage             INTEGER,
     mileage_recorded_at TIMESTAMPTZ,
     notes               TEXT,
-    is_active           BOOLEAN      NOT NULL DEFAULT TRUE,
     created_at          TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     created_by          UUID,
     updated_at          TIMESTAMPTZ,
@@ -52,7 +51,6 @@ COMMENT ON COLUMN customer.vehicles.transmission_id      IS 'FK to codebook.tran
 COMMENT ON COLUMN customer.vehicles.mileage              IS 'Last recorded odometer reading.';
 COMMENT ON COLUMN customer.vehicles.mileage_recorded_at  IS 'Timestamp when the mileage value was last updated.';
 COMMENT ON COLUMN customer.vehicles.notes                IS 'Internal workshop notes about this vehicle. Not visible to the customer.';
-COMMENT ON COLUMN customer.vehicles.is_active            IS 'FALSE = vehicle record suspended / inactive.';
 COMMENT ON COLUMN customer.vehicles.created_by           IS 'User who created this record. NULL for system/seed records.';
 COMMENT ON COLUMN customer.vehicles.updated_at           IS 'NULL on creation. Set on any update, including soft-delete.';
 COMMENT ON COLUMN customer.vehicles.is_deleted           IS 'Soft delete flag. When TRUE, updated_at holds the deletion timestamp.';

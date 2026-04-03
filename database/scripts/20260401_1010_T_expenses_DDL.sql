@@ -18,7 +18,6 @@ CREATE TABLE IF NOT EXISTS workshop.expenses (
     amount              NUMERIC(12,2) NOT NULL,
     expense_date        DATE          NOT NULL,
     notes               TEXT,
-    is_active           BOOLEAN       NOT NULL DEFAULT TRUE,
     created_at          TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
     created_by          UUID,
     updated_at          TIMESTAMPTZ,
@@ -45,7 +44,6 @@ COMMENT ON COLUMN workshop.expenses.description              IS 'Short descripti
 COMMENT ON COLUMN workshop.expenses.amount                   IS 'Expense amount. Must be positive.';
 COMMENT ON COLUMN workshop.expenses.expense_date             IS 'The date the expense occurred.';
 COMMENT ON COLUMN workshop.expenses.notes                    IS 'Optional internal notes about this expense.';
-COMMENT ON COLUMN workshop.expenses.is_active                IS 'FALSE = expense deactivated / voided.';
 COMMENT ON COLUMN workshop.expenses.created_by               IS 'User who created this record. NULL for system/seed records.';
 COMMENT ON COLUMN workshop.expenses.updated_at               IS 'NULL on creation. Set on any update, including soft-delete.';
 COMMENT ON COLUMN workshop.expenses.is_deleted               IS 'Soft delete flag. When TRUE, updated_at holds the deletion timestamp.';

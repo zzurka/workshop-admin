@@ -19,7 +19,6 @@ CREATE TABLE IF NOT EXISTS workshop.work_order_parts (
     quantity        SMALLINT      NOT NULL DEFAULT 1,
     unit_price      NUMERIC(10,2),
     notes           TEXT,
-    is_active       BOOLEAN       NOT NULL DEFAULT TRUE,
     created_at      TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
     created_by      UUID,
     updated_at      TIMESTAMPTZ,
@@ -47,7 +46,6 @@ COMMENT ON COLUMN workshop.work_order_parts.part_number      IS 'Manufacturer or
 COMMENT ON COLUMN workshop.work_order_parts.quantity         IS 'Number of units needed. Must be at least 1.';
 COMMENT ON COLUMN workshop.work_order_parts.unit_price       IS 'Price per unit. NULL if not yet quoted.';
 COMMENT ON COLUMN workshop.work_order_parts.notes            IS 'Notes about this part (e.g. "OEM only, no aftermarket").';
-COMMENT ON COLUMN workshop.work_order_parts.is_active        IS 'FALSE = part line voided / removed from order.';
 COMMENT ON COLUMN workshop.work_order_parts.created_by       IS 'User who created this record. NULL for system/seed records.';
 COMMENT ON COLUMN workshop.work_order_parts.updated_at       IS 'NULL on creation. Set on any update, including soft-delete.';
 COMMENT ON COLUMN workshop.work_order_parts.is_deleted       IS 'Soft delete flag. When TRUE, updated_at holds the deletion timestamp.';
