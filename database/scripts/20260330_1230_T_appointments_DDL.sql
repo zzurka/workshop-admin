@@ -16,7 +16,8 @@ CREATE TABLE IF NOT EXISTS workshop.appointments (
     customer_id             UUID         NOT NULL,
     vehicle_id              UUID         NOT NULL,
     appointment_status_id   SMALLINT     NOT NULL,
-    scheduled_at            TIMESTAMPTZ  NOT NULL,
+    preferred_date          DATE,
+    scheduled_at            TIMESTAMPTZ,
     description             TEXT,
     notes                   TEXT,
     is_active               BOOLEAN      NOT NULL DEFAULT TRUE,
@@ -41,7 +42,8 @@ COMMENT ON COLUMN workshop.appointments.tenant_id              IS 'The tenant (w
 COMMENT ON COLUMN workshop.appointments.customer_id            IS 'The customer requesting service.';
 COMMENT ON COLUMN workshop.appointments.vehicle_id             IS 'The vehicle to be serviced.';
 COMMENT ON COLUMN workshop.appointments.appointment_status_id  IS 'FK to codebook.appointment_statuses (scheduled, confirmed, completed, cancelled).';
-COMMENT ON COLUMN workshop.appointments.scheduled_at           IS 'Date/time the appointment is scheduled for.';
+COMMENT ON COLUMN workshop.appointments.preferred_date         IS 'Date the customer would prefer. NULL if no preference.';
+COMMENT ON COLUMN workshop.appointments.scheduled_at           IS 'Confirmed date/time. NULL until the workshop confirms a slot.';
 COMMENT ON COLUMN workshop.appointments.description            IS 'Free-text description of what the customer needs — written during intake (phone call or walk-in).';
 COMMENT ON COLUMN workshop.appointments.notes                  IS 'Internal workshop notes about this appointment.';
 COMMENT ON COLUMN workshop.appointments.is_active              IS 'FALSE = appointment voided / inactive.';
