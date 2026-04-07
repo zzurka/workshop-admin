@@ -1,23 +1,32 @@
-var builder = WebApplication.CreateBuilder(args);
+using WorkshopAdmin.API.Infrastructure;
+using WorkshopAdmin.API.Middleware;
+using WorkshopAdmin.Application;
+using WorkshopAdmin.Application.Common.Interfaces;
+using WorkshopAdmin.Infrastructure;
 
-// Add services to the container.
+WebApplicationBuilder builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
-// Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+builder.Services.AddHttpContextAccessor();
 
-var app = builder.Build();
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
 
-// Configure the HTTP request pipeline.
+builder.Services.AddScoped<ICurrentUserContext, CurrentUserContext>();
+builder.Services.AddScoped<ITenantContext, TenantContext>();
+
+WebApplication app = builder.Build();
+
+app.UseMiddleware<ExceptionHandlingMiddleware>();
+
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
-
 app.UseAuthorization();
-
 app.MapControllers();
 
 app.Run();
