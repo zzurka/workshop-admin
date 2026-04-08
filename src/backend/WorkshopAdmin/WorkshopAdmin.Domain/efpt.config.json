@@ -1,0 +1,210 @@
+﻿{
+   "CodeGenerationMode": 6,
+   "ContextClassName": "WorkshopAdminContext",
+   "ContextNamespace": null,
+   "FilterSchemas": false,
+   "IncludeConnectionString": false,
+   "IrregularWords": null,
+   "MinimumProductVersion": "2.6.1382",
+   "ModelNamespace": null,
+   "OutputContextPath": null,
+   "OutputPath": "Entities",
+   "PluralRules": null,
+   "PreserveCasingWithRegex": true,
+   "ProjectRootNamespace": "WorkshopAdmin.Domain",
+   "Schemas": null,
+   "SelectedHandlebarsLanguage": 3,
+   "SelectedToBeGenerated": 2,
+   "SingularRules": null,
+   "T4TemplatePath": null,
+   "Tables": [
+      {
+         "Name": "auth.login_history",
+         "ObjectType": 0
+      },
+      {
+         "Name": "auth.mfa_recovery_codes",
+         "ObjectType": 0
+      },
+      {
+         "Name": "auth.permissions",
+         "ObjectType": 0
+      },
+      {
+         "Name": "auth.role_permissions",
+         "ObjectType": 0
+      },
+      {
+         "Name": "auth.roles",
+         "ObjectType": 0
+      },
+      {
+         "Name": "auth.user_roles",
+         "ObjectType": 0
+      },
+      {
+         "Name": "auth.users",
+         "ObjectType": 0
+      },
+      {
+         "Name": "codebook.appointment_statuses",
+         "ObjectType": 0
+      },
+      {
+         "Name": "codebook.employment_types",
+         "ObjectType": 0
+      },
+      {
+         "Name": "codebook.expense_categories",
+         "ObjectType": 0
+      },
+      {
+         "Name": "codebook.fuel_types",
+         "ObjectType": 0
+      },
+      {
+         "Name": "codebook.invoice_statuses",
+         "ObjectType": 0
+      },
+      {
+         "Name": "codebook.leave_statuses",
+         "ObjectType": 0
+      },
+      {
+         "Name": "codebook.leave_types",
+         "ObjectType": 0
+      },
+      {
+         "Name": "codebook.part_statuses",
+         "ObjectType": 0
+      },
+      {
+         "Name": "codebook.service_types",
+         "ObjectType": 0
+      },
+      {
+         "Name": "codebook.stock_transaction_types",
+         "ObjectType": 0
+      },
+      {
+         "Name": "codebook.subscription_plans",
+         "ObjectType": 0
+      },
+      {
+         "Name": "codebook.transmissions",
+         "ObjectType": 0
+      },
+      {
+         "Name": "codebook.units_of_measure",
+         "ObjectType": 0
+      },
+      {
+         "Name": "codebook.work_order_statuses",
+         "ObjectType": 0
+      },
+      {
+         "Name": "customer.customers",
+         "ObjectType": 0
+      },
+      {
+         "Name": "customer.vehicles",
+         "ObjectType": 0
+      },
+      {
+         "Name": "hr.employees",
+         "ObjectType": 0
+      },
+      {
+         "Name": "hr.leave_balances",
+         "ObjectType": 0
+      },
+      {
+         "Name": "hr.leave_requests",
+         "ObjectType": 0
+      },
+      {
+         "Name": "hr.time_entries",
+         "ObjectType": 0
+      },
+      {
+         "Name": "tenant.tenants",
+         "ObjectType": 0
+      },
+      {
+         "Name": "warehouse.parts_catalog",
+         "ObjectType": 0
+      },
+      {
+         "Name": "warehouse.stock",
+         "ObjectType": 0
+      },
+      {
+         "Name": "warehouse.stock_transactions",
+         "ObjectType": 0
+      },
+      {
+         "Name": "workshop.appointment_services",
+         "ObjectType": 0
+      },
+      {
+         "Name": "workshop.appointments",
+         "ObjectType": 0
+      },
+      {
+         "Name": "workshop.expenses",
+         "ObjectType": 0
+      },
+      {
+         "Name": "workshop.invoice_lines",
+         "ObjectType": 0
+      },
+      {
+         "Name": "workshop.invoices",
+         "ObjectType": 0
+      },
+      {
+         "Name": "workshop.supplier_contacts",
+         "ObjectType": 0
+      },
+      {
+         "Name": "workshop.suppliers",
+         "ObjectType": 0
+      },
+      {
+         "Name": "workshop.work_order_parts",
+         "ObjectType": 0
+      },
+      {
+         "Name": "workshop.work_orders",
+         "ObjectType": 0
+      }
+   ],
+   "UiHint": null,
+   "UncountableWords": null,
+   "UseAsyncStoredProcedureCalls": true,
+   "UseBoolPropertiesWithoutDefaultSql": false,
+   "UseDatabaseNames": false,
+   "UseDatabaseNamesForRoutines": true,
+   "UseDateOnlyTimeOnly": true,
+   "UseDbContextSplitting": false,
+   "UseDecimalDataAnnotationForSprocResult": true,
+   "UseFluentApiOnly": true,
+   "UseHandleBars": false,
+   "UseHierarchyId": false,
+   "UseInflector": true,
+   "UseInternalAccessModifiersForSprocsAndFunctions": false,
+   "UseLegacyPluralizer": false,
+   "UseManyToManyEntity": false,
+   "UseNoDefaultConstructor": false,
+   "UseNoNavigations": true,
+   "UseNoObjectFilter": false,
+   "UseNodaTime": false,
+   "UseNullableReferences": true,
+   "UsePrefixNavigationNaming": false,
+   "UseSchemaFolders": true,
+   "UseSchemaNamespaces": false,
+   "UseSpatial": false,
+   "UseT4": false,
+   "UseT4Split": false,
+   "UseTypedTvpParameters": true
+}
