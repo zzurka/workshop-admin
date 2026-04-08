@@ -1,6 +1,5 @@
 namespace WorkshopAdmin.Domain.Exceptions;
 
-public class BusinessRuleException : DomainException
+public class BusinessRuleException(string message) : DomainException(message)
 {
-    public BusinessRuleException(string message) : base(message) { }
 }

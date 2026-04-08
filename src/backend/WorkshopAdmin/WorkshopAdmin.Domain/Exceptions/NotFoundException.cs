@@ -1,7 +1,5 @@
 namespace WorkshopAdmin.Domain.Exceptions;
 
-public class NotFoundException : DomainException
+public class NotFoundException(string entityName, object id) : DomainException($"{entityName} with ID '{id}' was not found.")
 {
-    public NotFoundException(string entityName, object id)
-        : base($"{entityName} with ID '{id}' was not found.") { }
 }

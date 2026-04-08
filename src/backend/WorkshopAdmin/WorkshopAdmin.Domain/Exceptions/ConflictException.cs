@@ -1,6 +1,5 @@
 namespace WorkshopAdmin.Domain.Exceptions;
 
-public class ConflictException : DomainException
+public class ConflictException(string message) : DomainException(message)
 {
-    public ConflictException(string message) : base(message) { }
 }

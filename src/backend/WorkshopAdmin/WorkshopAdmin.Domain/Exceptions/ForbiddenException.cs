@@ -1,6 +1,5 @@
 namespace WorkshopAdmin.Domain.Exceptions;
 
-public class ForbiddenException : DomainException
+public class ForbiddenException(string message) : DomainException(message)
 {
-    public ForbiddenException(string message) : base(message) { }
 }
