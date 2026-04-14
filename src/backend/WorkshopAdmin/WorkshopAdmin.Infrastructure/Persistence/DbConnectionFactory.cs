@@ -4,14 +4,9 @@ using System.Data;
 using Npgsql;
 using WorkshopAdmin.Application.Common.Interfaces;
 
-public class DbConnectionFactory : IDbConnectionFactory
+public class DbConnectionFactory(string connectionString) : IDbConnectionFactory
 {
-    private readonly string _connectionString;
-
-    public DbConnectionFactory(string connectionString)
-    {
-        _connectionString = connectionString;
-    }
+    private readonly string _connectionString = connectionString;
 
     public IDbConnection CreateConnection()
     {

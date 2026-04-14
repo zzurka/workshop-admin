@@ -1,3 +1,4 @@
+using Scalar.AspNetCore;
 using WorkshopAdmin.API.Infrastructure;
 using WorkshopAdmin.API.Middleware;
 using WorkshopAdmin.Application;
@@ -23,6 +24,7 @@ app.UseMiddleware<ExceptionHandlingMiddleware>();
 if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
+    app.MapScalarApiReference();
 }
 
 app.UseHttpsRedirection();

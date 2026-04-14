@@ -1,12 +1,16 @@
-<Project Sdk="Microsoft.NET.Sdk.Web">
+﻿<Project Sdk="Microsoft.NET.Sdk.Web">
+	<PropertyGroup>
+		<UserSecretsId>9979d02c-1d7b-438d-b50e-b1b111ee4b99</UserSecretsId>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\WorkshopAdmin.Application\WorkshopAdmin.Application.csproj" />
-    <ProjectReference Include="..\WorkshopAdmin.Infrastructure\WorkshopAdmin.Infrastructure.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\WorkshopAdmin.Application\WorkshopAdmin.Application.csproj" />
+		<ProjectReference Include="..\WorkshopAdmin.Infrastructure\WorkshopAdmin.Infrastructure.csproj" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+		<PackageReference Include="Scalar.AspNetCore" />
+	</ItemGroup>
 
 </Project>

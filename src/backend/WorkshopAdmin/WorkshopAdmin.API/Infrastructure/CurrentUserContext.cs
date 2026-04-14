@@ -3,14 +3,9 @@ namespace WorkshopAdmin.API.Infrastructure;
 using System.Security.Claims;
 using WorkshopAdmin.Application.Common.Interfaces;
 
-public class CurrentUserContext : ICurrentUserContext
+public class CurrentUserContext(IHttpContextAccessor httpContextAccessor) : ICurrentUserContext
 {
-    private readonly IHttpContextAccessor _httpContextAccessor;
-
-    public CurrentUserContext(IHttpContextAccessor httpContextAccessor)
-    {
-        _httpContextAccessor = httpContextAccessor;
-    }
+    private readonly IHttpContextAccessor _httpContextAccessor = httpContextAccessor;
 
     public Guid UserId
     {
