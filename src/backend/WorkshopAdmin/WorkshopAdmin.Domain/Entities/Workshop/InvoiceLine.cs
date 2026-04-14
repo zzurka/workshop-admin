@@ -68,4 +68,9 @@ public partial class InvoiceLine
     public DateTime? UpdatedAt { get; set; }
 
     public Guid? UpdatedBy { get; set; }
+
+    /// <summary>
+    /// Percentage discount for this line item (0–100). line_total = quantity * unit_price * (1 - discount_percent / 100).
+    /// </summary>
+    public decimal DiscountPercent { get; set; }
 }
