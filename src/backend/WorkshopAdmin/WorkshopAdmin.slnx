@@ -5,6 +5,7 @@
     <File Path="Directory.Packages.props" />
   </Folder>
   <Project Path="WorkshopAdmin.API/WorkshopAdmin.API.csproj" />
+  <Project Path="WorkshopAdmin.CLI/WorkshopAdmin.CLI.csproj" />
   <Project Path="WorkshopAdmin.Application/WorkshopAdmin.Application.csproj" />
   <Project Path="WorkshopAdmin.Domain/WorkshopAdmin.Domain.csproj" />
   <Project Path="WorkshopAdmin.Infrastructure/WorkshopAdmin.Infrastructure.csproj" />
