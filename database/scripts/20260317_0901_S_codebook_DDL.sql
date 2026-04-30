@@ -1,6 +1,6 @@
 -- Migration: 20260319_0900_S_codebook_DDL.sql
 -- Description: Create the codebook schema for shared reference/lookup tables
---              (fuel types, transmissions, statuses, etc.).
+--              (fuel types, transmission types, statuses, etc.).
 -- Author: WorkshopAdmin Team
 -- Date: 2026-03-19
 --
@@ -11,7 +11,7 @@ BEGIN;
 CREATE SCHEMA IF NOT EXISTS codebook;
 
 COMMENT ON SCHEMA codebook IS
-    'Reference data: shared lookup tables used across all domain schemas (fuel types, transmissions, statuses, etc.).';
+    'Reference data: shared lookup tables used across all domain schemas (fuel types, transmission types, statuses, etc.).';
 
 -- App user: schema access
 GRANT USAGE ON SCHEMA codebook TO workshopadmin_app;

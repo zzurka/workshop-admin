@@ -1,5 +1,5 @@
--- Migration: 20260319_0921_T_transmissions_DML.sql
--- Description: Seed data for codebook.transmissions.
+-- Migration: 20260317_0920_T_transmission_types_DML.sql
+-- Description: Seed data for codebook.transmission_types.
 -- Author: WorkshopAdmin Team
 -- Date: 2026-03-19
 --
@@ -7,7 +7,7 @@
 
 BEGIN;
 
-INSERT INTO codebook.transmissions (code, label, sort_order) VALUES
+INSERT INTO codebook.transmission_types (code, label, sort_order) VALUES
     ('automatic', '{"en": "Automatic", "sr": "Automatski"}', 1),
     ('manual',    '{"en": "Manual",    "sr": "Ručni"}',      2),
     ('cvt',       '{"en": "CVT",       "sr": "CVT"}',        3),
