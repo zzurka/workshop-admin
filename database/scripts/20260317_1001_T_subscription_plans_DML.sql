@@ -1,4 +1,4 @@
--- Migration: 20260319_0931_T_subscription_plans_DML.sql
+-- Migration: 20260317_1001_T_subscription_plans_DML.sql
 -- Description: Seed data for codebook.subscription_plans.
 -- Author: WorkshopAdmin Team
 -- Date: 2026-03-19

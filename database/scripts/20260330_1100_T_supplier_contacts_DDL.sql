@@ -1,4 +1,4 @@
--- Migration: 20260330_1220_T_supplier_contacts_DDL.sql
+-- Migration: 20260330_1100_T_supplier_contacts_DDL.sql
 -- Description: Create the workshop.supplier_contacts table. Multiple contacts
 --              per supplier with optional primary contact flag.
 --              Tenant is derived via supplier_id → workshop.suppliers.tenant_id.

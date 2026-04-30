@@ -1,4 +1,4 @@
--- Migration: 20260330_1110_T_appointment_statuses_DDL.sql
+-- Migration: 20260317_0929_T_appointment_statuses_DDL.sql
 -- Description: Create the codebook.appointment_statuses lookup table.
 --              Referenced by workshop.appointments.appointment_status_id.
 -- Author: WorkshopAdmin Team

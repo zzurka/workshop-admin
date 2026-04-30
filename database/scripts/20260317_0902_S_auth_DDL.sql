@@ -1,4 +1,4 @@
--- Migration: 20260317_1000_S_auth_DDL.sql
+-- Migration: 20260317_0902_S_auth_DDL.sql
 -- Description: Create the auth schema for authentication and authorization objects
 --              (users, roles, permissions, and their junction tables).
 -- Author: WorkshopAdmin Team

@@ -1,4 +1,4 @@
--- Migration: 20260401_1001_T_expense_categories_DML.sql
+-- Migration: 20260317_0938_T_expense_categories_DML.sql
 -- Description: Seed data for codebook.expense_categories.
 -- Author: WorkshopAdmin Team
 -- Date: 2026-04-01

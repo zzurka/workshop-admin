@@ -1,4 +1,4 @@
--- Migration: 20260330_1111_T_appointment_statuses_DML.sql
+-- Migration: 20260317_0930_T_appointment_statuses_DML.sql
 -- Description: Seed data for codebook.appointment_statuses.
 -- Author: WorkshopAdmin Team
 -- Date: 2026-03-30

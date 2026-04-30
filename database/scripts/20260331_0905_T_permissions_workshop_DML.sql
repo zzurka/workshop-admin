@@ -1,4 +1,4 @@
--- Migration: 20260331_0950_T_permissions_workshop_DML.sql
+-- Migration: 20260331_0905_T_permissions_workshop_DML.sql
 -- Description: Seed workshop permissions — appointments, work orders,
 --              suppliers, and invoices.
 -- Author: WorkshopAdmin Team

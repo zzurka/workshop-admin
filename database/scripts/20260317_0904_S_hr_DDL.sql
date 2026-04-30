@@ -1,4 +1,4 @@
--- Migration: 20260330_1000_S_hr_DDL.sql
+-- Migration: 20260317_0904_S_hr_DDL.sql
 -- Description: Create the hr schema for employee management, time tracking,
 --              and leave/absence tracking.
 -- Author: WorkshopAdmin Team

@@ -1,4 +1,4 @@
--- Migration: 20260317_1110_T_tenants_DDL.sql
+-- Migration: 20260317_1002_T_tenants_DDL.sql
 -- Description: Create the tenant.tenants table. Each tenant represents one
 --              workshop / organization using the system.
 -- Author: WorkshopAdmin Team

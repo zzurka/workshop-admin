@@ -1,4 +1,4 @@
--- Migration: 20260319_0910_T_fuel_types_DDL.sql
+-- Migration: 20260317_0917_T_fuel_types_DDL.sql
 -- Description: Create the codebook.fuel_types lookup table.
 --              Referenced by customer.vehicles.fuel_type_id.
 -- Author: WorkshopAdmin Team

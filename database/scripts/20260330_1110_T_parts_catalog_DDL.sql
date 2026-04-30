@@ -1,4 +1,4 @@
--- Migration: 20260402_1030_T_parts_catalog_DDL.sql
+-- Migration: 20260330_1110_T_parts_catalog_DDL.sql
 -- Description: Create the warehouse.parts_catalog table. Master list of parts
 --              a workshop stocks, with barcode support and default pricing.
 -- Author: WorkshopAdmin Team

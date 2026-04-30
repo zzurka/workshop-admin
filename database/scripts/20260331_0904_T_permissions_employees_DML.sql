@@ -1,4 +1,4 @@
--- Migration: 20260331_0940_T_permissions_employees_DML.sql
+-- Migration: 20260331_0904_T_permissions_employees_DML.sql
 -- Description: Seed employee, time entry, leave request, and leave balance
 --              permissions. Self-access (own time entries, own leave requests)
 --              is handled in application logic.

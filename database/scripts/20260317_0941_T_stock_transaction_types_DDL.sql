@@ -1,4 +1,4 @@
--- Migration: 20260402_1020_T_stock_transaction_types_DDL.sql
+-- Migration: 20260317_0941_T_stock_transaction_types_DDL.sql
 -- Description: Create the codebook.stock_transaction_types lookup table.
 --              Referenced by warehouse.stock_transactions.transaction_type_id.
 -- Author: WorkshopAdmin Team

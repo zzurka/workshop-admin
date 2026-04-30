@@ -1,4 +1,4 @@
--- Migration: 20260331_0960_T_permissions_codebook_DML.sql
+-- Migration: 20260331_0906_T_permissions_codebook_DML.sql
 -- Description: Seed codebook/lookup data permissions.
 -- Author: WorkshopAdmin Team
 -- Date: 2026-03-31

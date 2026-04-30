@@ -1,4 +1,4 @@
--- Migration: 20260402_1050_T_stock_transactions_DDL.sql
+-- Migration: 20260330_1300_T_stock_transactions_DDL.sql
 -- Description: Create the warehouse.stock_transactions table. Immutable log of
 --              all stock movements (receipts, issues, returns, adjustments).
 -- Author: WorkshopAdmin Team

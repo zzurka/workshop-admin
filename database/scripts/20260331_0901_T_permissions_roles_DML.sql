@@ -1,4 +1,4 @@
--- Migration: 20260331_0910_T_permissions_roles_DML.sql
+-- Migration: 20260331_0901_T_permissions_roles_DML.sql
 -- Description: Seed role management permissions.
 -- Author: WorkshopAdmin Team
 -- Date: 2026-03-31

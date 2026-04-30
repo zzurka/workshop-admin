@@ -1,4 +1,4 @@
--- Migration: 20260331_0920_T_permissions_customers_DML.sql
+-- Migration: 20260331_0902_T_permissions_customers_DML.sql
 -- Description: Seed customer management permissions.
 -- Author: WorkshopAdmin Team
 -- Date: 2026-03-31

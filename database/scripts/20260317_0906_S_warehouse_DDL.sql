@@ -1,4 +1,4 @@
--- Migration: 20260402_1000_S_warehouse_DDL.sql
+-- Migration: 20260317_0906_S_warehouse_DDL.sql
 -- Description: Create the warehouse schema for parts catalog, stock levels,
 --              and stock movement tracking.
 -- Author: WorkshopAdmin Team

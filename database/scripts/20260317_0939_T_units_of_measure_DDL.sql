@@ -1,4 +1,4 @@
--- Migration: 20260402_1010_T_units_of_measure_DDL.sql
+-- Migration: 20260317_0939_T_units_of_measure_DDL.sql
 -- Description: Create the codebook.units_of_measure lookup table.
 --              Referenced by warehouse.parts_catalog.unit_of_measure_id.
 -- Author: WorkshopAdmin Team

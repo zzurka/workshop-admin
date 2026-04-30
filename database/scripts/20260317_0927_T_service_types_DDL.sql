@@ -1,4 +1,4 @@
--- Migration: 20260330_1100_T_service_types_DDL.sql
+-- Migration: 20260317_0927_T_service_types_DDL.sql
 -- Description: Create the codebook.service_types lookup table.
 --              Referenced by workshop.appointment_services.service_type_id.
 -- Author: WorkshopAdmin Team

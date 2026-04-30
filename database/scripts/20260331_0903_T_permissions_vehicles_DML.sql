@@ -1,4 +1,4 @@
--- Migration: 20260331_0930_T_permissions_vehicles_DML.sql
+-- Migration: 20260331_0903_T_permissions_vehicles_DML.sql
 -- Description: Seed vehicle management permissions.
 -- Author: WorkshopAdmin Team
 -- Date: 2026-03-31

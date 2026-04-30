@@ -1,4 +1,4 @@
--- Migration: 20260330_1210_T_suppliers_DDL.sql
+-- Migration: 20260330_1050_T_suppliers_DDL.sql
 -- Description: Create the workshop.suppliers table. Stores parts suppliers
 --              referenced by work_order_parts. Scoped to a single tenant.
 -- Author: WorkshopAdmin Team

@@ -1,4 +1,4 @@
--- Migration: 20260401_1000_T_expense_categories_DDL.sql
+-- Migration: 20260317_0937_T_expense_categories_DDL.sql
 -- Description: Create the codebook.expense_categories lookup table.
 --              Referenced by workshop.expenses.expense_category_id.
 -- Author: WorkshopAdmin Team

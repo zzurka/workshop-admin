@@ -1,4 +1,4 @@
--- Migration: 20260317_1100_S_tenant_DDL.sql
+-- Migration: 20260317_0900_S_tenant_DDL.sql
 -- Description: Create the tenant schema for multi-tenancy objects
 --              (tenants / workshop organizations).
 -- Author: WorkshopAdmin Team

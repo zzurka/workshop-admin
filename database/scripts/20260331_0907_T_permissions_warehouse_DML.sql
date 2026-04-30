@@ -1,4 +1,4 @@
--- Migration: 20260402_1070_T_permissions_warehouse_DML.sql
+-- Migration: 20260331_0907_T_permissions_warehouse_DML.sql
 -- Description: Seed warehouse permissions — parts catalog, stock, and
 --              stock transactions.
 -- Author: WorkshopAdmin Team

@@ -1,4 +1,4 @@
--- Migration: 20260402_1040_T_stock_DDL.sql
+-- Migration: 20260330_1120_T_stock_DDL.sql
 -- Description: Create the warehouse.stock table. Tracks current inventory
 --              levels per part per tenant.
 -- Author: WorkshopAdmin Team

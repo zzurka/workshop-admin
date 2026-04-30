@@ -1,4 +1,4 @@
--- Migration: 20260319_0911_T_fuel_types_DML.sql
+-- Migration: 20260317_0918_T_fuel_types_DML.sql
 -- Description: Seed data for codebook.fuel_types.
 -- Author: WorkshopAdmin Team
 -- Date: 2026-03-19

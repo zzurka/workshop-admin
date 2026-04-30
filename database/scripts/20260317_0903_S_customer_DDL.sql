@@ -1,4 +1,4 @@
--- Migration: 20260317_1300_S_customer_DDL.sql
+-- Migration: 20260317_0903_S_customer_DDL.sql
 -- Description: Create the customer schema for customer and vehicle objects
 --              (customers / workshop clients and their vehicles).
 -- Author: WorkshopAdmin Team

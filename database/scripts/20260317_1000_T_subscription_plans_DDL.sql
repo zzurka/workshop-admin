@@ -1,4 +1,4 @@
--- Migration: 20260319_0930_T_subscription_plans_DDL.sql
+-- Migration: 20260317_1000_T_subscription_plans_DDL.sql
 -- Description: Create the codebook.subscription_plans lookup table.
 --              Referenced by tenant.tenants.subscription_plan_id.
 -- Author: WorkshopAdmin Team
