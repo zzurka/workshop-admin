@@ -15,8 +15,7 @@ INSERT INTO auth.permissions (name, resource, action, description) VALUES
     ('users:delete',         'users', 'delete',         'Soft-delete user accounts'),
     ('users:deactivate',     'users', 'deactivate',     'Activate/deactivate user accounts'),
     ('users:reset_password', 'users', 'reset_password', 'Reset another user''s password'),
-    ('users:assign_roles',   'users', 'assign_roles',   'Assign/remove roles to/from users'),
-    ('users:assign_tenants', 'users', 'assign_tenants', 'Assign/remove users to/from tenants')
+    ('users:assign_roles',   'users', 'assign_roles',   'Assign/remove roles to/from users')
 ON CONFLICT (name) DO NOTHING;
 
 COMMIT;

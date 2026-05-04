@@ -7,9 +7,9 @@
 
 BEGIN;
 
-INSERT INTO auth.permissions (name, resource, action, description) VALUES
-    ('codebook:read',   'codebook', 'read',   'View codebook/lookup data'),
-    ('codebook:manage', 'codebook', 'manage', 'Create, edit, and deactivate codebook entries')
+INSERT INTO auth.permissions (name, resource, action, description, scope) VALUES
+    ('codebook:read',   'codebook', 'read',   'View codebook/lookup data',                     'tenant'),
+    ('codebook:manage', 'codebook', 'manage', 'Create, edit, and deactivate codebook entries', 'platform')
 ON CONFLICT (name) DO NOTHING;
 
 COMMIT;
