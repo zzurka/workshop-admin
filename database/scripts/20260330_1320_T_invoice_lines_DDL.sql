@@ -17,6 +17,7 @@ CREATE TABLE IF NOT EXISTS workshop.invoice_lines (
     description         VARCHAR(500)  NOT NULL,
     quantity            NUMERIC(10,2) NOT NULL DEFAULT 1,
     unit_price          NUMERIC(10,2) NOT NULL,
+    discount_percent    NUMERIC(5,2)  NOT NULL DEFAULT 0,
     line_total          NUMERIC(10,2) NOT NULL,
     notes               TEXT,
     created_at          TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
@@ -31,7 +32,8 @@ CREATE TABLE IF NOT EXISTS workshop.invoice_lines (
     CONSTRAINT fk_workshop_invoice_lines_created_by             FOREIGN KEY (created_by)         REFERENCES auth.users(id),
     CONSTRAINT fk_workshop_invoice_lines_updated_by             FOREIGN KEY (updated_by)         REFERENCES auth.users(id),
     CONSTRAINT ck_workshop_invoice_lines_quantity                CHECK (quantity > 0),
-    CONSTRAINT ck_workshop_invoice_lines_unit_price              CHECK (unit_price >= 0)
+    CONSTRAINT ck_workshop_invoice_lines_unit_price              CHECK (unit_price >= 0),
+    CONSTRAINT ck_workshop_invoice_lines_discount_percent        CHECK (discount_percent >= 0 AND discount_percent <= 100)
 );
 
 COMMENT ON TABLE  workshop.invoice_lines                        IS 'Individual line items on an invoice. Parts lines link to work_order_parts; labor lines link to work_orders. Walk-in invoice lines have no work order links.';
@@ -42,7 +44,8 @@ COMMENT ON COLUMN workshop.invoice_lines.work_order_part_id     IS 'Optional lin
 COMMENT ON COLUMN workshop.invoice_lines.description            IS 'Line item description shown on the invoice (e.g. "Oil filter OEM 123-456" or "Labor: brake pad replacement").';
 COMMENT ON COLUMN workshop.invoice_lines.quantity               IS 'Number of units. Supports decimals for labor hours (e.g. 1.5 hours).';
 COMMENT ON COLUMN workshop.invoice_lines.unit_price             IS 'Price per unit.';
-COMMENT ON COLUMN workshop.invoice_lines.line_total             IS 'Total for this line (quantity * unit_price). Stored for immutability — once invoiced, the amount is fixed.';
+COMMENT ON COLUMN workshop.invoice_lines.discount_percent       IS 'Percentage discount for this line item (0–100). Default 0 (no discount).';
+COMMENT ON COLUMN workshop.invoice_lines.line_total             IS 'Total for this line (quantity * unit_price * (1 - discount_percent / 100)). Stored for immutability — once invoiced, the amount is fixed.';
 COMMENT ON COLUMN workshop.invoice_lines.notes                  IS 'Optional notes for this line item.';
 COMMENT ON COLUMN workshop.invoice_lines.created_by             IS 'User who created this record. NULL for system/seed records.';
 COMMENT ON COLUMN workshop.invoice_lines.updated_at             IS 'NULL on creation. Set on any update.';

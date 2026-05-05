@@ -10,7 +10,9 @@ BEGIN;
 INSERT INTO codebook.part_statuses (code, label, sort_order) VALUES
     ('in_stock',  '{"en": "In Stock",  "sr": "Na stanju"}',  1),
     ('ordered',   '{"en": "Ordered",   "sr": "Naručeno"}',   2),
-    ('received',  '{"en": "Received",  "sr": "Primljeno"}',  3)
+    ('received',  '{"en": "Received",  "sr": "Primljeno"}',  3),
+    ('returned',  '{"en": "Returned",  "sr": "Vraćeno"}',    4),
+    ('cancelled', '{"en": "Cancelled", "sr": "Otkazano"}',   5)
 ON CONFLICT (code) DO NOTHING;
 
 COMMIT;
