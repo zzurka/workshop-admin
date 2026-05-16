@@ -46,7 +46,12 @@ public partial class InvoiceLine
     public decimal UnitPrice { get; set; }
 
     /// <summary>
-    /// Total for this line (quantity * unit_price). Stored for immutability — once invoiced, the amount is fixed.
+    /// Percentage discount for this line item (0–100). Default 0 (no discount).
+    /// </summary>
+    public decimal DiscountPercent { get; set; }
+
+    /// <summary>
+    /// Total for this line (quantity * unit_price * (1 - discount_percent / 100)). Stored for immutability — once invoiced, the amount is fixed.
     /// </summary>
     public decimal LineTotal { get; set; }
 
@@ -68,9 +73,4 @@ public partial class InvoiceLine
     public DateTime? UpdatedAt { get; set; }
 
     public Guid? UpdatedBy { get; set; }
-
-    /// <summary>
-    /// Percentage discount for this line item (0–100). line_total = quantity * unit_price * (1 - discount_percent / 100).
-    /// </summary>
-    public decimal DiscountPercent { get; set; }
 }

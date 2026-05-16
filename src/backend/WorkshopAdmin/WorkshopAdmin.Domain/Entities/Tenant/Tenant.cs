@@ -27,9 +27,14 @@ public partial class Tenant
     public string? ContactPhone { get; set; }
 
     /// <summary>
-    /// FK to codebook.subscription_plans. Current subscription tier.
+    /// FK to tenant.subscription_plans. Current subscription tier.
     /// </summary>
-    public short SubscriptionPlanId { get; set; }
+    public Guid SubscriptionPlanId { get; set; }
+
+    /// <summary>
+    /// FK to codebook.currencies. The tenant&apos;s operational currency, used as the default for invoices, expenses, and parts pricing. Independent of the subscription plan billing currency.
+    /// </summary>
+    public short DefaultCurrencyId { get; set; }
 
     public string? AddressLine1 { get; set; }
 

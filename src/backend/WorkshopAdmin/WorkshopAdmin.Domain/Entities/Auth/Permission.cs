@@ -27,6 +27,11 @@ public partial class Permission
     /// </summary>
     public string Action { get; set; } = null!;
 
+    /// <summary>
+    /// &apos;platform&apos; = assignable only to global roles by platform_admin (e.g. tenants:*, subscription_plans:*, codebook:manage). &apos;tenant&apos; = assignable to any role.
+    /// </summary>
+    public string Scope { get; set; } = null!;
+
     public string? Description { get; set; }
 
     public DateTime CreatedAt { get; set; }

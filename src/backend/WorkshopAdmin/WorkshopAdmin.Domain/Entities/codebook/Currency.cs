@@ -6,9 +6,9 @@ using System.Collections.Generic;
 namespace WorkshopAdmin.Domain.Entities;
 
 /// <summary>
-/// Lookup table for tenant subscription tiers (e.g. free, trial, paid).
+/// Lookup table for currencies. Code is the ISO 4217 three-letter identifier (e.g. EUR, USD, RSD).
 /// </summary>
-public partial class SubscriptionPlan
+public partial class Currency
 {
     /// <summary>
     /// SMALLSERIAL primary key. Max 32,767 values — sufficient for a codebook.
@@ -16,12 +16,12 @@ public partial class SubscriptionPlan
     public short Id { get; set; }
 
     /// <summary>
-    /// Stable machine-readable identifier, e.g. &apos;free&apos;. Never changes — safe to use in code and APIs.
+    /// ISO 4217 currency code, e.g. &apos;EUR&apos;. Stable machine-readable identifier — never changes.
     /// </summary>
     public string Code { get; set; } = null!;
 
     /// <summary>
-    /// Translated display names as JSONB, e.g. {&quot;en&quot;: &quot;Free&quot;, &quot;hr&quot;: &quot;Besplatno&quot;}. Use COALESCE(label-&gt;&gt;lang, label-&gt;&gt;&apos;en&apos;) to fall back to English.
+    /// Translated display names as JSONB, e.g. {&quot;en&quot;: &quot;Euro&quot;, &quot;sr&quot;: &quot;Evro&quot;}. Use COALESCE(label-&gt;&gt;lang, label-&gt;&gt;&apos;en&apos;) to fall back to English.
     /// </summary>
     public string Label { get; set; } = null!;
 

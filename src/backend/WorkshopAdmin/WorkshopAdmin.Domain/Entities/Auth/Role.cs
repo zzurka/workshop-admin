@@ -6,13 +6,23 @@ using System.Collections.Generic;
 namespace WorkshopAdmin.Domain.Entities;
 
 /// <summary>
-/// Named roles that group permissions, assigned to users (e.g. admin, staff, customer_portal).
+/// Named roles that group permissions, assigned to users. Global roles have tenant_id IS NULL; tenant-scoped custom roles have tenant_id set.
 /// </summary>
 public partial class Role
 {
     public Guid Id { get; set; }
 
+    /// <summary>
+    /// NULL = global role managed by platform_admin. Set = tenant-scoped custom role managed by that tenant&apos;s tenant_admin.
+    /// </summary>
+    public Guid? TenantId { get; set; }
+
     public string Name { get; set; } = null!;
+
+    /// <summary>
+    /// &apos;platform&apos; = assignable only to platform users (auth.users.tenant_id IS NULL); only contains scope=platform permissions. &apos;tenant&apos; = assignable to tenant users; only contains scope=tenant permissions. Custom roles created by tenant_admins are always scope=tenant.
+    /// </summary>
+    public string Scope { get; set; } = null!;
 
     public string? Description { get; set; }
 

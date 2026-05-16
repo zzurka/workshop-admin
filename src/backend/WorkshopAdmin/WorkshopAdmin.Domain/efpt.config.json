@@ -51,6 +51,14 @@
          "ObjectType": 0
       },
       {
+         "Name": "codebook.billing_periods",
+         "ObjectType": 0
+      },
+      {
+         "Name": "codebook.currencies",
+         "ObjectType": 0
+      },
+      {
          "Name": "codebook.employment_types",
          "ObjectType": 0
       },
@@ -87,11 +95,7 @@
          "ObjectType": 0
       },
       {
-         "Name": "codebook.subscription_plans",
-         "ObjectType": 0
-      },
-      {
-         "Name": "codebook.transmissions",
+         "Name": "codebook.transmission_types",
          "ObjectType": 0
       },
       {
@@ -124,6 +128,10 @@
       },
       {
          "Name": "hr.time_entries",
+         "ObjectType": 0
+      },
+      {
+         "Name": "tenant.subscription_plans",
          "ObjectType": 0
       },
       {

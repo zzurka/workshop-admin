@@ -48,9 +48,9 @@ public partial class Vehicle
     public string? EngineType { get; set; }
 
     /// <summary>
-    /// FK to codebook.transmissions.
+    /// FK to codebook.transmission_types.
     /// </summary>
-    public short? TransmissionId { get; set; }
+    public short? TransmissionTypeId { get; set; }
 
     /// <summary>
     /// Last recorded odometer reading.

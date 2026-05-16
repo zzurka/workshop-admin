@@ -8,7 +8,7 @@ namespace WorkshopAdmin.Domain.Entities;
 /// <summary>
 /// Lookup table for vehicle transmission types (e.g. automatic, manual, cvt).
 /// </summary>
-public partial class Transmission
+public partial class TransmissionType
 {
     /// <summary>
     /// SMALLSERIAL primary key. Max 32,767 values — sufficient for a codebook.
@@ -21,7 +21,7 @@ public partial class Transmission
     public string Code { get; set; } = null!;
 
     /// <summary>
-    /// Translated display names as JSONB, e.g. {&quot;en&quot;: &quot;Automatic&quot;, &quot;hr&quot;: &quot;Automatski&quot;}. Use COALESCE(label-&gt;&gt;lang, label-&gt;&gt;&apos;en&apos;) to fall back to English.
+    /// Translated display names as JSONB, e.g. {&quot;en&quot;: &quot;Automatic&quot;, &quot;sr&quot;: &quot;Automatski&quot;}. Use COALESCE(label-&gt;&gt;lang, label-&gt;&gt;&apos;en&apos;) to fall back to English.
     /// </summary>
     public string Label { get; set; } = null!;
 
