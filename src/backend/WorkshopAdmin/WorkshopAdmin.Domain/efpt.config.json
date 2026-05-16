@@ -31,6 +31,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "auth.refresh_tokens",
+         "ObjectType": 0
+      },
+      {
          "Name": "auth.role_permissions",
          "ObjectType": 0
       },

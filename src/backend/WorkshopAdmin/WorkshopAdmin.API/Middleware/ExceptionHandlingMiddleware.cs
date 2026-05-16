@@ -29,6 +29,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
             NotFoundException => StatusCodes.Status404NotFound,
             BusinessRuleException => StatusCodes.Status422UnprocessableEntity,
             ConflictException => StatusCodes.Status409Conflict,
+            UnauthorizedException => StatusCodes.Status401Unauthorized,
             ForbiddenException => StatusCodes.Status403Forbidden,
             ValidationException => StatusCodes.Status400BadRequest,
             DomainException => StatusCodes.Status400BadRequest,
@@ -65,6 +66,7 @@ public class ExceptionHandlingMiddleware(RequestDelegate next, ILogger<Exception
     private static string GetTitle(int statusCode) => statusCode switch
     {
         400 => "Bad Request",
+        401 => "Unauthorized",
         403 => "Forbidden",
         404 => "Not Found",
         409 => "Conflict",

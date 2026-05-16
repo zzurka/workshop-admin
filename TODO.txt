@@ -1,3 +1,7 @@
 -----------------------------------------------------------------------------------------------------------------------------------------------------
 In Visual Studio, right-click the API project → Manage User Secrets — it opens the secrets.json file directly in the editor.
 -----------------------------------------------------------------------------------------------------------------------------------------------------
+Required user secrets for the API project (set via "Manage User Secrets" or the dotnet CLI):
+  dotnet user-secrets set "Database:Password" "<db-password>"
+  dotnet user-secrets set "Jwt:SigningKey" "<random-string-at-least-32-bytes>"
+-----------------------------------------------------------------------------------------------------------------------------------------------------

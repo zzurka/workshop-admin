@@ -1,10 +1,12 @@
 namespace WorkshopAdmin.Infrastructure;
 
+using System.Text;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using WorkshopAdmin.Application.Common.Interfaces;
 using WorkshopAdmin.Infrastructure.Persistence;
+using WorkshopAdmin.Infrastructure.Persistence.Repositories.Auth;
 using WorkshopAdmin.Infrastructure.Persistence.TypeHandlers;
 using WorkshopAdmin.Infrastructure.Security;
 
@@ -20,9 +22,35 @@ public static class DependencyInjection
         services.AddSingleton<IDbConnectionFactory>(new DbConnectionFactory(connectionString));
         services.AddSingleton<IPasswordHasher, Argon2PasswordHasher>();
 
-        // Repositories will be registered here as they are implemented
+        services.AddSingleton(BuildJwtOptions(configuration));
+        services.AddSingleton<IJwtTokenService, JwtTokenService>();
+
+        services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<ILoginHistoryRepository, LoginHistoryRepository>();
 
         return services;
+    }
+
+    private static JwtOptions BuildJwtOptions(IConfiguration configuration)
+    {
+        string signingKey = configuration["Jwt:SigningKey"]
+            ?? throw new InvalidOperationException(
+                "Jwt:SigningKey not configured. Set it via: dotnet user-secrets set \"Jwt:SigningKey\" \"<value>\"");
+
+        if (Encoding.UTF8.GetByteCount(signingKey) < 32)
+        {
+            throw new InvalidOperationException("Jwt:SigningKey must be at least 32 bytes for HMAC-SHA256.");
+        }
+
+        return new JwtOptions
+        {
+            Issuer = configuration["Jwt:Issuer"] ?? throw new InvalidOperationException("Jwt:Issuer not configured."),
+            Audience = configuration["Jwt:Audience"] ?? throw new InvalidOperationException("Jwt:Audience not configured."),
+            SigningKey = signingKey,
+            AccessTokenMinutes = int.TryParse(configuration["Jwt:AccessTokenMinutes"], out int minutes) ? minutes : 15,
+            RefreshTokenDays = int.TryParse(configuration["Jwt:RefreshTokenDays"], out int days) ? days : 14
+        };
     }
 
     private static string BuildConnectionString(IConfiguration configuration)

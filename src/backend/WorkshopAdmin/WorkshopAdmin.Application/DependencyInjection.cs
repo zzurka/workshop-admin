@@ -2,6 +2,7 @@ namespace WorkshopAdmin.Application;
 
 using FluentValidation;
 using Microsoft.Extensions.DependencyInjection;
+using WorkshopAdmin.Application.Features.Auth;
 
 public static class DependencyInjection
 {
@@ -9,7 +10,7 @@ public static class DependencyInjection
     {
         services.AddValidatorsFromAssembly(typeof(DependencyInjection).Assembly);
 
-        // Services will be registered here as they are implemented
+        services.AddScoped<IAuthService, AuthService>();
 
         return services;
     }
