@@ -10,9 +10,9 @@
 BEGIN;
 
 INSERT INTO codebook.currencies (code, label, sort_order) VALUES
-    ('EUR', '{"en": "Euro",          "sr": "Evro"}',          1),
-    ('USD', '{"en": "US Dollar",     "sr": "Američki dolar"}', 2),
-    ('RSD', '{"en": "Serbian Dinar", "sr": "Srpski dinar"}',  3)
+    ('EUR', '{"en": "Euro",          "sr": "Evro"}',          	1),
+    ('USD', '{"en": "US Dollar",     "sr": "Američki dolar"}', 	2),
+    ('RSD', '{"en": "Serbian Dinar", "sr": "Srpski dinar"}',  	3)
 ON CONFLICT (code) DO NOTHING;
 
 COMMIT;

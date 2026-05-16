@@ -16,6 +16,6 @@ INSERT INTO auth.roles (name, scope, description) VALUES
     ('mechanic',        'tenant',   'Performs work: appointments, work orders, parts usage, time entries.'),
     ('receptionist',    'tenant',   'Front-desk operations: customers, vehicles, appointments, invoices.'),
     ('warehouse_clerk', 'tenant',   'Warehouse operations: parts catalog, stock levels, stock transactions.')
-ON CONFLICT (name) DO NOTHING;
+ON CONFLICT (tenant_id, name) DO NOTHING;
 
 COMMIT;
