@@ -1,8 +1,10 @@
 using System.Security.Claims;
 using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
+using WorkshopAdmin.API.Authorization;
 using WorkshopAdmin.API.Infrastructure;
 using WorkshopAdmin.API.Middleware;
 using WorkshopAdmin.Application;
@@ -50,6 +52,8 @@ builder.Services
     });
 
 builder.Services.AddAuthorization();
+builder.Services.AddSingleton<IAuthorizationPolicyProvider, PermissionPolicyProvider>();
+builder.Services.AddSingleton<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
 WebApplication app = builder.Build();
 

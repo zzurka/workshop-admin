@@ -14,4 +14,12 @@ public interface IUserRepository
 
     /// <summary>Distinct permission names granted to the user through their roles.</summary>
     Task<IReadOnlyList<string>> GetPermissionNamesAsync(Guid userId, IDbConnection connection, CancellationToken cancellationToken);
+
+    Task<bool> EmailExistsAsync(string email, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>Inserts a user and returns the generated id.</summary>
+    Task<Guid> CreateAsync(NewUser user, Guid createdBy, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>Assigns a role to a user (idempotent; re-activates a soft-deleted assignment).</summary>
+    Task AssignRoleAsync(Guid userId, Guid roleId, Guid createdBy, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken);
 }

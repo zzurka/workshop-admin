@@ -5,3 +5,11 @@ Required user secrets for the API project (set via "Manage User Secrets" or the 
   dotnet user-secrets set "Database:Password" "<db-password>"
   dotnet user-secrets set "Jwt:SigningKey" "<random-string-at-least-32-bytes>"
 -----------------------------------------------------------------------------------------------------------------------------------------------------
+Email infrastructure (PLANNED — not yet implemented):
+  Current IEmailSender impl is LoggingEmailSender (logs, does not deliver).
+  Next step: add a real provider (SMTP via MailKit, or SendGrid/Postmark API),
+  read the "Email" config section (FromAddress/FromName) + provider credentials
+  from user-secrets, and register it in Infrastructure DI in place of
+  LoggingEmailSender. Welcome email on tenant creation is already wired
+  (best-effort, post-commit) and will start delivering once the provider lands.
+-----------------------------------------------------------------------------------------------------------------------------------------------------

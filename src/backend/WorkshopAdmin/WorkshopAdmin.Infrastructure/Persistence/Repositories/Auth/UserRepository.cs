@@ -77,4 +77,57 @@ public sealed class UserRepository : IUserRepository
             new CommandDefinition(sql, new { UserId = userId }, cancellationToken: cancellationToken));
         return rows.AsList();
     }
+
+    public Task<bool> EmailExistsAsync(string email, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT EXISTS (
+                SELECT 1 FROM auth.users
+                WHERE LOWER(email) = LOWER(@Email) AND is_deleted = FALSE
+            )
+            """;
+
+        return connection.ExecuteScalarAsync<bool>(
+            new CommandDefinition(sql, new { Email = email }, transaction, cancellationToken: cancellationToken));
+    }
+
+    public Task<Guid> CreateAsync(NewUser user, Guid createdBy, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            INSERT INTO auth.users (email, password_hash, first_name, last_name, tenant_id, created_by)
+            VALUES (@Email, @PasswordHash, @FirstName, @LastName, @TenantId, @CreatedBy)
+            RETURNING id
+            """;
+
+        return connection.ExecuteScalarAsync<Guid>(new CommandDefinition(
+            sql,
+            new
+            {
+                user.Email,
+                user.PasswordHash,
+                user.FirstName,
+                user.LastName,
+                user.TenantId,
+                CreatedBy = createdBy
+            },
+            transaction,
+            cancellationToken: cancellationToken));
+    }
+
+    public Task AssignRoleAsync(Guid userId, Guid roleId, Guid createdBy, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            INSERT INTO auth.user_roles (user_id, role_id, created_by)
+            VALUES (@UserId, @RoleId, @CreatedBy)
+            ON CONFLICT (user_id, role_id)
+            DO UPDATE SET is_deleted = FALSE, updated_at = NOW(), updated_by = @CreatedBy
+            WHERE auth.user_roles.is_deleted = TRUE
+            """;
+
+        return connection.ExecuteAsync(new CommandDefinition(
+            sql,
+            new { UserId = userId, RoleId = roleId, CreatedBy = createdBy },
+            transaction,
+            cancellationToken: cancellationToken));
+    }
 }

@@ -5,8 +5,11 @@ using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using WorkshopAdmin.Application.Common.Interfaces;
+using WorkshopAdmin.Infrastructure.Email;
 using WorkshopAdmin.Infrastructure.Persistence;
 using WorkshopAdmin.Infrastructure.Persistence.Repositories.Auth;
+using WorkshopAdmin.Infrastructure.Persistence.Repositories.Codebook;
+using WorkshopAdmin.Infrastructure.Persistence.Repositories.Tenant;
 using WorkshopAdmin.Infrastructure.Persistence.TypeHandlers;
 using WorkshopAdmin.Infrastructure.Security;
 
@@ -26,8 +29,14 @@ public static class DependencyInjection
         services.AddSingleton<IJwtTokenService, JwtTokenService>();
 
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
         services.AddScoped<ILoginHistoryRepository, LoginHistoryRepository>();
+        services.AddScoped<ITenantRepository, TenantRepository>();
+        services.AddScoped<ISubscriptionPlanRepository, SubscriptionPlanRepository>();
+        services.AddScoped<ICodebookRepository, CodebookRepository>();
+
+        services.AddSingleton<IEmailSender, LoggingEmailSender>();
 
         return services;
     }
