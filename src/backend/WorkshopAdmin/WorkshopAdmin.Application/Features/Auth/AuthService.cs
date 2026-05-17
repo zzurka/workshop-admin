@@ -38,8 +38,7 @@ public sealed class AuthService(
 
         AuthUser? user = await userRepository.FindByEmailAsync(request.Email, connection, cancellationToken);
 
-        // auth.login_history.user_id is NOT NULL, so a failed attempt for an
-        // unknown email cannot be recorded.
+        // auth.login_history.user_id is NOT NULL, so a failed attempt for an unknown email cannot be recorded.
         if (user is null)
         {
             throw new UnauthorizedException(InvalidCredentialsMessage);
