@@ -1,4 +1,4 @@
-namespace WorkshopAdmin.API.Controllers;
+namespace WorkshopAdmin.API.Controllers.Auth;
 
 using Microsoft.AspNetCore.Mvc;
 using WorkshopAdmin.Application.Features.Auth;

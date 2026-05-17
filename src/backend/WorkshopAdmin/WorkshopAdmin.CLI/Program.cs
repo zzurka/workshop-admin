@@ -8,7 +8,7 @@ if (args.Length == 0)
 {
     Console.WriteLine("Usage: WorkshopAdmin.CLI <command>");
     Console.WriteLine("Commands:");
-    Console.WriteLine("  seed-admin   Create the initial platform super admin user");
+    Console.WriteLine("  seed-admin   Create the initial platform super admin user and assign the platform_admin role");
     return 1;
 }
 
@@ -62,30 +62,86 @@ static async Task<int> SeedAdmin()
 
     var factory = new DbConnectionFactory(connectionString);
     using IDbConnection db = factory.CreateConnection();
+    db.Open();
+    using IDbTransaction tx = db.BeginTransaction();
 
-    const string sql = """
-        INSERT INTO auth.users (email, password_hash, first_name, last_name, tenant_id)
-        VALUES (@Email, @PasswordHash, @FirstName, @LastName, NULL)
-        ON CONFLICT (email) DO NOTHING
-        RETURNING id;
-        """;
-
-    Guid? id = await db.QuerySingleOrDefaultAsync<Guid?>(sql, new
+    try
     {
-        Email = email,
-        PasswordHash = passwordHash,
-        FirstName = firstName,
-        LastName = lastName
-    });
+        // Resolve the platform_admin role by its stable name (ids are not
+        // stable across environments). It is a global role: tenant_id IS NULL.
+        Guid? roleId = await db.QuerySingleOrDefaultAsync<Guid?>(
+            """
+            SELECT id FROM auth.roles
+            WHERE name = 'platform_admin' AND tenant_id IS NULL AND is_deleted = FALSE
+            """,
+            transaction: tx);
 
-    if (id is null)
-    {
-        Console.WriteLine($"User with email '{email}' already exists. No changes made.");
+        if (roleId is null)
+        {
+            tx.Rollback();
+            return Error("Role 'platform_admin' not found. Run the database migrations (roles DML) first.");
+        }
+
+        const string insertUserSql = """
+            INSERT INTO auth.users (email, password_hash, first_name, last_name, tenant_id)
+            VALUES (@Email, @PasswordHash, @FirstName, @LastName, NULL)
+            ON CONFLICT (email) DO NOTHING
+            RETURNING id;
+            """;
+
+        Guid? userId = await db.QuerySingleOrDefaultAsync<Guid?>(insertUserSql, new
+        {
+            Email = email,
+            PasswordHash = passwordHash,
+            FirstName = firstName,
+            LastName = lastName
+        }, tx);
+
+        if (userId is null)
+        {
+            // User already exists — still ensure the platform_admin assignment
+            // is present so a partially-seeded state is repaired.
+            userId = await db.QuerySingleOrDefaultAsync<Guid?>(
+                "SELECT id FROM auth.users WHERE email = @Email AND is_deleted = FALSE",
+                new { Email = email }, tx);
+
+            if (userId is null)
+            {
+                tx.Rollback();
+                return Error($"User with email '{email}' exists but could not be loaded.");
+            }
+
+            Console.WriteLine($"User '{email}' already exists. Ensuring platform_admin role is assigned.");
+        }
+        else
+        {
+            Console.WriteLine($"Super admin created successfully. ID: {userId}");
+        }
+
+        // Idempotent assignment: re-activate the link if it was soft-deleted,
+        // otherwise no-op. created_by is NULL for the bootstrap account.
+        int affected = await db.ExecuteAsync(
+            """
+            INSERT INTO auth.user_roles (user_id, role_id)
+            VALUES (@UserId, @RoleId)
+            ON CONFLICT (user_id, role_id)
+            DO UPDATE SET is_deleted = FALSE, updated_at = NOW()
+            WHERE auth.user_roles.is_deleted = TRUE
+            """,
+            new { UserId = userId, RoleId = roleId }, tx);
+
+        tx.Commit();
+
+        Console.WriteLine(affected > 0
+            ? "platform_admin role assigned."
+            : "platform_admin role was already assigned.");
         return 0;
     }
-
-    Console.WriteLine($"Super admin created successfully. ID: {id}");
-    return 0;
+    catch
+    {
+        tx.Rollback();
+        throw;
+    }
 }
 
 static string? ReadPasswordMasked()
