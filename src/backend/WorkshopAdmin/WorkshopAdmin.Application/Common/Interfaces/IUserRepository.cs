@@ -2,6 +2,8 @@ namespace WorkshopAdmin.Application.Common.Interfaces;
 
 using System.Data;
 using WorkshopAdmin.Application.Features.Auth.Models;
+using WorkshopAdmin.Application.Features.User.List;
+using WorkshopAdmin.Application.Features.User.Models;
 
 public interface IUserRepository
 {
@@ -22,4 +24,30 @@ public interface IUserRepository
 
     /// <summary>Assigns a role to a user (idempotent; re-activates a soft-deleted assignment).</summary>
     Task AssignRoleAsync(Guid userId, Guid roleId, Guid createdBy, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    /// <summary>Soft-deletes a user's role assignment (idempotent; no-op if not currently assigned).</summary>
+    Task RemoveRoleAsync(Guid userId, Guid roleId, Guid updatedBy, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken);
+
+    // --- Tenant-scoped user administration (all bounded to the caller's tenant) ---
+
+    Task<IReadOnlyList<UserListItem>> ListByTenantAsync(
+        Guid tenantId, string? search, bool? isActive, int offset, int limit, string sortBy, string sortDirection,
+        IDbConnection connection, CancellationToken cancellationToken);
+
+    Task<int> CountByTenantAsync(Guid tenantId, string? search, bool? isActive, IDbConnection connection, CancellationToken cancellationToken);
+
+    Task<UserRecord?> GetByIdInTenantAsync(Guid id, Guid tenantId, IDbConnection connection, CancellationToken cancellationToken);
+
+    Task<bool> ExistsInTenantAsync(Guid id, Guid tenantId, IDbConnection connection, IDbTransaction? transaction, CancellationToken cancellationToken);
+
+    Task<bool> UpdateProfileAsync(Guid id, Guid tenantId, string firstName, string lastName, string? phoneNumber, Guid updatedBy, IDbConnection connection, IDbTransaction? transaction, CancellationToken cancellationToken);
+
+    Task<bool> SetActiveAsync(Guid id, Guid tenantId, bool isActive, Guid updatedBy, IDbConnection connection, IDbTransaction? transaction, CancellationToken cancellationToken);
+
+    Task<bool> SoftDeleteAsync(Guid id, Guid tenantId, Guid updatedBy, IDbConnection connection, IDbTransaction? transaction, CancellationToken cancellationToken);
+
+    Task<bool> SetPasswordAsync(Guid id, Guid tenantId, string passwordHash, Guid updatedBy, IDbConnection connection, IDbTransaction? transaction, CancellationToken cancellationToken);
+
+    /// <summary>Count of active, non-deleted users in the tenant holding the named role, optionally excluding one user.</summary>
+    Task<int> CountActiveByRoleAsync(Guid tenantId, string roleName, Guid? excludingUserId, IDbConnection connection, IDbTransaction? transaction, CancellationToken cancellationToken);
 }
