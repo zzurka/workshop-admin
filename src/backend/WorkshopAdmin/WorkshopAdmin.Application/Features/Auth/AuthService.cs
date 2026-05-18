@@ -1,6 +1,5 @@
 namespace WorkshopAdmin.Application.Features.Auth;
 
-using System.Data;
 using System.Data.Common;
 using FluentValidation;
 using WorkshopAdmin.Application.Common.Interfaces;
@@ -34,7 +33,7 @@ public sealed class AuthService(
     {
         await loginValidator.ValidateAndThrowAsync(request, cancellationToken);
 
-        await using DbConnection connection = await OpenConnectionAsync(cancellationToken);
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
 
         AuthUser? user = await userRepository.FindByEmailAsync(request.Email, connection, cancellationToken);
 
@@ -93,7 +92,7 @@ public sealed class AuthService(
     {
         await refreshValidator.ValidateAndThrowAsync(request, cancellationToken);
 
-        await using DbConnection connection = await OpenConnectionAsync(cancellationToken);
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
 
         string tokenHash = jwtTokenService.HashRefreshToken(request.RefreshToken);
         RefreshTokenRecord? stored = await refreshTokenRepository.FindByHashAsync(tokenHash, connection, cancellationToken);
@@ -204,17 +203,5 @@ public sealed class AuthService(
         }
 
         return null;
-    }
-
-    private async Task<DbConnection> OpenConnectionAsync(CancellationToken cancellationToken)
-    {
-        IDbConnection connection = connectionFactory.CreateConnection();
-        if (connection is not DbConnection dbConnection)
-        {
-            throw new InvalidOperationException("The configured connection does not support asynchronous operations.");
-        }
-
-        await dbConnection.OpenAsync(cancellationToken);
-        return dbConnection;
     }
 }

@@ -52,7 +52,7 @@ public sealed class UserService(
             ? "DESC"
             : "ASC";
 
-        await using DbConnection connection = await OpenConnectionAsync(cancellationToken);
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
 
         IReadOnlyList<UserListItem> items = await userRepository.ListByTenantAsync(
             tenantId, request.Search, request.IsActive, offset, limit, sortBy, sortDirection, connection, cancellationToken);
@@ -71,7 +71,7 @@ public sealed class UserService(
     {
         Guid tenantId = RequireTenant();
 
-        await using DbConnection connection = await OpenConnectionAsync(cancellationToken);
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
 
         UserRecord user = await userRepository.GetByIdInTenantAsync(id, tenantId, connection, cancellationToken)
             ?? throw new NotFoundException("User", id);
@@ -91,7 +91,7 @@ public sealed class UserService(
         Guid actingUserId = currentUser.UserId;
         string passwordHash = passwordHasher.Hash(request.Password);
 
-        await using DbConnection connection = await OpenConnectionAsync(cancellationToken);
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
         await using DbTransaction transaction = await connection.BeginTransactionAsync(cancellationToken);
 
         Guid userId;
@@ -128,7 +128,7 @@ public sealed class UserService(
 
         Guid tenantId = RequireTenant();
 
-        await using DbConnection connection = await OpenConnectionAsync(cancellationToken);
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
 
         bool updated = await userRepository.UpdateProfileAsync(
             id, tenantId, request.FirstName, request.LastName, request.PhoneNumber,
@@ -145,7 +145,7 @@ public sealed class UserService(
         Guid tenantId = RequireTenant();
         Guid actingUserId = currentUser.UserId;
 
-        await using DbConnection connection = await OpenConnectionAsync(cancellationToken);
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
 
         if (!await userRepository.ExistsInTenantAsync(id, tenantId, connection, null, cancellationToken))
         {
@@ -191,7 +191,7 @@ public sealed class UserService(
             throw new BusinessRuleException("You cannot delete your own account.");
         }
 
-        await using DbConnection connection = await OpenConnectionAsync(cancellationToken);
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
 
         if (!await userRepository.ExistsInTenantAsync(id, tenantId, connection, null, cancellationToken))
         {
@@ -222,7 +222,7 @@ public sealed class UserService(
         Guid actingUserId = currentUser.UserId;
         string passwordHash = passwordHasher.Hash(request.NewPassword);
 
-        await using DbConnection connection = await OpenConnectionAsync(cancellationToken);
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
 
         if (!await userRepository.ExistsInTenantAsync(id, tenantId, connection, null, cancellationToken))
         {
@@ -251,7 +251,7 @@ public sealed class UserService(
         Guid tenantId = RequireTenant();
         Guid actingUserId = currentUser.UserId;
 
-        await using DbConnection connection = await OpenConnectionAsync(cancellationToken);
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
 
         if (!await userRepository.ExistsInTenantAsync(id, tenantId, connection, null, cancellationToken))
         {
@@ -276,7 +276,7 @@ public sealed class UserService(
         Guid tenantId = RequireTenant();
         Guid actingUserId = currentUser.UserId;
 
-        await using DbConnection connection = await OpenConnectionAsync(cancellationToken);
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
 
         if (!await userRepository.ExistsInTenantAsync(id, tenantId, connection, null, cancellationToken))
         {
@@ -359,16 +359,4 @@ public sealed class UserService(
     private Guid RequireTenant()
         => tenantContext.TenantId
            ?? throw new ForbiddenException("A tenant context is required for user administration.");
-
-    private async Task<DbConnection> OpenConnectionAsync(CancellationToken cancellationToken)
-    {
-        IDbConnection connection = connectionFactory.CreateConnection();
-        if (connection is not DbConnection dbConnection)
-        {
-            throw new InvalidOperationException("The configured connection does not support asynchronous operations.");
-        }
-
-        await dbConnection.OpenAsync(cancellationToken);
-        return dbConnection;
-    }
 }

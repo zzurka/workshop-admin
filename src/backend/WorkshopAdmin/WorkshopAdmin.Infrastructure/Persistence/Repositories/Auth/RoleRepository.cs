@@ -3,6 +3,7 @@ namespace WorkshopAdmin.Infrastructure.Persistence.Repositories.Auth;
 using System.Data;
 using Dapper;
 using WorkshopAdmin.Application.Common.Interfaces;
+using WorkshopAdmin.Application.Features.Role.List;
 
 public sealed class RoleRepository : IRoleRepository
 {
@@ -50,6 +51,28 @@ public sealed class RoleRepository : IRoleRepository
             new { RoleIds = roleIds.ToArray(), TenantId = tenantId },
             transaction,
             cancellationToken: cancellationToken));
+        return rows.AsList();
+    }
+
+    public async Task<IReadOnlyList<RoleListItem>> ListAssignableAsync(
+        Guid tenantId,
+        IDbConnection connection,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+            SELECT id,
+                   name,
+                   description,
+                   (tenant_id IS NULL) AS is_global
+            FROM auth.roles
+            WHERE scope = 'tenant'
+              AND (tenant_id IS NULL OR tenant_id = @TenantId)
+              AND is_deleted = FALSE
+            ORDER BY name
+            """;
+
+        var rows = await connection.QueryAsync<RoleListItem>(
+            new CommandDefinition(sql, new { TenantId = tenantId }, cancellationToken: cancellationToken));
         return rows.AsList();
     }
 }

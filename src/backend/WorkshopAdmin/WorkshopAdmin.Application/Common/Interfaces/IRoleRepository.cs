@@ -1,6 +1,7 @@
 namespace WorkshopAdmin.Application.Common.Interfaces;
 
 using System.Data;
+using WorkshopAdmin.Application.Features.Role.List;
 
 public interface IRoleRepository
 {
@@ -24,5 +25,14 @@ public interface IRoleRepository
         Guid tenantId,
         IDbConnection connection,
         IDbTransaction? transaction,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Lists the roles a tenant actor may assign to users (tenant-scoped, global
+    /// or own-tenant), ordered by name.
+    /// </summary>
+    Task<IReadOnlyList<RoleListItem>> ListAssignableAsync(
+        Guid tenantId,
+        IDbConnection connection,
         CancellationToken cancellationToken);
 }

@@ -1,6 +1,5 @@
 namespace WorkshopAdmin.Application.Features.Tenant;
 
-using System.Data;
 using System.Data.Common;
 using FluentValidation;
 using WorkshopAdmin.Application.Common.Codebooks;
@@ -49,7 +48,7 @@ public sealed class TenantService(
             ? "DESC"
             : "ASC";
 
-        await using DbConnection connection = await OpenConnectionAsync(cancellationToken);
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
 
         IReadOnlyList<TenantListItem> items = await tenantRepository.ListAsync(
             request.Search, request.IsActive, offset, limit, sortBy, sortDirection, connection, cancellationToken);
@@ -66,7 +65,7 @@ public sealed class TenantService(
 
     public async Task<TenantDetailResponse> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        await using DbConnection connection = await OpenConnectionAsync(cancellationToken);
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
 
         return await tenantRepository.GetByIdAsync(id, connection, cancellationToken)
             ?? throw new NotFoundException("Tenant", id);
@@ -79,7 +78,7 @@ public sealed class TenantService(
         Guid actingUserId = currentUser.UserId;
         string passwordHash = passwordHasher.Hash(request.Admin.Password);
 
-        await using DbConnection connection = await OpenConnectionAsync(cancellationToken);
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
         await using DbTransaction transaction = await connection.BeginTransactionAsync(cancellationToken);
 
         Guid tenantId;
@@ -141,7 +140,7 @@ public sealed class TenantService(
 
         Guid actingUserId = currentUser.UserId;
 
-        await using DbConnection connection = await OpenConnectionAsync(cancellationToken);
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
 
         Guid planId = await subscriptionPlanRepository.ResolveActiveIdByCodeAsync(
             request.SubscriptionPlanCode, connection, null, cancellationToken)
@@ -166,7 +165,7 @@ public sealed class TenantService(
 
     public async Task SetActivationAsync(Guid id, bool isActive, CancellationToken cancellationToken)
     {
-        await using DbConnection connection = await OpenConnectionAsync(cancellationToken);
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
 
         bool changed = await tenantRepository.SetActiveAsync(id, isActive, currentUser.UserId, connection, cancellationToken);
         if (!changed)
@@ -177,7 +176,7 @@ public sealed class TenantService(
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken)
     {
-        await using DbConnection connection = await OpenConnectionAsync(cancellationToken);
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
 
         bool deleted = await tenantRepository.SoftDeleteAsync(id, currentUser.UserId, connection, cancellationToken);
         if (!deleted)
@@ -206,17 +205,5 @@ public sealed class TenantService(
             // Swallowed by design: the tenant is already committed. The email
             // sender implementation is responsible for logging delivery.
         }
-    }
-
-    private async Task<DbConnection> OpenConnectionAsync(CancellationToken cancellationToken)
-    {
-        IDbConnection connection = connectionFactory.CreateConnection();
-        if (connection is not DbConnection dbConnection)
-        {
-            throw new InvalidOperationException("The configured connection does not support asynchronous operations.");
-        }
-
-        await dbConnection.OpenAsync(cancellationToken);
-        return dbConnection;
     }
 }
