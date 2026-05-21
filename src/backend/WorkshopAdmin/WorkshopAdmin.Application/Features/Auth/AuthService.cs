@@ -1,8 +1,10 @@
 namespace WorkshopAdmin.Application.Features.Auth;
 
 using System.Data.Common;
+using System.Security.Cryptography;
 using FluentValidation;
 using WorkshopAdmin.Application.Common.Interfaces;
+using WorkshopAdmin.Application.Features.Auth.External;
 using WorkshopAdmin.Application.Features.Auth.Login;
 using WorkshopAdmin.Application.Features.Auth.Logout;
 using WorkshopAdmin.Application.Features.Auth.Models;
@@ -14,18 +16,25 @@ public sealed class AuthService(
     IUserRepository userRepository,
     IRefreshTokenRepository refreshTokenRepository,
     ILoginHistoryRepository loginHistoryRepository,
+    IExternalLoginRepository externalLoginRepository,
+    IExternalAuthRegistry externalAuthRegistry,
+    IExternalStateCache externalStateCache,
+    IExternalHandoffCache externalHandoffCache,
     IPasswordHasher passwordHasher,
     IJwtTokenService jwtTokenService,
     IValidator<LoginRequest> loginValidator,
     IValidator<RefreshRequest> refreshValidator,
-    IValidator<LogoutRequest> logoutValidator) : IAuthService
+    IValidator<LogoutRequest> logoutValidator,
+    IValidator<ExternalExchangeRequest> externalExchangeValidator) : IAuthService
 {
-    private const string LoginMethod = "password";
+    private const string LoginMethodPassword = "password";
 
     // Returned to the client for every credential / state failure so the API
     // never reveals which check failed (no user enumeration). The specific
     // reason is still written to auth.login_history.
     private const string InvalidCredentialsMessage = "Invalid email or password.";
+    
+    private const string ExternalLoginRejectedMessage = "External sign-in could not be completed.";
 
     public async Task<LoginResponse> LoginAsync(
         LoginRequest request,
@@ -45,49 +54,15 @@ public sealed class AuthService(
             throw new UnauthorizedException(InvalidCredentialsMessage);
         }
 
-        string? failureReason = EvaluateLoginFailure(user, request.Password);
+        string? failureReason = EvaluatePasswordLoginFailure(user, request.Password);
         if (failureReason is not null)
         {
             await loginHistoryRepository.RecordAsync(
-                user.Id, LoginMethod, ipAddress, userAgent, success: false, failureReason, connection, transaction: null, cancellationToken);
+                user.Id, LoginMethodPassword, ipAddress, userAgent, success: false, failureReason, connection, transaction: null, cancellationToken);
             throw new UnauthorizedException(InvalidCredentialsMessage);
         }
 
-        IReadOnlyList<string> roles = await userRepository.GetRoleNamesAsync(user.Id, connection, cancellationToken);
-        IReadOnlyList<string> permissions = await userRepository.GetPermissionNamesAsync(user.Id, connection, cancellationToken);
-
-        AccessToken accessToken = jwtTokenService.GenerateAccessToken(user, roles, permissions);
-        GeneratedRefreshToken refreshToken = jwtTokenService.GenerateRefreshToken();
-
-        await using DbTransaction transaction = await connection.BeginTransactionAsync(cancellationToken);
-        try
-        {
-            await refreshTokenRepository.InsertAsync(
-                new RefreshTokenRecord
-                {
-                    UserId = user.Id,
-                    TokenHash = refreshToken.TokenHash,
-                    ExpiresAt = refreshToken.ExpiresAt
-                },
-                connection, transaction, cancellationToken);
-
-            await loginHistoryRepository.RecordAsync(
-                user.Id, LoginMethod, ipAddress, userAgent, success: true, failureReason: null, connection, transaction, cancellationToken);
-
-            await transaction.CommitAsync(cancellationToken);
-        }
-        catch
-        {
-            await transaction.RollbackAsync(cancellationToken);
-            throw;
-        }
-
-        return new LoginResponse(
-            accessToken.Token,
-            accessToken.ExpiresAt,
-            refreshToken.RawToken,
-            refreshToken.ExpiresAt,
-            new AuthenticatedUser(user.Id, user.Email, user.FirstName, user.LastName, user.TenantId, roles));
+        return await IssueLoginAsync(user, LoginMethodPassword, ipAddress, userAgent, connection, postCommit: null, cancellationToken);
     }
 
     public async Task<RefreshResponse> RefreshAsync(RefreshRequest request, CancellationToken cancellationToken)
@@ -214,11 +189,174 @@ public sealed class AuthService(
         }
     }
 
+    public async Task<ExternalStartResponse> ExternalStartAsync(
+        string providerCode, string redirectUri, CancellationToken cancellationToken)
+    {
+        IExternalAuthClient client = externalAuthRegistry.Get(providerCode)
+            ?? throw new NotFoundException("ExternalAuthProvider", providerCode);
+
+        string codeVerifier = GenerateUrlSafeToken(64);
+        string codeChallenge = PkceChallenge(codeVerifier);
+        string state = GenerateUrlSafeToken(32);
+
+        await externalStateCache.SetAsync(state, new ExternalStateEntry(providerCode, codeVerifier, redirectUri), cancellationToken);
+
+        string authorizeUrl = await client.BuildAuthorizeUrlAsync(state, codeChallenge, redirectUri, cancellationToken);
+        return new ExternalStartResponse(authorizeUrl);
+    }
+
+    public async Task<string> ExternalCallbackAsync(
+        string providerCode, string code, string state, string? ipAddress, string? userAgent, CancellationToken cancellationToken)
+    {
+        ExternalStateEntry? stateEntry = await externalStateCache.TakeAsync(state, cancellationToken);
+        if (stateEntry is null || !string.Equals(stateEntry.Provider, providerCode, StringComparison.OrdinalIgnoreCase))
+        {
+            throw new UnauthorizedException(ExternalLoginRejectedMessage);
+        }
+
+        IExternalAuthClient client = externalAuthRegistry.Get(providerCode)
+            ?? throw new NotFoundException("ExternalAuthProvider", providerCode);
+
+        ExternalIdentity identity = await client.ExchangeCodeAsync(code, stateEntry.CodeVerifier, stateEntry.RedirectUri, cancellationToken);
+
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
+        string loginMethod = providerCode;
+
+        // Match: existing link → user; else verified-email → auto-link.
+        ExternalLoginRecord? link = await externalLoginRepository.FindAsync(identity.Provider, identity.Subject, connection, cancellationToken);
+
+        AuthUser? user;
+        Guid? linkIdToTouch;
+        bool createLink;
+
+        if (link is not null)
+        {
+            user = await userRepository.FindByIdAsync(link.UserId, connection, cancellationToken);
+            linkIdToTouch = link.Id;
+            createLink = false;
+        }
+        else
+        {
+            if (!identity.EmailVerified)
+            {
+                throw new UnauthorizedException(ExternalLoginRejectedMessage);
+            }
+
+            user = await userRepository.FindByEmailAsync(identity.Email, connection, cancellationToken);
+            linkIdToTouch = null;
+            createLink = user is not null;
+        }
+
+        if (user is null)
+        {
+            // No invitation. login_history.user_id is NOT NULL, so this is not recorded.
+            throw new UnauthorizedException(ExternalLoginRejectedMessage);
+        }
+
+        string? accountFailure = EvaluateAccountState(user);
+        if (accountFailure is not null)
+        {
+            await loginHistoryRepository.RecordAsync(
+                user.Id, loginMethod, ipAddress, userAgent, success: false, accountFailure, connection, transaction: null, cancellationToken);
+            throw new UnauthorizedException(ExternalLoginRejectedMessage);
+        }
+
+        LoginResponse login = await IssueLoginAsync(
+            user, loginMethod, ipAddress, userAgent, connection,
+            postCommit: async (conn, tx) =>
+            {
+                if (createLink)
+                {
+                    await externalLoginRepository.InsertAsync(
+                        user.Id, identity.Provider, identity.Subject, identity.Email, conn, tx, cancellationToken);
+                }
+                else if (linkIdToTouch is Guid linkId)
+                {
+                    await externalLoginRepository.UpdateLastLoginAsync(linkId, conn, tx, cancellationToken);
+                }
+            },
+            cancellationToken);
+
+        string handoffCode = GenerateUrlSafeToken(32);
+        await externalHandoffCache.SetAsync(handoffCode, login, cancellationToken);
+        return handoffCode;
+    }
+
+    public async Task<LoginResponse> ExternalExchangeAsync(ExternalExchangeRequest request, CancellationToken cancellationToken)
+    {
+        await externalExchangeValidator.ValidateAndThrowAsync(request, cancellationToken);
+
+        LoginResponse? payload = await externalHandoffCache.TakeAsync(request.HandoffCode, cancellationToken);
+        if (payload is null)
+        {
+            throw new UnauthorizedException("Handoff code is invalid or has expired.");
+        }
+
+        return payload;
+    }
+
+    /// <summary>
+    /// Shared end-of-login path: loads roles + permissions, issues an access
+    /// token, inserts a new refresh token, records login_history success, and
+    /// (optionally) runs <paramref name="postCommit"/> work inside the same tx
+    /// before commit.
+    /// </summary>
+    private async Task<LoginResponse> IssueLoginAsync(
+        AuthUser user,
+        string loginMethod,
+        string? ipAddress,
+        string? userAgent,
+        DbConnection connection,
+        Func<DbConnection, DbTransaction, Task>? postCommit,
+        CancellationToken cancellationToken)
+    {
+        IReadOnlyList<string> roles = await userRepository.GetRoleNamesAsync(user.Id, connection, cancellationToken);
+        IReadOnlyList<string> permissions = await userRepository.GetPermissionNamesAsync(user.Id, connection, cancellationToken);
+
+        AccessToken accessToken = jwtTokenService.GenerateAccessToken(user, roles, permissions);
+        GeneratedRefreshToken refreshToken = jwtTokenService.GenerateRefreshToken();
+
+        await using DbTransaction transaction = await connection.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            await refreshTokenRepository.InsertAsync(
+                new RefreshTokenRecord
+                {
+                    UserId = user.Id,
+                    TokenHash = refreshToken.TokenHash,
+                    ExpiresAt = refreshToken.ExpiresAt
+                },
+                connection, transaction, cancellationToken);
+
+            await loginHistoryRepository.RecordAsync(
+                user.Id, loginMethod, ipAddress, userAgent, success: true, failureReason: null, connection, transaction, cancellationToken);
+
+            if (postCommit is not null)
+            {
+                await postCommit(connection, transaction);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+
+        return new LoginResponse(
+            accessToken.Token,
+            accessToken.ExpiresAt,
+            refreshToken.RawToken,
+            refreshToken.ExpiresAt,
+            new AuthenticatedUser(user.Id, user.Email, user.FirstName, user.LastName, user.TenantId, roles));
+    }
+
     /// <summary>
     /// Returns a login_history failure reason, or null when the credentials and
     /// account state are all valid.
     /// </summary>
-    private string? EvaluateLoginFailure(AuthUser user, string password)
+    private string? EvaluatePasswordLoginFailure(AuthUser user, string password)
     {
         if (string.IsNullOrEmpty(user.PasswordHash))
         {
@@ -250,4 +388,19 @@ public sealed class AuthService(
 
         return null;
     }
+
+    private static string GenerateUrlSafeToken(int byteLength)
+    {
+        byte[] bytes = RandomNumberGenerator.GetBytes(byteLength);
+        return Base64UrlEncode(bytes);
+    }
+
+    private static string PkceChallenge(string codeVerifier)
+    {
+        byte[] hash = SHA256.HashData(System.Text.Encoding.ASCII.GetBytes(codeVerifier));
+        return Base64UrlEncode(hash);
+    }
+
+    private static string Base64UrlEncode(byte[] bytes)
+        => Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_');
 }

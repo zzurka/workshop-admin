@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 using WorkshopAdmin.API.Authorization;
+using WorkshopAdmin.API.Configuration;
 using WorkshopAdmin.API.Infrastructure;
 using WorkshopAdmin.API.Middleware;
 using WorkshopAdmin.Application;
@@ -22,6 +23,8 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddScoped<ICurrentUserContext, CurrentUserContext>();
 builder.Services.AddScoped<ITenantContext, TenantContext>();
+
+builder.Services.Configure<ApiUrlOptions>(builder.Configuration.GetSection("Api"));
 
 string jwtIssuer = builder.Configuration["Jwt:Issuer"]
     ?? throw new InvalidOperationException("Jwt:Issuer not configured.");

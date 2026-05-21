@@ -5,6 +5,7 @@ using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using WorkshopAdmin.Application.Common.Interfaces;
+using WorkshopAdmin.Infrastructure.Auth.External;
 using WorkshopAdmin.Infrastructure.Email;
 using WorkshopAdmin.Infrastructure.Persistence;
 using WorkshopAdmin.Infrastructure.Persistence.Repositories.Auth;
@@ -32,6 +33,7 @@ public static class DependencyInjection
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRoleRepository, RoleRepository>();
         services.AddScoped<IRefreshTokenRepository, RefreshTokenRepository>();
+        services.AddScoped<IExternalLoginRepository, ExternalLoginRepository>();
         services.AddScoped<ILoginHistoryRepository, LoginHistoryRepository>();
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<ISubscriptionPlanRepository, SubscriptionPlanRepository>();
@@ -44,6 +46,14 @@ public static class DependencyInjection
 
         services.AddSingleton<ITemplateRenderer, SimpleTemplateRenderer>();
         services.AddSingleton<IFrontendUrlProvider, FrontendUrlProvider>();
+
+        // External auth (OIDC) — registry + caches + HTTP client.
+        services.Configure<ExternalAuthOptions>(configuration.GetSection("Auth"));
+        services.AddHttpClient();
+        services.AddMemoryCache();
+        services.AddSingleton<IExternalAuthRegistry, ExternalAuthRegistry>();
+        services.AddSingleton<IExternalStateCache, MemoryExternalStateCache>();
+        services.AddSingleton<IExternalHandoffCache, MemoryExternalHandoffCache>();
         services.AddSingleton<ISmtpClient, MailKitSmtpClient>();
         services.AddScoped<IEmailOutbox, EmailOutbox>();
         services.AddHostedService<EmailDispatcherHostedService>();

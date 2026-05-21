@@ -31,6 +31,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "auth.external_logins",
+         "ObjectType": 0
+      },
+      {
          "Name": "auth.refresh_tokens",
          "ObjectType": 0
       },

@@ -7,6 +7,27 @@ Required user secrets for the API project (set via "Manage User Secrets" or the 
   [DONE] dotnet user-secrets set "Email:Smtp:Username" "<smtp-username>"
   [DONE] dotnet user-secrets set "Email:Smtp:Password" "<smtp-password>"
 -----------------------------------------------------------------------------------------------------------------------------------------------------
+External login (Google, Microsoft, generic OIDC) — invited-users-only:
+  In appsettings (Auth:ExternalProviders[*]), set Enabled=true, ClientId, and
+  the Authority for each provider you want to use. Then set the corresponding
+  client secret via user-secrets — e.g. for the first provider in the array:
+    dotnet user-secrets set "Auth:ExternalProviders:0:ClientSecret" "<secret>"
+    dotnet user-secrets set "Auth:ExternalProviders:1:ClientSecret" "<secret>"
+  Register the redirect URI with the provider:
+    {Api:BaseUrl}/api/auth/external/{code}/callback
+  (e.g. https://localhost:7001/api/auth/external/google/callback for Google
+  in dev). The Api:BaseUrl setting must match the public-facing host the
+  provider will redirect to. Frontend:BaseUrl is also used — the callback
+  redirects the browser to {Frontend:BaseUrl}/login/external/complete?code=...
+  which the SPA POSTs back to /api/auth/external/exchange.
+  
+To use it
+  1. Register a redirect URI with the provider: {Api:BaseUrl}/api/auth/external/{code}/callback (e.g. https://localhost:7001/api/auth/external/google/callback).
+  2. In appsettings.json, flip Enabled: true and set ClientId for the provider.
+  3. dotnet user-secrets set "Auth:ExternalProviders:0:ClientSecret" "<secret>" (index matches the array position).
+  4. SPA hits GET /api/auth/external/google, navigates to the returned authorizeUrl, then when the browser lands on {Frontend:BaseUrl}/login/external/complete?code=..., POSTs { HandoffCode } to
+	 /api/auth/external/exchange to get the same LoginResponse shape as password login.
+-----------------------------------------------------------------------------------------------------------------------------------------------------
 Email infrastructure:
   Transactional outbox in notification.email_outbox. Templates in
   notification.email_templates (multi-language JSONB, {{Placeholder}} tokens).

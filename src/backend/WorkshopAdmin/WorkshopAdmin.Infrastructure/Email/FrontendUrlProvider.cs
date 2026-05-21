@@ -8,4 +8,7 @@ public sealed class FrontendUrlProvider(IOptions<FrontendOptions> options) : IFr
     private readonly string _baseUrl = (options.Value.BaseUrl ?? string.Empty).TrimEnd('/');
 
     public string LoginUrl => _baseUrl + "/login";
+
+    public string ExternalCompleteUrl(string handoffCode)
+        => $"{_baseUrl}/login/external/complete?code={Uri.EscapeDataString(handoffCode)}";
 }

@@ -7,4 +7,7 @@ namespace WorkshopAdmin.Application.Common.Interfaces;
 public interface IFrontendUrlProvider
 {
     string LoginUrl { get; }
+
+    /// <summary>The SPA page that finishes an external login by POSTing the handoff code back to the API.</summary>
+    string ExternalCompleteUrl(string handoffCode);
 }
