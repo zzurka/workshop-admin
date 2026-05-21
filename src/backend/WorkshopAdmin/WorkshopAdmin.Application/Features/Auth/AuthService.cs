@@ -4,6 +4,7 @@ using System.Data.Common;
 using FluentValidation;
 using WorkshopAdmin.Application.Common.Interfaces;
 using WorkshopAdmin.Application.Features.Auth.Login;
+using WorkshopAdmin.Application.Features.Auth.Logout;
 using WorkshopAdmin.Application.Features.Auth.Models;
 using WorkshopAdmin.Application.Features.Auth.Refresh;
 using WorkshopAdmin.Domain.Exceptions;
@@ -16,7 +17,8 @@ public sealed class AuthService(
     IPasswordHasher passwordHasher,
     IJwtTokenService jwtTokenService,
     IValidator<LoginRequest> loginValidator,
-    IValidator<RefreshRequest> refreshValidator) : IAuthService
+    IValidator<RefreshRequest> refreshValidator,
+    IValidator<LogoutRequest> logoutValidator) : IAuthService
 {
     private const string LoginMethod = "password";
 
@@ -166,6 +168,50 @@ public sealed class AuthService(
             accessToken.ExpiresAt,
             newRefreshToken.RawToken,
             newRefreshToken.ExpiresAt);
+    }
+
+    public async Task LogoutAsync(LogoutRequest request, CancellationToken cancellationToken)
+    {
+        await logoutValidator.ValidateAndThrowAsync(request, cancellationToken);
+
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
+
+        string tokenHash = jwtTokenService.HashRefreshToken(request.RefreshToken);
+        RefreshTokenRecord? stored = await refreshTokenRepository.FindByHashAsync(tokenHash, connection, cancellationToken);
+
+        // Unknown or already-revoked: no-op, idempotent.
+        if (stored is null || stored.RevokedAt is not null)
+        {
+            return;
+        }
+
+        await using DbTransaction transaction = await connection.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            await refreshTokenRepository.RevokeAsync(stored.Id, replacedByTokenId: null, connection, transaction, cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    public async Task LogoutAllAsync(Guid userId, CancellationToken cancellationToken)
+    {
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
+        await using DbTransaction transaction = await connection.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            await refreshTokenRepository.RevokeAllForUserAsync(userId, connection, transaction, cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
     }
 
     /// <summary>
