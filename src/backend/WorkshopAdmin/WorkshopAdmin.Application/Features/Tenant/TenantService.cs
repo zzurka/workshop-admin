@@ -22,7 +22,8 @@ public sealed class TenantService(
     IUserRepository userRepository,
     IPasswordHasher passwordHasher,
     ICurrentUserContext currentUser,
-    IEmailSender emailSender,
+    IEmailOutbox emailOutbox,
+    IFrontendUrlProvider frontendUrls,
     IValidator<CreateTenantRequest> createValidator,
     IValidator<UpdateTenantRequest> updateValidator) : ITenantService
 {
@@ -120,6 +121,8 @@ public sealed class TenantService(
 
             await userRepository.AssignRoleAsync(adminUserId, tenantAdminRoleId, actingUserId, connection, transaction, cancellationToken);
 
+            await EnqueueWelcomeEmailAsync(tenantId, request, connection, transaction, cancellationToken);
+
             await transaction.CommitAsync(cancellationToken);
         }
         catch
@@ -127,9 +130,6 @@ public sealed class TenantService(
             await transaction.RollbackAsync(cancellationToken);
             throw;
         }
-
-        // Best-effort welcome email — must never roll back a committed tenant.
-        await TrySendWelcomeEmailAsync(request, cancellationToken);
 
         return new CreateTenantResponse(tenantId, adminUserId);
     }
@@ -185,25 +185,28 @@ public sealed class TenantService(
         }
     }
 
-    private async Task TrySendWelcomeEmailAsync(CreateTenantRequest request, CancellationToken cancellationToken)
+    private Task EnqueueWelcomeEmailAsync(
+        Guid tenantId,
+        CreateTenantRequest request,
+        DbConnection connection,
+        DbTransaction transaction,
+        CancellationToken cancellationToken)
     {
-        try
+        Dictionary<string, string> placeholders = new()
         {
-            string subject = $"Your WorkshopAdmin workspace '{request.Name}' is ready";
-            string html =
-                $"<p>Hello {request.Admin.FirstName},</p>" +
-                $"<p>The workspace <strong>{request.Name}</strong> has been created and your administrator " +
-                $"account (<strong>{request.Admin.Email}</strong>) is active.</p>" +
-                "<p>You can now sign in with the password provided to you.</p>";
+            ["TenantName"] = request.Name,
+            ["AdminName"] = $"{request.Admin.FirstName} {request.Admin.LastName}".Trim(),
+            ["AdminEmail"] = request.Admin.Email,
+            ["LoginUrl"] = frontendUrls.LoginUrl
+        };
 
-            await emailSender.SendAsync(
-                new EmailMessage(request.Admin.Email, subject, html),
-                cancellationToken);
-        }
-        catch
-        {
-            // Swallowed by design: the tenant is already committed. The email
-            // sender implementation is responsible for logging delivery.
-        }
+        EmailMessage message = new(
+            TemplateCode: "welcome",
+            To: request.Admin.Email,
+            Placeholders: placeholders,
+            ToName: placeholders["AdminName"],
+            TenantId: tenantId);
+
+        return emailOutbox.EnqueueAsync(message, connection, transaction, cancellationToken);
     }
 }

@@ -135,6 +135,14 @@
          "ObjectType": 0
       },
       {
+         "Name": "notification.email_outbox",
+         "ObjectType": 0
+      },
+      {
+         "Name": "notification.email_templates",
+         "ObjectType": 0
+      },
+      {
          "Name": "tenant.subscription_plans",
          "ObjectType": 0
       },

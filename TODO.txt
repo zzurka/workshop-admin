@@ -2,14 +2,16 @@
 In Visual Studio, right-click the API project → Manage User Secrets — it opens the secrets.json file directly in the editor.
 -----------------------------------------------------------------------------------------------------------------------------------------------------
 Required user secrets for the API project (set via "Manage User Secrets" or the dotnet CLI):
-  dotnet user-secrets set "Database:Password" "<db-password>"
-  dotnet user-secrets set "Jwt:SigningKey" "<random-string-at-least-32-bytes>"
+  [DONE] dotnet user-secrets set "Database:Password" "<db-password>"
+  [DONE] dotnet user-secrets set "Jwt:SigningKey" "<random-string-at-least-32-bytes>"
+  [DONE] dotnet user-secrets set "Email:Smtp:Username" "<smtp-username>"
+  [DONE] dotnet user-secrets set "Email:Smtp:Password" "<smtp-password>"
 -----------------------------------------------------------------------------------------------------------------------------------------------------
-Email infrastructure (PLANNED — not yet implemented):
-  Current IEmailSender impl is LoggingEmailSender (logs, does not deliver).
-  Next step: add a real provider (SMTP via MailKit, or SendGrid/Postmark API),
-  read the "Email" config section (FromAddress/FromName) + provider credentials
-  from user-secrets, and register it in Infrastructure DI in place of
-  LoggingEmailSender. Welcome email on tenant creation is already wired
-  (best-effort, post-commit) and will start delivering once the provider lands.
+Email infrastructure:
+  Transactional outbox in notification.email_outbox. Templates in
+  notification.email_templates (multi-language JSONB, {{Placeholder}} tokens).
+  EmailDispatcherHostedService drains the outbox via MailKit SMTP with
+  exponential backoff and SKIP LOCKED claim. Configure the SMTP host/port
+  in appsettings (Email:Smtp:*) and credentials via user-secrets.
+  Frontend:BaseUrl is used to build links embedded in emails (e.g. LoginUrl).
 -----------------------------------------------------------------------------------------------------------------------------------------------------

@@ -9,6 +9,7 @@ using WorkshopAdmin.Infrastructure.Email;
 using WorkshopAdmin.Infrastructure.Persistence;
 using WorkshopAdmin.Infrastructure.Persistence.Repositories.Auth;
 using WorkshopAdmin.Infrastructure.Persistence.Repositories.Codebook;
+using WorkshopAdmin.Infrastructure.Persistence.Repositories.Notification;
 using WorkshopAdmin.Infrastructure.Persistence.Repositories.Tenant;
 using WorkshopAdmin.Infrastructure.Persistence.TypeHandlers;
 using WorkshopAdmin.Infrastructure.Security;
@@ -35,8 +36,17 @@ public static class DependencyInjection
         services.AddScoped<ITenantRepository, TenantRepository>();
         services.AddScoped<ISubscriptionPlanRepository, SubscriptionPlanRepository>();
         services.AddScoped<ICodebookRepository, CodebookRepository>();
+        services.AddScoped<IEmailTemplateRepository, EmailTemplateRepository>();
+        services.AddScoped<IEmailOutboxRepository, EmailOutboxRepository>();
 
-        services.AddSingleton<IEmailSender, LoggingEmailSender>();
+        services.Configure<EmailOptions>(configuration.GetSection("Email"));
+        services.Configure<FrontendOptions>(configuration.GetSection("Frontend"));
+
+        services.AddSingleton<ITemplateRenderer, SimpleTemplateRenderer>();
+        services.AddSingleton<IFrontendUrlProvider, FrontendUrlProvider>();
+        services.AddSingleton<ISmtpClient, MailKitSmtpClient>();
+        services.AddScoped<IEmailOutbox, EmailOutbox>();
+        services.AddHostedService<EmailDispatcherHostedService>();
 
         return services;
     }
