@@ -9,6 +9,7 @@ using WorkshopAdmin.Application.Features.Auth;
 using WorkshopAdmin.Application.Features.Auth.External;
 using WorkshopAdmin.Application.Features.Auth.Login;
 using WorkshopAdmin.Application.Features.Auth.Logout;
+using WorkshopAdmin.Application.Features.Auth.PasswordReset;
 using WorkshopAdmin.Application.Features.Auth.Refresh;
 
 [ApiController]
@@ -90,6 +91,28 @@ public sealed class AuthController(
     {
         LoginResponse response = await authService.ExternalExchangeAsync(request, cancellationToken);
         return Ok(response);
+    }
+
+    /// <summary>
+    /// Starts a self-service password reset. Always returns 204 — the response
+    /// never indicates whether the email is registered.
+    /// </summary>
+    [HttpPost("forgot-password")]
+    public async Task<IActionResult> ForgotPassword([FromBody] ForgotPasswordRequest request, CancellationToken cancellationToken)
+    {
+        await authService.ForgotPasswordAsync(request, cancellationToken);
+        return NoContent();
+    }
+
+    /// <summary>
+    /// Completes a password reset using the token from the email. On success,
+    /// sets the new password and revokes every active refresh token.
+    /// </summary>
+    [HttpPost("reset-password")]
+    public async Task<IActionResult> ResetPassword([FromBody] CompletePasswordResetRequest request, CancellationToken cancellationToken)
+    {
+        await authService.CompletePasswordResetAsync(request, cancellationToken);
+        return NoContent();
     }
 
     private (string? ip, string? userAgent) CallerMetadata()

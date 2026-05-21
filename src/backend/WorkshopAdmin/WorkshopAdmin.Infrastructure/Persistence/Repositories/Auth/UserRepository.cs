@@ -133,6 +133,25 @@ public sealed class UserRepository : IUserRepository
             cancellationToken: cancellationToken));
     }
 
+    public async Task<bool> UpdatePasswordHashAsync(
+        Guid userId, string passwordHash, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken)
+    {
+        const string sql = """
+            UPDATE auth.users
+            SET password_hash = @PasswordHash,
+                updated_at = NOW(),
+                updated_by = @UserId
+            WHERE id = @UserId AND is_deleted = FALSE
+            """;
+
+        int affected = await connection.ExecuteAsync(new CommandDefinition(
+            sql,
+            new { UserId = userId, PasswordHash = passwordHash },
+            transaction,
+            cancellationToken: cancellationToken));
+        return affected > 0;
+    }
+
     public Task RemoveRoleAsync(Guid userId, Guid roleId, Guid updatedBy, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken)
     {
         const string sql = """

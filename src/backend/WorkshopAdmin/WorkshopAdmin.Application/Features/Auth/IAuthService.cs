@@ -3,6 +3,7 @@ namespace WorkshopAdmin.Application.Features.Auth;
 using WorkshopAdmin.Application.Features.Auth.External;
 using WorkshopAdmin.Application.Features.Auth.Login;
 using WorkshopAdmin.Application.Features.Auth.Logout;
+using WorkshopAdmin.Application.Features.Auth.PasswordReset;
 using WorkshopAdmin.Application.Features.Auth.Refresh;
 
 public interface IAuthService
@@ -35,4 +36,19 @@ public interface IAuthService
 
     /// <summary>Exchanges a single-use handoff code for the real login response.</summary>
     Task<LoginResponse> ExternalExchangeAsync(ExternalExchangeRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Starts a self-service password reset. Always returns successfully — no
+    /// response signals whether the email exists, the user is active, or has a
+    /// local password. When all conditions are met, a single-use reset token
+    /// is generated, persisted (hash only), and emailed.
+    /// </summary>
+    Task ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Completes a password reset using a token from the reset email. Sets the
+    /// new password, marks the token used, and revokes every active refresh
+    /// token so the user must sign in again on every device.
+    /// </summary>
+    Task CompletePasswordResetAsync(CompletePasswordResetRequest request, CancellationToken cancellationToken);
 }

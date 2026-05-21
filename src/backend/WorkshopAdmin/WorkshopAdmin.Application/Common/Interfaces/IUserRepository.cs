@@ -25,6 +25,12 @@ public interface IUserRepository
     /// <summary>Assigns a role to a user (idempotent; re-activates a soft-deleted assignment).</summary>
     Task AssignRoleAsync(Guid userId, Guid roleId, Guid createdBy, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken);
 
+    /// <summary>
+    /// Sets password_hash for an arbitrary (non-deleted) user, independent of tenant scope.
+    /// Used by self-service password reset where the actor IS the user.
+    /// </summary>
+    Task<bool> UpdatePasswordHashAsync(Guid userId, string passwordHash, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken);
+
     /// <summary>Soft-deletes a user's role assignment (idempotent; no-op if not currently assigned).</summary>
     Task RemoveRoleAsync(Guid userId, Guid roleId, Guid updatedBy, IDbConnection connection, IDbTransaction transaction, CancellationToken cancellationToken);
 

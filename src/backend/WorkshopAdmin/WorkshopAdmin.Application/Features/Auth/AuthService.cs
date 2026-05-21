@@ -4,10 +4,12 @@ using System.Data.Common;
 using System.Security.Cryptography;
 using FluentValidation;
 using WorkshopAdmin.Application.Common.Interfaces;
+using WorkshopAdmin.Application.Common.Models;
 using WorkshopAdmin.Application.Features.Auth.External;
 using WorkshopAdmin.Application.Features.Auth.Login;
 using WorkshopAdmin.Application.Features.Auth.Logout;
 using WorkshopAdmin.Application.Features.Auth.Models;
+using WorkshopAdmin.Application.Features.Auth.PasswordReset;
 using WorkshopAdmin.Application.Features.Auth.Refresh;
 using WorkshopAdmin.Domain.Exceptions;
 
@@ -20,14 +22,21 @@ public sealed class AuthService(
     IExternalAuthRegistry externalAuthRegistry,
     IExternalStateCache externalStateCache,
     IExternalHandoffCache externalHandoffCache,
+    IPasswordResetTokenRepository passwordResetTokenRepository,
+    IEmailOutbox emailOutbox,
+    IFrontendUrlProvider frontendUrls,
     IPasswordHasher passwordHasher,
     IJwtTokenService jwtTokenService,
     IValidator<LoginRequest> loginValidator,
     IValidator<RefreshRequest> refreshValidator,
     IValidator<LogoutRequest> logoutValidator,
-    IValidator<ExternalExchangeRequest> externalExchangeValidator) : IAuthService
+    IValidator<ExternalExchangeRequest> externalExchangeValidator,
+    IValidator<ForgotPasswordRequest> forgotPasswordValidator,
+    IValidator<CompletePasswordResetRequest> completePasswordResetValidator) : IAuthService
 {
     private const string LoginMethodPassword = "password";
+
+    private const int PasswordResetTokenExpiryMinutes = 60;
 
     // Returned to the client for every credential / state failure so the API
     // never reveals which check failed (no user enumeration). The specific
@@ -293,6 +302,105 @@ public sealed class AuthService(
         }
 
         return payload;
+    }
+
+    public async Task ForgotPasswordAsync(ForgotPasswordRequest request, CancellationToken cancellationToken)
+    {
+        await forgotPasswordValidator.ValidateAndThrowAsync(request, cancellationToken);
+
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
+
+        AuthUser? user = await userRepository.FindByEmailAsync(request.Email, connection, cancellationToken);
+
+        // Silently no-op for: unknown email; external-auth-only account; inactive
+        // account; inactive tenant. The response is identical in every case so
+        // the endpoint never reveals whether an address is registered.
+        if (user is null
+            || string.IsNullOrEmpty(user.PasswordHash)
+            || EvaluateAccountState(user) is not null)
+        {
+            return;
+        }
+
+        string rawToken = GenerateUrlSafeToken(32);
+        string tokenHash = jwtTokenService.HashRefreshToken(rawToken);
+        DateTime expiresAt = DateTime.UtcNow.AddMinutes(PasswordResetTokenExpiryMinutes);
+
+        Dictionary<string, string> placeholders = new()
+        {
+            ["UserName"] = BuildDisplayName(user),
+            ["ResetUrl"] = frontendUrls.PasswordResetUrl(rawToken),
+            ["ExpiresInMinutes"] = PasswordResetTokenExpiryMinutes.ToString()
+        };
+
+        EmailMessage email = new(
+            TemplateCode: "password_reset",
+            To: user.Email,
+            Placeholders: placeholders,
+            ToName: placeholders["UserName"],
+            TenantId: user.TenantId);
+
+        await using DbTransaction transaction = await connection.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            await passwordResetTokenRepository.InsertAsync(user.Id, tokenHash, expiresAt, connection, transaction, cancellationToken);
+            await emailOutbox.EnqueueAsync(email, connection, transaction, cancellationToken);
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    public async Task CompletePasswordResetAsync(CompletePasswordResetRequest request, CancellationToken cancellationToken)
+    {
+        await completePasswordResetValidator.ValidateAndThrowAsync(request, cancellationToken);
+
+        string tokenHash = jwtTokenService.HashRefreshToken(request.Token);
+
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
+
+        PasswordResetTokenRecord? stored = await passwordResetTokenRepository.FindByHashAsync(tokenHash, connection, cancellationToken);
+        if (stored is null || stored.UsedAt is not null || stored.ExpiresAt <= DateTime.UtcNow)
+        {
+            throw new UnauthorizedException("Reset link is invalid or has expired.");
+        }
+
+        AuthUser? user = await userRepository.FindByIdAsync(stored.UserId, connection, cancellationToken);
+        if (user is null || EvaluateAccountState(user) is not null)
+        {
+            throw new UnauthorizedException("Reset link is invalid or has expired.");
+        }
+
+        string newPasswordHash = passwordHasher.Hash(request.NewPassword);
+
+        await using DbTransaction transaction = await connection.BeginTransactionAsync(cancellationToken);
+        try
+        {
+            bool updated = await userRepository.UpdatePasswordHashAsync(user.Id, newPasswordHash, connection, transaction, cancellationToken);
+            if (!updated)
+            {
+                throw new UnauthorizedException("Reset link is invalid or has expired.");
+            }
+
+            await passwordResetTokenRepository.MarkUsedAsync(stored.Id, connection, transaction, cancellationToken);
+            await refreshTokenRepository.RevokeAllForUserAsync(user.Id, connection, transaction, cancellationToken);
+
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    private static string BuildDisplayName(AuthUser user)
+    {
+        string name = string.Join(' ', new[] { user.FirstName, user.LastName }.Where(s => !string.IsNullOrWhiteSpace(s))).Trim();
+        return string.IsNullOrEmpty(name) ? user.Email : name;
     }
 
     /// <summary>

@@ -10,4 +10,7 @@ public interface IFrontendUrlProvider
 
     /// <summary>The SPA page that finishes an external login by POSTing the handoff code back to the API.</summary>
     string ExternalCompleteUrl(string handoffCode);
+
+    /// <summary>The SPA page where the user picks a new password using the emailed reset token.</summary>
+    string PasswordResetUrl(string token);
 }

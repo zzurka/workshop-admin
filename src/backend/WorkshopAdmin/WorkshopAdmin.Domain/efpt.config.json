@@ -27,6 +27,10 @@
          "ObjectType": 0
       },
       {
+         "Name": "auth.password_reset_tokens",
+         "ObjectType": 0
+      },
+      {
          "Name": "auth.permissions",
          "ObjectType": 0
       },

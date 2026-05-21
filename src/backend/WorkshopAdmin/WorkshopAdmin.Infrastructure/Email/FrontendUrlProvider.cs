@@ -11,4 +11,7 @@ public sealed class FrontendUrlProvider(IOptions<FrontendOptions> options) : IFr
 
     public string ExternalCompleteUrl(string handoffCode)
         => $"{_baseUrl}/login/external/complete?code={Uri.EscapeDataString(handoffCode)}";
+
+    public string PasswordResetUrl(string token)
+        => $"{_baseUrl}/reset-password?token={Uri.EscapeDataString(token)}";
 }
