@@ -1,10 +1,11 @@
 namespace WorkshopAdmin.Application.Features.User;
 
+using FluentValidation;
 using System.Data;
 using System.Data.Common;
-using FluentValidation;
 using WorkshopAdmin.Application.Common.Interfaces;
 using WorkshopAdmin.Application.Common.Models;
+using WorkshopAdmin.Application.Common.Persistence;
 using WorkshopAdmin.Application.Features.Auth.Models;
 using WorkshopAdmin.Application.Features.User.AssignRoles;
 using WorkshopAdmin.Application.Features.User.Create;

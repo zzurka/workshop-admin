@@ -1,8 +1,8 @@
 namespace WorkshopAdmin.Infrastructure.Persistence.Repositories.Auth;
 
-using System.Data;
 using Dapper;
-using WorkshopAdmin.Application.Common.Interfaces;
+using System.Data;
+using WorkshopAdmin.Application.Common.Persistence;
 using WorkshopAdmin.Application.Features.Auth.Models;
 using WorkshopAdmin.Application.Features.User.List;
 using WorkshopAdmin.Application.Features.User.Models;

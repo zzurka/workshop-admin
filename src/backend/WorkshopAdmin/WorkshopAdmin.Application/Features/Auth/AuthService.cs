@@ -1,10 +1,11 @@
 namespace WorkshopAdmin.Application.Features.Auth;
 
+using FluentValidation;
 using System.Data.Common;
 using System.Security.Cryptography;
-using FluentValidation;
 using WorkshopAdmin.Application.Common.Interfaces;
 using WorkshopAdmin.Application.Common.Models;
+using WorkshopAdmin.Application.Common.Persistence;
 using WorkshopAdmin.Application.Features.Auth.External;
 using WorkshopAdmin.Application.Features.Auth.Login;
 using WorkshopAdmin.Application.Features.Auth.Logout;

@@ -2,6 +2,7 @@ namespace WorkshopAdmin.Application.Features.Role;
 
 using System.Data.Common;
 using WorkshopAdmin.Application.Common.Interfaces;
+using WorkshopAdmin.Application.Common.Persistence;
 using WorkshopAdmin.Application.Features.Role.List;
 using WorkshopAdmin.Domain.Exceptions;
 

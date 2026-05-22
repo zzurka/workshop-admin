@@ -1,8 +1,8 @@
 namespace WorkshopAdmin.Infrastructure.Persistence.Repositories.Tenant;
 
-using System.Data;
 using Dapper;
-using WorkshopAdmin.Application.Common.Interfaces;
+using System.Data;
+using WorkshopAdmin.Application.Common.Persistence;
 using WorkshopAdmin.Application.Features.Tenant.GetById;
 using WorkshopAdmin.Application.Features.Tenant.List;
 using WorkshopAdmin.Application.Features.Tenant.Models;

@@ -1,9 +1,9 @@
 namespace WorkshopAdmin.Infrastructure.Persistence.Repositories.Codebook;
 
-using System.Data;
 using Dapper;
+using System.Data;
 using WorkshopAdmin.Application.Common.Codebooks;
-using WorkshopAdmin.Application.Common.Interfaces;
+using WorkshopAdmin.Application.Common.Persistence;
 
 /// <summary>
 /// Generic read access to the uniform <c>codebook</c> schema. The

@@ -1,9 +1,9 @@
 namespace WorkshopAdmin.Infrastructure.Persistence.Repositories.Notification;
 
-using System.Data;
 using Dapper;
-using WorkshopAdmin.Application.Common.Interfaces;
+using System.Data;
 using WorkshopAdmin.Application.Common.Models;
+using WorkshopAdmin.Application.Common.Persistence;
 
 public sealed class EmailOutboxRepository : IEmailOutboxRepository
 {

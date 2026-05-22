@@ -1,12 +1,13 @@
 namespace WorkshopAdmin.Infrastructure.Email;
 
-using System.Data.Common;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using System.Data.Common;
 using WorkshopAdmin.Application.Common.Interfaces;
 using WorkshopAdmin.Application.Common.Models;
+using WorkshopAdmin.Application.Common.Persistence;
 
 /// <summary>
 /// Background service that drains <c>notification.email_outbox</c>: claims due

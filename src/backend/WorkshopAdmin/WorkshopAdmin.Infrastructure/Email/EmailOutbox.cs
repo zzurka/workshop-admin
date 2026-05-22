@@ -1,9 +1,10 @@
 namespace WorkshopAdmin.Infrastructure.Email;
 
-using System.Data;
 using Microsoft.Extensions.Options;
+using System.Data;
 using WorkshopAdmin.Application.Common.Interfaces;
 using WorkshopAdmin.Application.Common.Models;
+using WorkshopAdmin.Application.Common.Persistence;
 using WorkshopAdmin.Domain.Exceptions;
 
 public sealed class EmailOutbox(

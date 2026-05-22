@@ -1,10 +1,11 @@
 namespace WorkshopAdmin.Infrastructure;
 
-using System.Text;
 using Dapper;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using System.Text;
 using WorkshopAdmin.Application.Common.Interfaces;
+using WorkshopAdmin.Application.Common.Persistence;
 using WorkshopAdmin.Infrastructure.Auth.External;
 using WorkshopAdmin.Infrastructure.Email;
 using WorkshopAdmin.Infrastructure.Persistence;

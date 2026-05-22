@@ -1,10 +1,11 @@
 namespace WorkshopAdmin.Application.Features.Tenant;
 
-using System.Data.Common;
 using FluentValidation;
+using System.Data.Common;
 using WorkshopAdmin.Application.Common.Codebooks;
 using WorkshopAdmin.Application.Common.Interfaces;
 using WorkshopAdmin.Application.Common.Models;
+using WorkshopAdmin.Application.Common.Persistence;
 using WorkshopAdmin.Application.Features.Auth.Models;
 using WorkshopAdmin.Application.Features.Tenant.Create;
 using WorkshopAdmin.Application.Features.Tenant.GetById;

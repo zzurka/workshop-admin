@@ -1,4 +1,4 @@
-namespace WorkshopAdmin.Application.Common.Interfaces;
+namespace WorkshopAdmin.Application.Common.Persistence;
 
 using System.Data;
 using WorkshopAdmin.Application.Common.Codebooks;
