@@ -18,6 +18,7 @@ CREATE TABLE IF NOT EXISTS auth.roles (
     name        VARCHAR(100) NOT NULL,
     scope       VARCHAR(20)  NOT NULL DEFAULT 'tenant',
     description TEXT,
+    is_system   BOOLEAN      NOT NULL DEFAULT FALSE,
     created_at  TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     created_by  UUID,
     updated_at  TIMESTAMPTZ,
@@ -25,7 +26,6 @@ CREATE TABLE IF NOT EXISTS auth.roles (
     is_deleted  BOOLEAN      NOT NULL DEFAULT FALSE,
 
     CONSTRAINT pk_auth_roles                PRIMARY KEY (id),
-    CONSTRAINT uq_auth_roles_tenant_id_name UNIQUE NULLS NOT DISTINCT (tenant_id, name),
     CONSTRAINT ck_auth_roles_scope          CHECK (scope IN ('platform', 'tenant')),
     CONSTRAINT ck_auth_roles_platform_scope CHECK (scope = 'tenant' OR tenant_id IS NULL),
     CONSTRAINT fk_auth_roles_tenant_id      FOREIGN KEY (tenant_id)  REFERENCES tenant.tenants(id),
@@ -36,8 +36,16 @@ CREATE TABLE IF NOT EXISTS auth.roles (
 COMMENT ON TABLE  auth.roles             IS 'Named roles that group permissions, assigned to users. Global roles have tenant_id IS NULL; tenant-scoped custom roles have tenant_id set.';
 COMMENT ON COLUMN auth.roles.tenant_id   IS 'NULL = global role managed by platform_admin. Set = tenant-scoped custom role managed by that tenant''s tenant_admin.';
 COMMENT ON COLUMN auth.roles.scope       IS '''platform'' = assignable only to platform users (auth.users.tenant_id IS NULL); only contains scope=platform permissions. ''tenant'' = assignable to tenant users; only contains scope=tenant permissions. Custom roles created by tenant_admins are always scope=tenant.';
+COMMENT ON COLUMN auth.roles.is_system   IS 'TRUE for seeded built-in roles referenced by name in application code. System roles cannot be renamed, edited, or deleted.';
 COMMENT ON COLUMN auth.roles.updated_at  IS 'NULL on creation. Set on any update, including soft-delete.';
 COMMENT ON COLUMN auth.roles.is_deleted  IS 'Soft delete flag. When TRUE, updated_at holds the deletion timestamp.';
+
+-- Partial unique index instead of a table constraint so soft-deleted roles
+-- release their name for reuse. NULLS NOT DISTINCT keeps global role names
+-- (tenant_id IS NULL) unique among themselves.
+CREATE UNIQUE INDEX IF NOT EXISTS uq_auth_roles_tenant_id_name
+    ON auth.roles (tenant_id, name) NULLS NOT DISTINCT
+    WHERE NOT is_deleted;
 
 CREATE INDEX IF NOT EXISTS ix_auth_roles_tenant_id
     ON auth.roles (tenant_id);
