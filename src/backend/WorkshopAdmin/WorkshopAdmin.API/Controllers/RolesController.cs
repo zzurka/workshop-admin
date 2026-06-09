@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using WorkshopAdmin.API.Authorization;
 using WorkshopAdmin.Application.Features.Role;
+using WorkshopAdmin.Application.Features.Role.AssignPermissions;
 using WorkshopAdmin.Application.Features.Role.Assignable;
 using WorkshopAdmin.Application.Features.Role.Create;
 using WorkshopAdmin.Application.Features.Role.GetById;
@@ -58,6 +59,22 @@ public sealed class RolesController(IRoleService roleService) : ControllerBase
     public async Task<IActionResult> Delete(Guid id, CancellationToken cancellationToken)
     {
         await roleService.DeleteAsync(id, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpPost("{id:guid}/permissions")]
+    [HasPermission("roles:assign_permissions")]
+    public async Task<IActionResult> AssignPermissions(Guid id, [FromBody] AssignPermissionsRequest request, CancellationToken cancellationToken)
+    {
+        await roleService.AssignPermissionsAsync(id, request, cancellationToken);
+        return NoContent();
+    }
+
+    [HttpDelete("{id:guid}/permissions/{permissionId:guid}")]
+    [HasPermission("roles:assign_permissions")]
+    public async Task<IActionResult> RemovePermission(Guid id, Guid permissionId, CancellationToken cancellationToken)
+    {
+        await roleService.RemovePermissionAsync(id, permissionId, cancellationToken);
         return NoContent();
     }
 }

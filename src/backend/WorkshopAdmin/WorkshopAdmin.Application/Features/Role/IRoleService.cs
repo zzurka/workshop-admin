@@ -1,5 +1,6 @@
 namespace WorkshopAdmin.Application.Features.Role;
 
+using WorkshopAdmin.Application.Features.Role.AssignPermissions;
 using WorkshopAdmin.Application.Features.Role.Assignable;
 using WorkshopAdmin.Application.Features.Role.Create;
 using WorkshopAdmin.Application.Features.Role.GetById;
@@ -36,4 +37,13 @@ public interface IRoleService
 
     /// <summary>Soft-deletes a role. Rejected for system roles and roles still assigned to active users.</summary>
     Task DeleteAsync(Guid id, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Grants permissions to a role (additive, idempotent). Tenant-scoped roles
+    /// only accept scope='tenant' permissions. The platform_admin role is locked.
+    /// </summary>
+    Task AssignPermissionsAsync(Guid id, AssignPermissionsRequest request, CancellationToken cancellationToken);
+
+    /// <summary>Revokes a permission from a role (idempotent). The platform_admin role is locked.</summary>
+    Task RemovePermissionAsync(Guid id, Guid permissionId, CancellationToken cancellationToken);
 }

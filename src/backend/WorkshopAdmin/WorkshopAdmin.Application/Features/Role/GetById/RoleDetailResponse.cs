@@ -1,8 +1,10 @@
 namespace WorkshopAdmin.Application.Features.Role.GetById;
 
+using WorkshopAdmin.Application.Features.Permission.Models;
+
 /// <summary>
-/// Role detail. <see cref="Permissions"/> is the read-only list of permission
-/// names granted to the role — managing them is a separate surface
+/// Role detail. <see cref="Permissions"/> are the permissions granted to the
+/// role; they are managed via the role-permission endpoints
 /// (roles:assign_permissions).
 /// </summary>
 public sealed record RoleDetailResponse(
@@ -14,4 +16,4 @@ public sealed record RoleDetailResponse(
     bool IsSystem,
     DateTime CreatedAt,
     DateTime? UpdatedAt,
-    IReadOnlyList<string> Permissions);
+    IReadOnlyList<PermissionItem> Permissions);

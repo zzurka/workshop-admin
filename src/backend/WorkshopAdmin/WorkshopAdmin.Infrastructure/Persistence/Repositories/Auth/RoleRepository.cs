@@ -3,6 +3,7 @@ namespace WorkshopAdmin.Infrastructure.Persistence.Repositories.Auth;
 using Dapper;
 using System.Data;
 using WorkshopAdmin.Application.Common.Persistence;
+using WorkshopAdmin.Application.Features.Permission.Models;
 using WorkshopAdmin.Application.Features.Role.Assignable;
 using WorkshopAdmin.Application.Features.Role.List;
 using WorkshopAdmin.Application.Features.Role.Models;
@@ -142,13 +143,13 @@ public sealed class RoleRepository : IRoleRepository
             new CommandDefinition(sql, new { Id = id }, transaction, cancellationToken: cancellationToken));
     }
 
-    public async Task<IReadOnlyList<string>> GetPermissionNamesAsync(
+    public async Task<IReadOnlyList<PermissionItem>> GetPermissionsAsync(
         Guid roleId,
         IDbConnection connection,
         CancellationToken cancellationToken)
     {
         const string sql = """
-            SELECT p.name
+            SELECT p.id, p.name, p.resource, p.action, p.scope, p.description
             FROM auth.role_permissions rp
             JOIN auth.permissions p ON p.id = rp.permission_id AND p.is_deleted = FALSE
             WHERE rp.role_id = @RoleId
@@ -156,9 +157,55 @@ public sealed class RoleRepository : IRoleRepository
             ORDER BY p.name
             """;
 
-        var rows = await connection.QueryAsync<string>(
+        var rows = await connection.QueryAsync<PermissionItem>(
             new CommandDefinition(sql, new { RoleId = roleId }, cancellationToken: cancellationToken));
         return rows.AsList();
+    }
+
+    public Task AssignPermissionAsync(
+        Guid roleId,
+        Guid permissionId,
+        Guid createdBy,
+        IDbConnection connection,
+        IDbTransaction? transaction,
+        CancellationToken cancellationToken)
+    {
+        // Idempotent grant, mirrors UserRepository.AssignRoleAsync: an active
+        // row is untouched, a soft-deleted row is revived.
+        const string sql = """
+            INSERT INTO auth.role_permissions (role_id, permission_id, created_by)
+            VALUES (@RoleId, @PermissionId, @CreatedBy)
+            ON CONFLICT (role_id, permission_id)
+            DO UPDATE SET is_deleted = FALSE, updated_at = NOW(), updated_by = @CreatedBy
+            WHERE auth.role_permissions.is_deleted = TRUE
+            """;
+
+        return connection.ExecuteAsync(new CommandDefinition(
+            sql,
+            new { RoleId = roleId, PermissionId = permissionId, CreatedBy = createdBy },
+            transaction,
+            cancellationToken: cancellationToken));
+    }
+
+    public Task RemovePermissionAsync(
+        Guid roleId,
+        Guid permissionId,
+        Guid updatedBy,
+        IDbConnection connection,
+        IDbTransaction? transaction,
+        CancellationToken cancellationToken)
+    {
+        const string sql = """
+            UPDATE auth.role_permissions
+            SET is_deleted = TRUE, updated_at = NOW(), updated_by = @UpdatedBy
+            WHERE role_id = @RoleId AND permission_id = @PermissionId AND is_deleted = FALSE
+            """;
+
+        return connection.ExecuteAsync(new CommandDefinition(
+            sql,
+            new { RoleId = roleId, PermissionId = permissionId, UpdatedBy = updatedBy },
+            transaction,
+            cancellationToken: cancellationToken));
     }
 
     public Task<bool> NameExistsAsync(

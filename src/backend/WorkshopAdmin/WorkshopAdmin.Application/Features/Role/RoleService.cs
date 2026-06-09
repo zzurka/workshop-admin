@@ -4,6 +4,8 @@ using FluentValidation;
 using System.Data.Common;
 using WorkshopAdmin.Application.Common.Interfaces;
 using WorkshopAdmin.Application.Common.Persistence;
+using WorkshopAdmin.Application.Features.Permission.Models;
+using WorkshopAdmin.Application.Features.Role.AssignPermissions;
 using WorkshopAdmin.Application.Features.Role.Assignable;
 using WorkshopAdmin.Application.Features.Role.Create;
 using WorkshopAdmin.Application.Features.Role.GetById;
@@ -15,13 +17,16 @@ using WorkshopAdmin.Domain.Exceptions;
 public sealed class RoleService(
     IDbConnectionFactory connectionFactory,
     IRoleRepository roleRepository,
+    IPermissionRepository permissionRepository,
     ICurrentUserContext currentUser,
     ITenantContext tenantContext,
     IValidator<CreateRoleRequest> createValidator,
-    IValidator<UpdateRoleRequest> updateValidator) : IRoleService
+    IValidator<UpdateRoleRequest> updateValidator,
+    IValidator<AssignPermissionsRequest> assignPermissionsValidator) : IRoleService
 {
     private const string PlatformScope = "platform";
     private const string TenantScope = "tenant";
+    private const string PlatformAdminRoleName = "platform_admin";
 
     public async Task<IReadOnlyList<AssignableRoleItem>> ListAssignableAsync(CancellationToken cancellationToken)
     {
@@ -46,7 +51,7 @@ public sealed class RoleService(
         await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
 
         RoleRecord role = await GetVisibleRoleAsync(id, connection, cancellationToken);
-        IReadOnlyList<string> permissions = await roleRepository.GetPermissionNamesAsync(id, connection, cancellationToken);
+        IReadOnlyList<PermissionItem> permissions = await roleRepository.GetPermissionsAsync(id, connection, cancellationToken);
 
         return new RoleDetailResponse(
             role.Id, role.Name, role.Description, role.Scope,
@@ -130,6 +135,57 @@ public sealed class RoleService(
         await roleRepository.SoftDeleteAsync(id, currentUser.UserId, connection, null, cancellationToken);
     }
 
+    public async Task AssignPermissionsAsync(Guid id, AssignPermissionsRequest request, CancellationToken cancellationToken)
+    {
+        await assignPermissionsValidator.ValidateAndThrowAsync(request, cancellationToken);
+
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
+
+        RoleRecord role = await GetVisibleRoleAsync(id, connection, cancellationToken);
+        RequireOwned(role);
+        RequirePermissionsUnlocked(role);
+
+        List<Guid> distinctIds = request.PermissionIds.Distinct().ToList();
+
+        // Platform-scoped roles may hold permissions of any scope (platform_admin
+        // holds tenant-scoped roles:* etc.); tenant-scoped roles only tenant ones.
+        IReadOnlyList<Guid> grantable = await permissionRepository.GetGrantableIdsAsync(
+            distinctIds, tenantScopeOnly: role.Scope == TenantScope, connection, null, cancellationToken);
+
+        if (grantable.Count != distinctIds.Count)
+        {
+            throw new BusinessRuleException("One or more permissions cannot be assigned to this role.");
+        }
+
+        await using DbTransaction transaction = await connection.BeginTransactionAsync(cancellationToken);
+        
+        try
+        {
+            foreach (Guid permissionId in distinctIds)
+            {
+                await roleRepository.AssignPermissionAsync(id, permissionId, currentUser.UserId, connection, transaction, cancellationToken);
+            }
+
+            await transaction.CommitAsync(cancellationToken);
+        }
+        catch
+        {
+            await transaction.RollbackAsync(cancellationToken);
+            throw;
+        }
+    }
+
+    public async Task RemovePermissionAsync(Guid id, Guid permissionId, CancellationToken cancellationToken)
+    {
+        await using DbConnection connection = await connectionFactory.CreateOpenConnectionAsync(cancellationToken);
+
+        RoleRecord role = await GetVisibleRoleAsync(id, connection, cancellationToken);
+        RequireOwned(role);
+        RequirePermissionsUnlocked(role);
+
+        await roleRepository.RemovePermissionAsync(id, permissionId, currentUser.UserId, connection, null, cancellationToken);
+    }
+
     /// <summary>
     /// Loads a non-deleted role and applies the actor's visibility rule.
     /// Tenant actor: own-tenant roles plus tenant-scoped global roles. Platform
@@ -155,6 +211,20 @@ public sealed class RoleService(
         if (tenantContext.TenantId is not null && role.TenantId is null)
         {
             throw new ForbiddenException("Global roles can only be managed by platform administrators.");
+        }
+    }
+
+    /// <summary>
+    /// The platform_admin role's permission set is immutable through the API —
+    /// removing e.g. roles:assign_permissions from it would be self-lockout.
+    /// Its matrix evolves via seed migrations only. Note: is_system alone does
+    /// NOT lock permissions (built-in roles like mechanic stay tunable).
+    /// </summary>
+    private static void RequirePermissionsUnlocked(RoleRecord role)
+    {
+        if (role.IsSystem && role.Name == PlatformAdminRoleName)
+        {
+            throw new BusinessRuleException("The platform_admin role's permissions cannot be modified.");
         }
     }
 

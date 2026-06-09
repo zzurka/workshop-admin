@@ -1,6 +1,7 @@
 namespace WorkshopAdmin.Application.Common.Persistence;
 
 using System.Data;
+using WorkshopAdmin.Application.Features.Permission.Models;
 using WorkshopAdmin.Application.Features.Role.Assignable;
 using WorkshopAdmin.Application.Features.Role.List;
 using WorkshopAdmin.Application.Features.Role.Models;
@@ -59,10 +60,31 @@ public interface IRoleRepository
         IDbTransaction? transaction,
         CancellationToken cancellationToken);
 
-    /// <summary>Names of the non-deleted permissions granted to the role, ordered by name.</summary>
-    Task<IReadOnlyList<string>> GetPermissionNamesAsync(
+    /// <summary>The non-deleted permissions granted to the role, ordered by name.</summary>
+    Task<IReadOnlyList<PermissionItem>> GetPermissionsAsync(
         Guid roleId,
         IDbConnection connection,
+        CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Grants a permission to a role (idempotent: re-granting an active row is a
+    /// no-op, a soft-deleted row is revived).
+    /// </summary>
+    Task AssignPermissionAsync(
+        Guid roleId,
+        Guid permissionId,
+        Guid createdBy,
+        IDbConnection connection,
+        IDbTransaction? transaction,
+        CancellationToken cancellationToken);
+
+    /// <summary>Revokes a permission from a role (idempotent soft delete).</summary>
+    Task RemovePermissionAsync(
+        Guid roleId,
+        Guid permissionId,
+        Guid updatedBy,
+        IDbConnection connection,
+        IDbTransaction? transaction,
         CancellationToken cancellationToken);
 
     /// <summary>
