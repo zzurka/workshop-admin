@@ -318,3 +318,143 @@ Would you like to explore how to structure database triggers for audit logging u
 [4] [https://doc.castsoftware.com](https://doc.castsoftware.com/export/AIPCONSOLE/Administration+Center+-+Security+-+User+Roles)
 [5] [https://dev.kevel.com](https://dev.kevel.com/docs/snowflake-destination)
 [6] [https://www.red-database-security.com](http://www.red-database-security.com/wp/sentrigo_webinar.pdf)
+
+To implement audit logging in a Database-First environment, using PostgreSQL triggers is the most secure approach. It captures changes made by EF Core, Dapper, direct SQL runner tools, or developers in production tools, bypassing the risk of application-level logging omission. [1] 
+Because you are already setting session variables (app.current_user_id or app.is_admin), your triggers can pull this live metadata mid-transaction. [2] 
+------------------------------
+## 1. The Audit Log Table (SQL)
+Create a centralized table to hold all mutation data. This table should not have Row-Level Security enabled, allowing admins to query historical logs across all tenants. [3] 
+
+CREATE TABLE audit_logs (
+    id BIGSERIAL PRIMARY KEY,
+    table_name TEXT NOT NULL,
+    action TEXT NOT NULL,              -- INSERT, UPDATE, DELETE
+    tenant_id UUID,                    -- Affected tenant
+    changed_by_user TEXT,              -- Pulled from app context
+    is_admin_action BOOLEAN DEFAULT false,
+    old_data JSONB,                    -- Row state before change (null on INSERT)
+    new_data JSONB,                    -- Row state after change (null on DELETE)
+    changed_at TIMESTAMPTZ DEFAULT clock_timestamp()
+);
+-- Index for high-performance log searchingCREATE INDEX idx_audit_logs_tenant_table ON audit_logs(tenant_id, table_name);
+
+## 2. The Universal Audit Trigger Function (SQL)
+Instead of writing a distinct trigger for every table, write one reusable trigger function. It dynamically reads the operational context and records JSON blocks of the state differences. [4] 
+
+CREATE OR REPLACE FUNCTION process_table_audit()RETURNS TRIGGER AS $$DECLARE
+    v_user_id TEXT;
+    v_is_admin TEXT;
+    v_tenant_id UUID;
+    v_old_json JSONB := NULL;
+    v_new_json JSONB := NULL;BEGIN
+    -- 1. Safely extract application session parameters
+    v_user_id := NULLIF(current_setting('app.current_user_id', true), '');
+    v_is_admin := current_setting('app.is_admin', true);
+
+    -- 2. Establish JSON payloads depending on the action type
+    IF (TG_OP = 'UPDATE') THEN
+        v_old_json := to_jsonb(OLD);
+        v_new_json := to_jsonb(NEW);
+        v_tenant_id := NEW.tenant_id; -- Fallback to extracting the tenant ID from the row
+    ELSIF (TG_OP = 'DELETE') THEN
+        v_old_json := to_jsonb(OLD);
+        v_tenant_id := OLD.tenant_id;
+    ELSIF (TG_OP = 'INSERT') THEN
+        v_new_json := to_jsonb(NEW);
+        v_tenant_id := NEW.tenant_id;
+    END IF;
+
+    -- If a specific tenant ID isn't found on the row, fallback to session context
+    IF v_tenant_id IS NULL THEN
+        v_tenant_id := NULLIF(current_setting('app.current_tenant_id', true), '')::uuid;
+    END IF;
+
+    -- 3. Write to audit_logs
+    INSERT INTO audit_logs (
+        table_name,
+        action,
+        tenant_id,
+        changed_by_user,
+        is_admin_action,
+        old_data,
+        new_data
+    ) VALUES (
+        TG_TABLE_NAME,
+        TG_OP,
+        v_tenant_id,
+        COALESCE(v_user_id, session_user), -- Falls back to system DB user if application didn't set context
+        (v_is_admin = 'true'),
+        v_old_json,
+        v_new_json
+    );
+
+    -- Return row to keep data pipeline moving smoothly
+    IF (TG_OP = 'DELETE') THEN
+        RETURN OLD;
+    ELSE
+        RETURN NEW;
+    END IF;END;
+$$ LANGUAGE plpgsql SECURITY DEFINER; -- Note: SECURITY DEFINER ensures audit writing works even if the application user has restrictive table rights.
+
+## 3. Attach Triggers to Multi-Tenant Tables
+For every table you want to monitor, bind the function above using a simple AFTER constraint trigger:
+
+CREATE TRIGGER audit_tenant_data_trigger
+AFTER INSERT OR UPDATE OR DELETE ON tenant_dataFOR EACH ROW EXECUTE FUNCTION process_table_audit();
+
+------------------------------
+## 4. Updating Your C# Application Layer
+To feed the audit log with the user's specific identity, you must adapt your existing .NET Context infrastructure to pass an extra app.current_user_id configuration.
+## Update the Provider:
+
+public interface ITenantProvider
+{
+    Guid GetTenantId();
+    bool IsGlobalAdmin();
+    string GetCurrentUserId(); // New method
+}
+public class HttpContextTenantProvider : ITenantProvider
+{
+    private readonly IHttpContextAccessor _httpContextAccessor;
+    // ... constructor ...
+
+    public string GetCurrentUserId()
+    {
+        // Extracts the unique ID of the login session/user from claims
+        return _httpContextAccessor.HttpContext?.User?.FindFirst(ClaimTypes.NameIdentifier)?.Value ?? "system";
+    }
+    // ... original methods ...
+}
+
+## Update the EF Core Interceptor:
+Modify your interceptor script to append the third context command.
+
+var tenantId = _tenantProvider.GetTenantId();var isAdmin = _tenantProvider.IsGlobalAdmin() ? "true" : "false";var userId = _tenantProvider.GetCurrentUserId();
+using var command = connection.CreateCommand();
+command.CommandText = $@"
+    SET LOCAL app.current_tenant_id = '{tenantId}';
+    SET LOCAL app.is_admin = '{isAdmin}';
+    SET LOCAL app.current_user_id = '{userId}';"; // Captures individual audit ownership
+    await command.ExecuteNonQueryAsync(cancellationToken);
+
+## Update the Dapper Factory:
+Apply the same SET LOCAL modification to your DapperConnectionFactory implementation.
+
+await connection.ExecuteAsync($@"
+    SET LOCAL app.current_tenant_id = '{_tenantProvider.GetTenantId()}';
+    SET LOCAL app.is_admin = '{(_tenantProvider.IsGlobalAdmin() ? "true" : "false")}';
+    SET LOCAL app.current_user_id = '{_tenantProvider.GetCurrentUserId()}';");
+
+------------------------------
+## 💡 Database-First Strategy Tips
+
+* Scaffolding/Reverse Engineering: Running dotnet ef dbcontext scaffold safely ignores triggers and functions. They exist entirely in your raw database tier, so they will not pollute or break your auto-generated C# entity configuration classes. [5] 
+* Cleaning Up Output Data: If your tables store massive properties (like large text strings or binary hashes), typing to_jsonb(NEW) directly logs them completely. To keep audit table storage sizes from ballooning, look into using jsonb_minus operations inside the function to explicitly filter out heavy columns (e.g., v_new_json = to_jsonb(NEW) - 'heavy_column').
+
+Would you like to know how to structure Entity Framework Core queries to efficiently extract audit trails for a single record from the database, or see how to filter out unchanged columns to minimize logging bloat?
+
+[1] [https://oneuptime.com](https://oneuptime.com/blog/post/2026-01-30-postgresql-event-triggers/view)
+[2] [https://alexanderobregon.substack.com](https://alexanderobregon.substack.com/p/triggers-in-sql-for-auditing-data)
+[3] [https://epicforcetech.com](https://epicforcetech.com/audit-trails-with-epicor-bpms-how-to-track-changes-without-custom-code/)
+[4] [https://www.sqlservercentral.com](https://www.sqlservercentral.com/articles/creating-a-generic-audit-trigger-with-sql-2005-clr)
+[5] [https://docwiki.embarcadero.com](https://docwiki.embarcadero.com/ERStudioDA/202/en/Creating_and_Editing_Triggers)
