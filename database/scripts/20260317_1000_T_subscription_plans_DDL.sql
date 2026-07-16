@@ -2,7 +2,7 @@
 -- Description: Create the tenant.subscription_plans table. Each row represents
 --              a billable product with pricing, billing cadence, usage limits,
 --              and feature flags. Referenced by tenant.tenants.subscription_plan_id.
---              Managed exclusively by platform_admin (tenant_id IS NULL users).
+--              Managed exclusively by platform_admin (platform-scope role holders).
 -- Author: WorkshopAdmin Team
 -- Date: 2026-03-17
 --

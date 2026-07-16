@@ -1,6 +1,8 @@
 -- Migration: 20260330_1010_T_employees_DDL.sql
--- Description: Create the hr.employees table. Each employee belongs to a single
---              tenant and is linked to an auth.users account for login.
+-- Description: Create the hr.employees table. Each employee row belongs to a
+--              single tenant and is linked to an auth.users account for login.
+--              The same person (auth.users identity) can be employed at
+--              multiple tenants — one employee row per tenant.
 -- Author: WorkshopAdmin Team
 -- Date: 2026-03-30
 --
@@ -24,9 +26,10 @@ CREATE TABLE IF NOT EXISTS hr.employees (
     is_deleted         BOOLEAN      NOT NULL DEFAULT FALSE,
 
     CONSTRAINT pk_hr_employees                    PRIMARY KEY (id),
-    CONSTRAINT uq_hr_employees_user_id            UNIQUE (user_id),
+    CONSTRAINT uq_hr_employees_tenant_id_user_id  UNIQUE (tenant_id, user_id),
     CONSTRAINT fk_hr_employees_tenant_id          FOREIGN KEY (tenant_id)          REFERENCES tenant.tenants(id),
     CONSTRAINT fk_hr_employees_user_id            FOREIGN KEY (user_id)            REFERENCES auth.users(id),
+    CONSTRAINT fk_hr_employees_user_id_tenant_id  FOREIGN KEY (user_id, tenant_id) REFERENCES auth.user_tenants(user_id, tenant_id),
     CONSTRAINT fk_hr_employees_employment_type_id FOREIGN KEY (employment_type_id) REFERENCES codebook.employment_types(id),
     CONSTRAINT fk_hr_employees_created_by         FOREIGN KEY (created_by)         REFERENCES auth.users(id),
     CONSTRAINT fk_hr_employees_updated_by         FOREIGN KEY (updated_by)         REFERENCES auth.users(id)
@@ -35,7 +38,7 @@ CREATE TABLE IF NOT EXISTS hr.employees (
 COMMENT ON TABLE  hr.employees                    IS 'Workshop employees. Each employee belongs to one tenant and has exactly one login account.';
 COMMENT ON COLUMN hr.employees.id                 IS 'UUID v7 primary key (time-ordered).';
 COMMENT ON COLUMN hr.employees.tenant_id          IS 'The tenant (workshop) this employee belongs to.';
-COMMENT ON COLUMN hr.employees.user_id            IS 'Link to auth.users — every employee must have a login account. UNIQUE — one auth account per employee. Name, email, phone are on auth.users.';
+COMMENT ON COLUMN hr.employees.user_id            IS 'Link to auth.users — every employee must have a login account. Unique per (tenant_id, user_id); the same person can be employed at multiple tenants, one employee row per tenant. (user_id, tenant_id) must be an auth.user_tenants membership (composite FK). Name, email, phone are on auth.users.';
 COMMENT ON COLUMN hr.employees.employment_type_id IS 'FK to codebook.employment_types (salaried, hourly).';
 COMMENT ON COLUMN hr.employees.hire_date          IS 'Date the employee started working.';
 COMMENT ON COLUMN hr.employees.termination_date   IS 'Date the employee left. NULL if still employed.';

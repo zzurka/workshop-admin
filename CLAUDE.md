@@ -18,8 +18,10 @@ docs/               Documentation
 
 ## Multi-tenancy model
 
-- User-tenant is 1:1: `tenant_id` lives on `auth.users` (nullable)
-- `tenant_id = NULL` means platform-level super admin
+- User-tenant is M:N: `auth.users` is a global identity (one row per person); tenant access lives in `auth.user_tenants` memberships
+- The same person can be a customer (or employee) at multiple tenants — one `customer.customers` / `hr.employees` row per tenant, tied to a membership via composite FK `(user_id, tenant_id) → auth.user_tenants`
+- Platform super admins have no memberships; they are recognized by a platform-scope role assignment (`auth.user_roles.tenant_id IS NULL`)
+- Role assignments are per tenant: `auth.user_roles.tenant_id` (NULL = platform-scope assignment)
 - Most domain tables have `tenant_id` for direct filtering
 - Child tables accessed only through their parent skip `tenant_id` (e.g., `invoice_lines`, `supplier_contacts`)
 

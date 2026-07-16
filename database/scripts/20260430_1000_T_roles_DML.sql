@@ -1,7 +1,7 @@
 -- Migration: 20260430_1000_T_roles_DML.sql
 -- Description: Seed default roles for the platform and tenants.
---              platform_admin is reserved for users with tenant_id IS NULL.
---              All other roles are intended for tenant-scoped users.
+--              platform_admin is assigned platform-wide (auth.user_roles.tenant_id IS NULL).
+--              All other roles are assigned per tenant membership (auth.user_tenants).
 -- Author: WorkshopAdmin Team
 -- Date: 2026-04-30
 --

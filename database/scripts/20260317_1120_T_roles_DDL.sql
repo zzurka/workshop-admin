@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS auth.roles (
 
 COMMENT ON TABLE  auth.roles             IS 'Named roles that group permissions, assigned to users. Global roles have tenant_id IS NULL; tenant-scoped custom roles have tenant_id set.';
 COMMENT ON COLUMN auth.roles.tenant_id   IS 'NULL = global role managed by platform_admin. Set = tenant-scoped custom role managed by that tenant''s tenant_admin.';
-COMMENT ON COLUMN auth.roles.scope       IS '''platform'' = assignable only to platform users (auth.users.tenant_id IS NULL); may hold permissions of any scope (platform_admin holds tenant-scoped roles:* etc.). ''tenant'' = assignable to tenant users; only holds scope=tenant permissions. Custom roles created by tenant_admins are always scope=tenant.';
+COMMENT ON COLUMN auth.roles.scope       IS '''platform'' = assignable only platform-wide (auth.user_roles.tenant_id IS NULL); may hold permissions of any scope (platform_admin holds tenant-scoped roles:* etc.). ''tenant'' = assignable to users within a tenant (auth.user_roles.tenant_id set); only holds scope=tenant permissions. Custom roles created by tenant_admins are always scope=tenant.';
 COMMENT ON COLUMN auth.roles.is_system   IS 'TRUE for seeded built-in roles referenced by name in application code. System roles cannot be renamed, edited, or deleted.';
 COMMENT ON COLUMN auth.roles.updated_at  IS 'NULL on creation. Set on any update, including soft-delete.';
 COMMENT ON COLUMN auth.roles.is_deleted  IS 'Soft delete flag. When TRUE, updated_at holds the deletion timestamp.';

@@ -1,6 +1,8 @@
 -- Migration: 20260317_1310_T_customers_DDL.sql
 -- Description: Create the customer.customers table. Each customer represents one
---              client of a workshop (tenant). Scoped to a single tenant.
+--              client of a workshop (tenant). Scoped to a single tenant. The
+--              same person (auth.users identity) can be a customer at multiple
+--              tenants — one customer row per tenant, linked via user_id.
 -- Author: WorkshopAdmin Team
 -- Date: 2026-03-17
 --
@@ -29,10 +31,11 @@ CREATE TABLE IF NOT EXISTS customer.customers (
     updated_by    UUID,
     is_deleted    BOOLEAN      NOT NULL DEFAULT FALSE,
 
-    CONSTRAINT pk_customer_customers               PRIMARY KEY (id),
-    CONSTRAINT uq_customer_customers_user_id       UNIQUE (user_id),
-    CONSTRAINT fk_customer_customers_tenant_id     FOREIGN KEY (tenant_id)  REFERENCES tenant.tenants(id),
-    CONSTRAINT fk_customer_customers_user_id       FOREIGN KEY (user_id)    REFERENCES auth.users(id),
+    CONSTRAINT pk_customer_customers                    PRIMARY KEY (id),
+    CONSTRAINT uq_customer_customers_tenant_id_user_id  UNIQUE (tenant_id, user_id),
+    CONSTRAINT fk_customer_customers_tenant_id          FOREIGN KEY (tenant_id)  REFERENCES tenant.tenants(id),
+    CONSTRAINT fk_customer_customers_user_id            FOREIGN KEY (user_id)    REFERENCES auth.users(id),
+    CONSTRAINT fk_customer_customers_user_id_tenant_id  FOREIGN KEY (user_id, tenant_id) REFERENCES auth.user_tenants(user_id, tenant_id),
     CONSTRAINT fk_customer_customers_created_by    FOREIGN KEY (created_by) REFERENCES auth.users(id),
     CONSTRAINT fk_customer_customers_updated_by    FOREIGN KEY (updated_by) REFERENCES auth.users(id)
 );
@@ -40,7 +43,7 @@ CREATE TABLE IF NOT EXISTS customer.customers (
 COMMENT ON TABLE  customer.customers               IS 'Workshop clients. Each customer belongs to exactly one tenant (workshop).';
 COMMENT ON COLUMN customer.customers.id            IS 'UUID v7 primary key (time-ordered).';
 COMMENT ON COLUMN customer.customers.tenant_id     IS 'The tenant (workshop) this customer belongs to.';
-COMMENT ON COLUMN customer.customers.user_id       IS 'Optional link to auth.users. Set when the customer is granted portal access. UNIQUE — one auth account per customer.';
+COMMENT ON COLUMN customer.customers.user_id       IS 'Optional link to auth.users. Set when the customer is granted portal access. Unique per (tenant_id, user_id) — the same person can be a customer at multiple tenants. When set, (user_id, tenant_id) must be an auth.user_tenants membership (composite FK; check is skipped while user_id IS NULL).';
 COMMENT ON COLUMN customer.customers.email         IS 'Customer email address. Nullable — some customers may not have one.';
 COMMENT ON COLUMN customer.customers.notes         IS 'Internal workshop notes about this customer. Not visible to the customer.';
 COMMENT ON COLUMN customer.customers.is_active     IS 'FALSE = customer record suspended / inactive.';
