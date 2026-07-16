@@ -5,4 +5,5 @@
 │   ├── api/
 │   └── database/
 │       ├── er-diagrams/
-│       └── schema-docs/
+│       ├── schema-docs/
+│       └── model-review.md     <-- DB model analysis findings + resolution tracking
