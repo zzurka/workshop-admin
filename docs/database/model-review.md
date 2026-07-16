@@ -4,7 +4,9 @@
 **Obuhvat:** sve tabele u `database/scripts/` (tenant, codebook, auth, customer, hr, workshop, warehouse, notification) upoređene sa funkcionalnim zahtevima po modulima.
 **Način rada:** stavke rešavamo jednu po jednu; skripte se smeju menjati u mestu (aplikacija još nije u upotrebi), a dev baza se posle izmene rebuild-uje (drop šema + pun runner, jer runner odbija izmenjene skripte po checksumu).
 
-**Statusi:** ✅ rešeno · 🔶 delimično · ⬜ otvoreno
+**Statusi:** ✅ rešeno · 🔶 delimično · 📝 plan spreman · ⬜ otvoreno
+
+Detaljni planovi po stavkama žive u [plans/](plans/) — jedan fajl po stavci; pravimo plan, potvrdimo odluke, pa implementiramo.
 
 ---
 
@@ -69,7 +71,9 @@ Model je zanatski solidan: konvencije se dosledno poštuju (UUID v7, audit kolon
 
 **Predlog:** `warehouse.purchase_orders` (supplier, status, ordered_at, expected_at) + `warehouse.purchase_order_lines` (catalog_part, količina, nabavna cena). Vezati `stock_transactions` (receipt) i `work_order_parts` (ordered) na PO liniju.
 
-### 1.7 Faktura — zakonski i računovodstveni elementi — ⬜
+### 1.7 Faktura — zakonski i računovodstveni elementi — 📝
+
+> **Plan:** [plans/1.7-fakture.md](plans/1.7-fakture.md) — odluke potvrđene 2026-07-17, spreman za implementaciju. Šifarnici tax_rates i payment_methods, fiskalni podaci na tenantu (PIB, MB, PDV status), gapless brojač po (tenant, godina), PDV snapshot na linijama, totali i billed_to snapshot na zaglavlju, tabela payments, status partially_paid.
 
 **Problem:** `workshop.invoices` nema:
 - **`invoice_number`** — sekvencijalni broj po tenantu (i godini) je zakonska obaveza u Srbiji; potreban i mehanizam dodele (tabela brojača po tenantu/godini — ne oslanjati se na UUID)
@@ -89,11 +93,15 @@ Model je zanatski solidan: konvencije se dosledno poštuju (UUID v7, audit kolon
 
 **Ostaje:** sistemski pristup za domenske tabele — dodati `UNIQUE (tenant_id, id)` na roditelje i kompozitne FK-ove `(tenant_id, <parent>_id)` na decu (appointments, work_orders, invoices, work_order_parts, stock, stock_transactions, expenses, leave_*, time_entries...). Trigger za vehicles tada može da se zameni kompozitnim FK-om.
 
-### 2.2 Row Level Security — ⬜ (odluka)
+> **Plan:** [plans/2.1-cross-tenant-integritet.md](plans/2.1-cross-tenant-integritet.md) — odluke potvrđene 2026-07-17, spreman za implementaciju. 9 roditelja dobija `UNIQUE (tenant_id, id)`, 13 dece prelazi na kompozitne FK-ove, `work_order_parts` i `invoice_lines` dobijaju denormalizovan `tenant_id`, vehicles trigger se briše.
+
+### 2.2 Row Level Security — 📝 (odluka: DA)
 
 **Problem:** Row-based multi-tenancy se oslanja isključivo na aplikativno filtriranje — jedan zaboravljen `WHERE tenant_id = ...` u backendu je direktan data leak.
 
 **Predlog:** razmotriti PostgreSQL RLS sa `app.current_tenant_id` session settingom kao odbranu u dubinu. Odluka (da/ne + obim) pre nego što backend naraste.
+
+> **Plan:** [plans/2.2-rls.md](plans/2.2-rls.md) — odluka DA potvrđena 2026-07-17. DB strana (policy skripta) ide odmah u implementacioni batch; backend deo (`SET LOCAL` interceptor) uz novi backend. Fail-closed policy dizajn, admin/migracije nezahvaćene.
 
 ---
 

@@ -1,0 +1,320 @@
+PostgreSQL Row-Level Security (RLS) is a built-in feature that lets you lock down specific rows of data in a table based on the logged-in user. It is perfect for separating customer data (multi-tenancy) so users only see their own records, removing the need to add manual WHERE clauses to every query. [1, 2, 3] 
+## How to use RLS
+
+   1. Turn it on: You enable RLS for a specific table.
+   2. Write rules (Policies): You create SQL rules (policies) that define exactly which rows a user can access.
+   3. Automatic filtering: When a user runs a query, PostgreSQL secretly applies these rules to filter out unauthorized data before it reaches the application. [1, 4, 5, 6] 
+
+## Example: The "Locker" Analogy
+Imagine a locker room. Instead of giving everyone a key to the entire building and trusting them not to snoop, the building manager automatically replaces every door with a locker that only opens for your specific ID. Even if you ask to "open all lockers," the room only gives you your own items.
+## Code Example: Multi-Tenant Setup
+This example restricts a table so users can only see rows tied to their specific organization ID. [7] 
+
+-- 1. Turn on RLS for the tableALTER TABLE events ENABLE ROW LEVEL SECURITY;
+-- 2. Create a policy for SELECT (reading data)-- Users can only see events where the org_id matches their database usernameCREATE POLICY event_isolation_policy ON events FOR SELECT USING (org_id::TEXT = current_user);
+
+## Important rules
+
+* Superusers bypass RLS: Database superusers and table owners typically bypass these rules.
+* No warnings: If a query silently returns zero rows, it usually means a policy is active but the user has no permission to view the data.
+* Performance: Always index the columns used in your policy conditions (like org_id in the example above) to keep queries fast. [5, 8, 9, 10, 11] 
+
+If you want to read more about advanced configurations or how to set it up for your specific application, check out these official and community resources:
+
+* Read the [PostgreSQL Row Security Policies Documentation](https://www.postgresql.org/docs/current/ddl-rowsecurity.html) for technical details.
+* View a step-by-step breakdown in the [PostgreSQL RLS Basics and Examples](https://satoricyber.com/postgres-security/postgres-row-level-security/) guide.
+* Learn about implementing it in your app with the [An Introduction to Postgres Row Level Security](https://dev.to/brianmmdev/an-introduction-to-postgres-row-level-security-rls-306k). [1, 2, 4, 8, 12] 
+
+If you'd like to implement RLS, tell me:
+
+* Are you building a multi-tenant SaaS application?
+* What framework or programming language are you using (e.g., Node.js, Python/Django)?
+
+I can show you exactly how to structure your session variables and policies for your stack.
+
+[1] [https://satoricyber.com](https://satoricyber.com/postgres-security/postgres-row-level-security/)
+[2] [https://medium.com](https://medium.com/@mozaffaritabar.h/row-level-security-rls-in-postgresql-497695f5145e)
+[3] [https://medium.com](https://medium.com/@anand_thakkar/row-level-security-rls-in-postgresql-for-multi-tenant-saas-apps-ef8c324031d0)
+[4] [https://dev.to](https://dev.to/brianmmdev/an-introduction-to-postgres-row-level-security-rls-306k)
+[5] [https://www.bytebase.com](https://www.bytebase.com/blog/postgres-row-level-security-limitations-and-alternatives/)
+[6] [https://shiftasia.com](https://shiftasia.com/community/why-your-database-needs-boundaries-an-intro-to-postgresqls-row-level-security-rls/)
+[7] [https://www.crunchydata.com](https://www.crunchydata.com/blog/row-level-security-for-tenants-in-postgres)
+[8] [https://www.postgresql.org](https://www.postgresql.org/docs/current/ddl-rowsecurity.html)
+[9] [https://www.bytebase.com](https://www.bytebase.com/blog/postgres-row-level-security-footguns/)
+[10] [https://pganalyze.com](https://pganalyze.com/blog/postgres-row-level-security-django-python)
+[11] [https://pganalyze.com](https://pganalyze.com/blog)
+[12] [https://www.youtube.com](https://www.youtube.com/watch?v=j53NoW9cPtY)
+
+To implement PostgreSQL Row-Level Security (RLS) in a .NET application using EF Core and Dapper, you must pass the current tenant ID from your application into a PostgreSQL session variable (like app.current_tenant_id) at the start of every database connection. [1] 
+Here is the complete setup guide for your stack.
+------------------------------
+## 1. Database Setup (SQL)
+Run this SQL script on your PostgreSQL database to enable RLS and create a policy that filters rows based on a session variable.
+
+-- Enable RLS on your tenant-isolated tableALTER TABLE tenant_data ENABLE ROW LEVEL SECURITY;
+-- Create a policy that checks the session variable 'app.current_tenant_id'CREATE POLICY tenant_isolation_policy ON tenant_dataAS RESTRICTIVEUSING (tenant_id = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid);
+
+## 2. The Core Pattern: Injecting Tenant Context
+Because RLS relies on database sessions, your application must execute SET LOCAL app.current_tenant_id = 'your-tenant-uuid' immediately after opening a connection. [2] 
+The easiest way to fetch the tenant ID per HTTP request in .NET is via a scoped TenantProvider.
+
+public interface ITenantProvider
+{
+    Guid GetTenantId();
+}
+// Example implementation reading from JWT claims or HTTP Headerspublic class HttpContextTenantProvider : ITenantProvider
+{
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public HttpContextTenantProvider(IHttpContextAccessor httpContextAccessor)
+    {
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    public Guid GetTenantId()
+    {
+        var tenantClaim = _httpContextAccessor.HttpContext?.User?.FindFirst("tenant_id")?.Value;
+        return Guid.TryParse(tenantClaim, out var tenantId) ? tenantId : Guid.Empty;
+    }
+}
+
+## 3. EF Core Implementation
+To automate this in Entity Framework Core, intercept database connections using a DbConnectionInterceptor. This ensures the session variable is set safely before any EF Core query runs. [3, 4] 
+
+using System.Data.Common;using Microsoft.EntityFrameworkCore.Diagnostics;
+public class NpgsqlRlsInterceptor : DbConnectionInterceptor
+{
+    private readonly ITenantProvider _tenantProvider;
+
+    public NpgsqlRlsInterceptor(ITenantProvider tenantProvider)
+    {
+        _tenantProvider = tenantProvider;
+    }
+
+    public override async ValueTask<InterceptionResult> ConnectionOpenedAsync(
+        DbConnection connection, 
+        ConnectionEndEventData eventData, 
+        InterceptionResult result, 
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = _tenantProvider.GetTenantId();
+        
+        // Inject tenant ID into the Postgres session scope
+        using var command = connection.CreateCommand();
+        command.CommandText = $"SET LOCAL app.current_tenant_id = '{tenantId}';";
+        await command.ExecuteNonQueryAsync(cancellationToken);
+
+        return await base.ConnectionOpenedAsync(connection, eventData, result, cancellationToken);
+    }
+}
+
+## Registering in Program.cs:
+
+builder.Services.AddScoped<ITenantProvider, HttpContextTenantProvider>();
+builder.Services.AddScoped<NpgsqlRlsInterceptor>();
+
+builder.Services.AddDbContext<AppDbContext>((sp, options) =>
+{
+    var interceptor = sp.GetRequiredService<NpgsqlRlsInterceptor>();
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection"))
+           .AddInterceptors(interceptor); // Automatically applies RLS
+});
+
+## 4. Dapper Implementation
+Dapper does not use interceptors. You must explicitly set the session variable right after opening your NpgsqlConnection. A clean way to handle this is via an extension method or factory. [5, 6, 7] 
+
+using System.Data;using Dapper;using Npgsql;
+public class DapperConnectionFactory
+{
+    private readonly string _connectionString;
+    private readonly ITenantProvider _tenantProvider;
+
+    public DapperConnectionFactory(IConfiguration configuration, ITenantProvider tenantProvider)
+    {
+        _connectionString = configuration.GetConnectionString("DefaultConnection");
+        _tenantProvider = tenantProvider;
+    }
+
+    public async Task<IDbConnection> CreateConnectionAsync()
+    {
+        var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        // Set RLS context for Dapper query execution
+        var tenantId = _tenantProvider.GetTenantId();
+        await connection.ExecuteAsync($"SET LOCAL app.current_tenant_id = '{tenantId}';");
+
+        return connection;
+    }
+}
+
+## Using Dapper in a Repository:
+
+public class OrderRepository
+{
+    private readonly DapperConnectionFactory _connectionFactory;
+
+    public OrderRepository(DapperConnectionFactory connectionFactory)
+    {
+        _connectionFactory = connectionFactory;
+    }
+
+    public async Task<IEnumerable<Order>> GetTenantOrdersAsync()
+    {
+        using var connection = await _connectionFactory.CreateConnectionAsync();
+        
+        // RLS automatically filters this out; no "WHERE tenant_id = @id" needed!
+        return await connection.QueryAsync<Order>("SELECT * FROM tenant_data"); 
+    }
+}
+
+## ⚠️ Critical Security Considerations
+
+* Connection Pooling: Always use SET LOCAL instead of SET. SET LOCAL only lasts for the duration of the current database transaction. If you use a plain SET, the tenant ID will leak to the next tenant when the connection is returned to the pool and reused. [8] 
+* Transactions: Because SET LOCAL requires an active transaction to live, make sure your EF Core operations or Dapper queries execute inside a transaction block (BeginTransactionAsync), or the settings will clear immediately after the assignment command finishes. [9] 
+* Bypassing RLS: The database user you use in your application connection string must not be a superuser or the table owner. Superusers and owners bypass RLS policies by default. Create a dedicated web application user role in PostgreSQL. [10] 
+
+If you are interested, we can discuss:
+
+* How to handle global admin overrides (so support staff can view all tenants)
+* How to run Entity Framework Core Migrations when RLS is active
+* Performance optimization and indexing strategy for RLS columns
+
+
+[1] [https://www.bytefish.de](https://www.bytefish.de/blog/aspnetcore_multitenancy.html)
+[2] [https://createxp.in](https://createxp.in/blogs/multi-tenant-saas-architecture-database-guide)
+[3] [https://github.com](https://github.com/dotnet/efcore/issues/27999)
+[4] [https://dev.to](https://dev.to/robert_devlin/quickly-connect-an-external-database-to-an-aspnet-core-api-using-odata-5c29)
+[5] [https://www.reddit.com](https://www.reddit.com/r/csharp/comments/1kqe9oa/dapper_or_ef_core_for_a_small_winforms_project/)
+[6] [https://dappertutorial.net](https://dappertutorial.net/dapper)
+[7] [https://codewithmukesh.com](https://codewithmukesh.com/blog/seeding-initial-data-efcore/)
+[8] [https://medium.com](https://medium.com/womenintechnology/building-a-multi-tenant-saas-row-level-security-schema-isolation-and-noisy-neighbor-prevention-5a2ea7d6a556)
+[9] [https://www.c-sharpcorner.com](https://www.c-sharpcorner.com/article/dapper-entity-framework-core-ef-core-together-against-postgresql-in-net-8/)
+[10] [https://dev.to](https://dev.to/ravindu2012/how-i-designed-a-multi-tenant-erp-system-that-isolates-100-of-customer-data-5865)
+
+To handle global admin overrides when using Row-Level Security (RLS), you need to update both your PostgreSQL policies and your .NET application. The goal is to pass a second session variable or a flag indicating the user's role, and then configure PostgreSQL to bypass the tenant check if that flag is active. [1, 2] 
+Here is the exact implementation pattern for your stack.
+------------------------------
+## 1. Database Setup (SQL)
+Modify your RLS policy to check for a new session variable: app.is_admin. If this variable is set to 'true', the policy evaluates to true for all rows, bypassing the tenant ID match. [3] 
+
+-- Recreate or update your policyDROP POLICY IF EXISTS tenant_isolation_policy ON tenant_data;
+CREATE POLICY tenant_isolation_policy ON tenant_dataAS RESTRICTIVEUSING (
+    -- Condition 1: User is a global admin
+    current_setting('app.is_admin', true) = 'true'
+    OR 
+    -- Condition 2: Regular tenant isolation match
+    tenant_id = NULLIF(current_setting('app.current_tenant_id', true), '')::uuid
+);
+
+## 2. Update the .NET Context
+Update your context provider to check if the current user has an Admin or Support role (usually parsed from their JWT claims or identity session). [4, 5] 
+
+public interface ITenantProvider
+{
+    Guid GetTenantId();
+    bool IsGlobalAdmin(); // New method
+}
+public class HttpContextTenantProvider : ITenantProvider
+{
+    private readonly IHttpContextAccessor _httpContextAccessor;
+
+    public HttpContextTenantProvider(IHttpContextAccessor httpContextAccessor)
+    {
+        _httpContextAccessor = httpContextAccessor;
+    }
+
+    public Guid GetTenantId()
+    {
+        var tenantClaim = _httpContextAccessor.HttpContext?.User?.FindFirst("tenant_id")?.Value;
+        return Guid.TryParse(tenantClaim, out var tenantId) ? tenantId : Guid.Empty;
+    }
+
+    public bool IsGlobalAdmin()
+    {
+        // Check if user has an Admin/Support role or a specific claim
+        var user = _httpContextAccessor.HttpContext?.User;
+        return user?.IsInRole("GlobalAdmin") ?? false;
+    }
+}
+
+## 3. EF Core Interceptor Update
+Modify your DbConnectionInterceptor to pass the app.is_admin state to PostgreSQL alongside the tenant ID.
+
+using System.Data.Common;using Microsoft.EntityFrameworkCore.Diagnostics;
+public class NpgsqlRlsInterceptor : DbConnectionInterceptor
+{
+    private readonly ITenantProvider _tenantProvider;
+
+    public NpgsqlRlsInterceptor(ITenantProvider tenantProvider)
+    {
+        _tenantProvider = tenantProvider;
+    }
+
+    public override async ValueTask<InterceptionResult> ConnectionOpenedAsync(
+        DbConnection connection, 
+        ConnectionEndEventData eventData, 
+        InterceptionResult result, 
+        CancellationToken cancellationToken = default)
+    {
+        var tenantId = _tenantProvider.GetTenantId();
+        var isAdmin = _tenantProvider.IsGlobalAdmin() ? "true" : "false";
+        
+        using var command = connection.CreateCommand();
+        // Inject both the tenant ID and the admin bypass flag into the connection session
+        command.CommandText = $@"
+            SET LOCAL app.current_tenant_id = '{tenantId}';
+            SET LOCAL app.is_admin = '{isAdmin}';";
+            
+        await command.ExecuteNonQueryAsync(cancellationToken);
+
+        return await base.ConnectionOpenedAsync(connection, eventData, result, cancellationToken);
+    }
+}
+
+## 4. Dapper Factory Update
+Apply the exact same concept to your Dapper connection builder.
+
+using System.Data;using Dapper;using Npgsql;
+public class DapperConnectionFactory
+{
+    private readonly string _connectionString;
+    private readonly ITenantProvider _tenantProvider;
+
+    public DapperConnectionFactory(IConfiguration configuration, ITenantProvider tenantProvider)
+    {
+        _connectionString = configuration.GetConnectionString("DefaultConnection");
+        _tenantProvider = tenantProvider;
+    }
+
+    public async Task<IDbConnection> CreateConnectionAsync()
+    {
+        var connection = new NpgsqlConnection(_connectionString);
+        await connection.OpenAsync();
+
+        var tenantId = _tenantProvider.GetTenantId();
+        var isAdmin = _tenantProvider.IsGlobalAdmin() ? "true" : "false";
+
+        // Set RLS session context for Dapper execution
+        await connection.ExecuteAsync($@"
+            SET LOCAL app.current_tenant_id = '{tenantId}';
+            SET LOCAL app.is_admin = '{isAdmin}';");
+
+        return connection;
+    }
+}
+
+------------------------------
+## 🛡️ Production & Audit Considerations
+
+* Audit Logging: When a global admin reads or writes data across tenants, tracking who did it is critical. Consider setting a third session variable like SET LOCAL app.current_user_id = 'admin-user-uuid' and using a database trigger on your tables to log every action into a central audit_logs table. [6] 
+* Implicit vs Explicit Admin Queries: When an admin is in "Global View Mode," running SELECT * FROM tenant_data returns every single row in the database. If your admin is trying to help a specific tenant, it is often safer to have them select a "Target Tenant ID" in their admin dashboard, which overrides app.current_tenant_id instead of bypassing RLS completely via app.is_admin = true.
+
+Would you like to explore how to structure database triggers for audit logging using these session variables, or do you want to see how to handle Entity Framework Core migrations without crashing your RLS setup?
+
+[1] [https://www.reddit.com](https://www.reddit.com/r/Supabase/comments/1oowl03/best_practice_for_creating_an_admin_user_that/)
+[2] [https://drupal.stackexchange.com](https://drupal.stackexchange.com/questions/189798/how-do-i-amend-roles-for-the-administer-users-by-role-module)
+[3] [https://vibe-eval.com](https://vibe-eval.com/guides/lovable/)
+[4] [https://doc.castsoftware.com](https://doc.castsoftware.com/export/AIPCONSOLE/Administration+Center+-+Security+-+User+Roles)
+[5] [https://dev.kevel.com](https://dev.kevel.com/docs/snowflake-destination)
+[6] [https://www.red-database-security.com](http://www.red-database-security.com/wp/sentrigo_webinar.pdf)
