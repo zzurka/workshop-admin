@@ -81,9 +81,11 @@ Model je zanatski solidan: konvencije se dosledno poštuju (UUID v7, audit kolon
 
 > **Plan:** [plans/1.6-purchase-orders.md](plans/1.6-purchase-orders.md) — odluke potvrđene 2026-07-17, spreman za implementaciju. Šifarnik statusa, PO brojač po (tenant, godina), purchase_orders + lines (delimični prijemi, veza ka work_order_parts), stock_transactions dobija purchase_order_line_id.
 
-### 1.7 Faktura — zakonski i računovodstveni elementi — 📝
+### 1.7 Faktura — zakonski i računovodstveni elementi — ✅ REŠENO (2026-07-18)
 
-> **Plan:** [plans/1.7-fakture.md](plans/1.7-fakture.md) — odluke potvrđene 2026-07-17, spreman za implementaciju. Šifarnici tax_rates i payment_methods, fiskalni podaci na tenantu (PIB, MB, PDV status), gapless brojač po (tenant, godina), PDV snapshot na linijama, totali i billed_to snapshot na zaglavlju, tabela payments, status partially_paid.
+> **Plan:** [plans/1.7-fakture.md](plans/1.7-fakture.md) — implementirano 2026-07-18. Šifarnici tax_rates i payment_methods, fiskalni podaci na tenantu (PIB, MB, PDV status, račun), gapless brojač po (tenant, godina), PDV snapshot na linijama, totali i billed_to snapshot na zaglavlju, tabela payments, status partially_paid.
+
+**Verifikovano:** pun rebuild (95 skripti), gapless numeracija (rollback + paralelne sesije), unique/CHECK odbijanja, tax_rate snapshot, payments FK — svi testovi iz plana prolaze.
 
 **Problem:** `workshop.invoices` nema:
 - **`invoice_number`** — sekvencijalni broj po tenantu (i godini) je zakonska obaveza u Srbiji; potreban i mehanizam dodele (tabela brojača po tenantu/godini — ne oslanjati se na UUID)
@@ -170,7 +172,7 @@ Model je zanatski solidan: konvencije se dosledno poštuju (UUID v7, audit kolon
 Baza (redosled stavki):
 
 1. ~~Multi-tenant identitet mušterije~~ ✅
-2. Fakture: broj, PDV, valuta, plaćanja (1.7) — zakonska strana
+2. ~~Fakture: broj, PDV, valuta, plaćanja (1.7)~~ ✅
 3. Cross-tenant kompozitni FK-ovi (2.1) + odluka o RLS (2.2)
 4. Nove tabele: reklamacije (1.2), purchase orders (1.6), payroll (1.3), work_order_labor (3.2)
 5. Appointments: queue, source, trajanje, no_show (1.4) + odluka o walk-in nalozima (1.5)
