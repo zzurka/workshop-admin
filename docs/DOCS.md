@@ -2,6 +2,7 @@
 
 ├── docs/
 │   ├── architecture/
+│   │   └── backend-plan.md     <-- New backend (modular monolith) architecture plan
 │   ├── api/
 │   └── database/
 │       ├── er-diagrams/

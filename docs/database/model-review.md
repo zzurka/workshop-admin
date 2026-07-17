@@ -152,7 +152,9 @@ Model je zanatski solidan: konvencije se dosledno poštuju (UUID v7, audit kolon
 
 ## 4. Backend
 
-### 4.1 Novi backend od nule — modular monolith — ⬜
+### 4.1 Novi backend od nule — modular monolith — 📝
+
+> **Plan:** [../architecture/backend-plan.md](../architecture/backend-plan.md) — detaljan arhitekturni plan (2026-07-17), odluke potvrđene 2026-07-18 (EF Core + Dapper, libsodium hasher). Spreman za implementaciju — F1 može odmah, ostatak kad šema uđe u batch.
 
 **Odluka (2026-07-16):** postojeći backend u `src/backend/` se NE refaktoriše — piše se novi od nule, sa arhitekturom modular monolith. Stari backend referencira uklonjeni `auth.users.tenant_id` i ne radi uz novu šemu; ostaje u repou samo kao referenca dok ga novi ne zameni.
 
