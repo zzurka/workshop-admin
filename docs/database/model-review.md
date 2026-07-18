@@ -143,9 +143,9 @@ Model je zanatski solidan: konvencije se dosledno poštuju (UUID v7, audit kolon
 > **Plan:** [plans/3.3-b2b-kupci.md](plans/3.3-b2b-kupci.md) — odluke potvrđene 2026-07-17, spreman za implementaciju. Customer_type diskriminator (person/company), company_name + PIB/MB, CHECK identiteta; otključava billed_to_tax_id iz 1.7.
 - `first_name`/`last_name` NOT NULL — nema podrške za pravna lica (naziv firme, PIB/MB); flotni B2B klijenti su česti kod servisa
 
-### 3.4 Tenant / ostalo — 📝
+### 3.4 Tenant / ostalo — 🔶 (attachments rešeni 2026-07-18)
 
-> **Plan:** [plans/3.4-tenant-ostalo.md](plans/3.4-tenant-ostalo.md) — odluke potvrđene 2026-07-17, spreman za implementaciju. Tenant_subscriptions istorija (jedna tekuća po tenantu), nova šema document + polimorfna attachments tabela sa dualnim storage-om (filesystem dev / S3 prod, storage_provider po redu), email_outbox dobija template_code i related_entity.
+> **Plan:** [plans/3.4-tenant-ostalo.md](plans/3.4-tenant-ostalo.md) — odluke potvrđene 2026-07-17. **Deo B (šema document + attachments) implementiran 2026-07-18** — izvučen ranije zbog čuvanja PDF-a izdate fakture (`invoices.pdf_attachment_id`); RLS (2.2) će novu šemu pokriti u istom prolazu. Ostaje: tenant_subscriptions istorija (jedna tekuća po tenantu) i email_outbox template_code + related_entity.
 - Nema istorije pretplate (`tenant_subscriptions`: plan, period, trial, status) — promene plana i naplata platforme se ne mogu pratiti
 - `subscription_plans.max_storage_mb` implicira attachmente, a tabela za dokumente/slike ne postoji
 - `email_outbox` nema vezu ka izvornom entitetu (`related_entity_type/id`) ni `template_code` — otežava dijagnostiku i idempotentnost slanja
