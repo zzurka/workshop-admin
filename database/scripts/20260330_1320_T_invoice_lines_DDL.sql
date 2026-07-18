@@ -20,6 +20,7 @@ CREATE TABLE IF NOT EXISTS workshop.invoice_lines (
     invoice_id          UUID          NOT NULL,
     work_order_id       UUID,
     work_order_part_id  UUID,
+    work_order_labor_id UUID,
     description         VARCHAR(500)  NOT NULL,
     quantity            NUMERIC(10,2) NOT NULL DEFAULT 1,
     unit_price          NUMERIC(10,2) NOT NULL,
@@ -39,6 +40,7 @@ CREATE TABLE IF NOT EXISTS workshop.invoice_lines (
     CONSTRAINT fk_workshop_invoice_lines_invoice_id             FOREIGN KEY (tenant_id, invoice_id)         REFERENCES workshop.invoices(tenant_id, id),
     CONSTRAINT fk_workshop_invoice_lines_work_order_id          FOREIGN KEY (tenant_id, work_order_id)      REFERENCES workshop.work_orders(tenant_id, id),
     CONSTRAINT fk_workshop_invoice_lines_work_order_part_id     FOREIGN KEY (tenant_id, work_order_part_id) REFERENCES workshop.work_order_parts(tenant_id, id),
+    CONSTRAINT fk_workshop_invoice_lines_work_order_labor_id    FOREIGN KEY (tenant_id, work_order_labor_id) REFERENCES workshop.work_order_labor(tenant_id, id),
     CONSTRAINT fk_workshop_invoice_lines_tax_rate_id            FOREIGN KEY (tax_rate_id)        REFERENCES codebook.tax_rates(id),
     CONSTRAINT fk_workshop_invoice_lines_created_by             FOREIGN KEY (created_by)         REFERENCES auth.users(id),
     CONSTRAINT fk_workshop_invoice_lines_updated_by             FOREIGN KEY (updated_by)         REFERENCES auth.users(id),
@@ -55,6 +57,7 @@ COMMENT ON COLUMN workshop.invoice_lines.tenant_id              IS 'Denormalized
 COMMENT ON COLUMN workshop.invoice_lines.invoice_id             IS 'The invoice this line belongs to. Composite FK (tenant_id, invoice_id) guarantees the invoice belongs to the same tenant.';
 COMMENT ON COLUMN workshop.invoice_lines.work_order_id          IS 'Optional link to the work order this line relates to. NULL for walk-in invoice lines; composite FK check is skipped while NULL.';
 COMMENT ON COLUMN workshop.invoice_lines.work_order_part_id     IS 'Optional link to the specific work_order_part. NULL for labor lines and walk-in lines; composite FK check is skipped while NULL.';
+COMMENT ON COLUMN workshop.invoice_lines.work_order_labor_id    IS 'Optional link to the work_order_labor entry this labor line bills (quantity = hours, unit_price = hourly_rate snapshot). NULL for parts lines and walk-in lines; composite FK check is skipped while NULL.';
 COMMENT ON COLUMN workshop.invoice_lines.description            IS 'Line item description shown on the invoice (e.g. "Oil filter OEM 123-456" or "Labor: brake pad replacement").';
 COMMENT ON COLUMN workshop.invoice_lines.quantity               IS 'Number of units. Supports decimals for labor hours (e.g. 1.5 hours).';
 COMMENT ON COLUMN workshop.invoice_lines.unit_price             IS 'NET price per unit (excluding VAT). The UI may accept gross input and convert.';
@@ -75,6 +78,9 @@ CREATE INDEX IF NOT EXISTS ix_workshop_invoice_lines_invoice_id
 
 CREATE INDEX IF NOT EXISTS ix_workshop_invoice_lines_work_order_id
     ON workshop.invoice_lines (work_order_id);
+
+CREATE INDEX IF NOT EXISTS ix_workshop_invoice_lines_work_order_labor_id
+    ON workshop.invoice_lines (work_order_labor_id);
 
 CREATE INDEX IF NOT EXISTS ix_workshop_invoice_lines_tax_rate_id
     ON workshop.invoice_lines (tax_rate_id);

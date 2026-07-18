@@ -16,6 +16,7 @@ CREATE TABLE IF NOT EXISTS warehouse.stock_transactions (
     quantity              NUMERIC(10,2) NOT NULL,
     work_order_id         UUID,
     supplier_id           UUID,
+    purchase_order_line_id UUID,
     notes                 TEXT,
     created_at            TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
     created_by            UUID        NOT NULL,
@@ -26,6 +27,7 @@ CREATE TABLE IF NOT EXISTS warehouse.stock_transactions (
     CONSTRAINT fk_warehouse_stock_transactions_transaction_type_id   FOREIGN KEY (transaction_type_id)        REFERENCES codebook.stock_transaction_types(id),
     CONSTRAINT fk_warehouse_stock_transactions_work_order_id         FOREIGN KEY (tenant_id, work_order_id)   REFERENCES workshop.work_orders(tenant_id, id),
     CONSTRAINT fk_warehouse_stock_transactions_supplier_id           FOREIGN KEY (tenant_id, supplier_id)     REFERENCES workshop.suppliers(tenant_id, id),
+    CONSTRAINT fk_warehouse_stock_transactions_purchase_order_line_id FOREIGN KEY (tenant_id, purchase_order_line_id) REFERENCES warehouse.purchase_order_lines(tenant_id, id),
     CONSTRAINT fk_warehouse_stock_transactions_created_by            FOREIGN KEY (created_by)          REFERENCES auth.users(id),
     CONSTRAINT ck_warehouse_stock_transactions_quantity               CHECK (quantity <> 0)
 );
@@ -38,6 +40,7 @@ COMMENT ON COLUMN warehouse.stock_transactions.transaction_type_id      IS 'FK t
 COMMENT ON COLUMN warehouse.stock_transactions.quantity                 IS 'Quantity moved. Positive for stock in (receipt, return, adjustment_in), negative for stock out (issue, adjustment_out). Cannot be zero.';
 COMMENT ON COLUMN warehouse.stock_transactions.work_order_id            IS 'FK to workshop.work_orders. Set when parts are issued to or returned from a work order. NULL otherwise.';
 COMMENT ON COLUMN warehouse.stock_transactions.supplier_id              IS 'FK to workshop.suppliers. Set when parts are received from a supplier. NULL otherwise.';
+COMMENT ON COLUMN warehouse.stock_transactions.purchase_order_line_id   IS 'FK to warehouse.purchase_order_lines. Set on receipt transactions booked against a purchase order line — enables reconciling received_quantity with actual receipts. NULL otherwise. Composite FK check is skipped while NULL.';
 COMMENT ON COLUMN warehouse.stock_transactions.notes                    IS 'Optional notes about this transaction (e.g. reason for adjustment).';
 COMMENT ON COLUMN warehouse.stock_transactions.created_by               IS 'User who performed this transaction.';
 
@@ -49,6 +52,9 @@ CREATE INDEX IF NOT EXISTS ix_warehouse_stock_transactions_catalog_part_id
 
 CREATE INDEX IF NOT EXISTS ix_warehouse_stock_transactions_work_order_id
     ON warehouse.stock_transactions (work_order_id);
+
+CREATE INDEX IF NOT EXISTS ix_warehouse_stock_transactions_purchase_order_line_id
+    ON warehouse.stock_transactions (purchase_order_line_id);
 
 CREATE INDEX IF NOT EXISTS ix_warehouse_stock_transactions_created_at
     ON warehouse.stock_transactions (created_at);

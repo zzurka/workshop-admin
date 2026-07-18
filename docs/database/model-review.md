@@ -33,23 +33,13 @@ Model je zanatski solidan: konvencije se dosledno poštuju (UUID v7, audit kolon
 
 **Posledica — otvoreno:** backend refaktor (vidi stavku 4.1).
 
-### 1.2 Reklamacije — 📝
+### 1.2 Reklamacije — ✅ REŠENO (2026-07-18)
 
-**Problem:** Zahtev iz Workshop modula; ne postoji nijedna tabela.
+> **Plan:** [plans/1.2-reklamacije.md](plans/1.2-reklamacije.md) — implementirano 2026-07-18. Šifarnik complaint_statuses, tabela complaints sa dvokoračnim tokom (odluka → rešavanje), garantnim radnim nalogom, kompozitnim FK-ovima i RLS policy-jem. Test plan prolazi.
 
-**Predlog:** `workshop.complaints` — FK na `invoice_id`/`work_order_id`, `customer_id`, `tenant_id`, opis, status (novi codebook `complaint_statuses`: submitted, in_review, accepted, rejected, resolved), `resolution` tekst, `resolved_by/at`, i `resolution_work_order_id` (rešavanje reklamacije često generiše novi radni nalog).
+### 1.3 Plate (payroll) — ✅ REŠENO (2026-07-18)
 
-> **Plan:** [plans/1.2-reklamacije.md](plans/1.2-reklamacije.md) — odluke potvrđene 2026-07-17, spreman za implementaciju. Šifarnik complaint_statuses, tabela complaints sa dvokoračnim tokom (odluka → rešavanje) i garantnim radnim nalogom.
-
-### 1.3 Plate (payroll) — 📝
-
-**Problem:** `hr.employees` ima samo `hourly_rate` — zaposleni tipa "salaried" nema ni iznos plate nigde. Zahtev traži "kompletno vođenje zaposlenih, kao što su plate".
-
-**Predlog:**
-- `hr.employee_compensations` — istorija zarada (`amount`, `valid_from`, `valid_to`); zamenjuje/dopunjuje `hourly_rate` (plata se menja kroz vreme, istorija je potrebna za obračun)
-- `hr.payroll_runs` + `hr.payslips` — obračunski period, bruto/neto, dodaci/odbici, status isplate
-
-> **Plan:** [plans/1.3-payroll.md](plans/1.3-payroll.md) — odluke potvrđene 2026-07-17, spreman za implementaciju. Compensations istorija (mesečna/satnica, jedna otvorena po zaposlenom), mesečni payroll_runs + payslips; obim v1 = evidencija bez poreskog obračuna; briše se `employees.hourly_rate`.
+> **Plan:** [plans/1.3-payroll.md](plans/1.3-payroll.md) — implementirano 2026-07-18. Compensations istorija (mesečna/satnica, jedna otvorena po zaposlenom — partial unique), mesečni payroll_runs (jedan po tenantu i mesecu) + payslips (jedan po zaposlenom u run-u); obim v1 = evidencija bez poreskog obračuna; `employees.hourly_rate` obrisan. Test plan prolazi.
 
 ### 1.4 Redosled zakazivanja — 📝
 
@@ -73,13 +63,9 @@ Model je zanatski solidan: konvencije se dosledno poštuju (UUID v7, audit kolon
 
 > **Plan:** [plans/1.5-walk-in.md](plans/1.5-walk-in.md) — odluka (opcija B) potvrđena 2026-07-17. Implicitni walk-in appointment; appointment = univerzalni „prijem vozila", nalog ostaje NOT NULL, brza popravka može appointment → invoice bez naloga. Bez novih izmena šeme — sve donosi 1.4.
 
-### 1.6 Poručivanje delova (purchase orders) — 📝
+### 1.6 Poručivanje delova (purchase orders) — ✅ REŠENO (2026-07-18)
 
-**Problem:** Warehouse zahtev navodi "porucivanje". `work_order_parts.part_status` ima ordered/received, ali ne postoji entitet narudžbenice — "šta je naručeno, od koga, kad stiže" se ne može voditi, a `stock_transactions.receipt` nema na šta da se veže.
-
-**Predlog:** `warehouse.purchase_orders` (supplier, status, ordered_at, expected_at) + `warehouse.purchase_order_lines` (catalog_part, količina, nabavna cena). Vezati `stock_transactions` (receipt) i `work_order_parts` (ordered) na PO liniju.
-
-> **Plan:** [plans/1.6-purchase-orders.md](plans/1.6-purchase-orders.md) — odluke potvrđene 2026-07-17, spreman za implementaciju. Šifarnik statusa, PO brojač po (tenant, godina), purchase_orders + lines (delimični prijemi, veza ka work_order_parts), stock_transactions dobija purchase_order_line_id.
+> **Plan:** [plans/1.6-purchase-orders.md](plans/1.6-purchase-orders.md) — implementirano 2026-07-18. Šifarnik statusa, PO brojač po (tenant, godina) sa dodelom pri kreiranju, purchase_orders + lines (delimični prijemi, veza ka work_order_parts), stock_transactions dobio purchase_order_line_id. Test plan prolazi (uklj. tok prijema).
 
 ### 1.7 Faktura — zakonski i računovodstveni elementi — ✅ REŠENO (2026-07-18)
 
@@ -126,13 +112,13 @@ Model je zanatski solidan: konvencije se dosledno poštuju (UUID v7, audit kolon
 - `login_history.user_id NOT NULL` — ne može se zabeležiti pokušaj sa nepostojećim emailom; predlog: nullable + `attempted_email`
 - `mfa_method` nema CHECK (totp/sms/email); `users.email` VARCHAR(255) vs `external_logins.email` VARCHAR(320) — ujednačiti
 
-### 3.2 Workshop / Warehouse — 📝
+### 3.2 Workshop / Warehouse — 🔶 (work_order_labor rešen 2026-07-18)
 
 > **Plan (ostatak sekcije):** [plans/3.2b-workshop-warehouse-sitnice.md](plans/3.2b-workshop-warehouse-sitnice.md) — odluke potvrđene 2026-07-17, spreman za implementaciju. Quantity → NUMERIC, index na tablicu, awaiting_approval status + approval kolone na nalogu, rezervacije kao view v_stock_availability, part_status `issued`.
 - `work_order_parts.quantity` SMALLINT, a stock i invoice linije NUMERIC(10,2) — ne može 1,5 l ulja na nalog; ujednačiti na NUMERIC
 - Nedostaje index na `vehicles.license_plate` — a denormalizacija `tenant_id` je obrazložena baš plate/VIN pretragom (VIN ima index, tablica nema)
-- Nema strukture za sate rada po nalogu (`work_order_labor`: employee, sati, satnica) — labor linije na fakturi nemaju izvor; `hr.time_entries` nije vezan za naloge
-  > **Plan:** [plans/3.2-work-order-labor.md](plans/3.2-work-order-labor.md) — odluke potvrđene 2026-07-17, spreman za implementaciju. Tabela work_order_labor (sati × naplatna satnica, snapshot), invoice_lines.work_order_labor_id, default_labor_rate na tenantu.
+- ~~Nema strukture za sate rada po nalogu~~ ✅ REŠENO (2026-07-18)
+  > **Plan:** [plans/3.2-work-order-labor.md](plans/3.2-work-order-labor.md) — implementirano 2026-07-18. Tabela work_order_labor (sati × naplatna satnica, snapshot), invoice_lines.work_order_labor_id, default_labor_rate na tenantu. Test plan prolazi.
 - Nema odobrenja mušterije za dodatne popravke (`approved_at`/`approved_by` na work orderu) — scenario iz zahteva
 - Stock nema koncept rezervacije (deo "in_stock" na nalogu ne umanjuje raspoloživo)
 
@@ -172,7 +158,7 @@ Baza (redosled stavki):
 1. ~~Multi-tenant identitet mušterije~~ ✅
 2. ~~Fakture: broj, PDV, valuta, plaćanja (1.7)~~ ✅
 3. ~~Cross-tenant kompozitni FK-ovi (2.1) + RLS DB strana (2.2)~~ ✅ (backend deo 2.2 uz novi backend)
-4. Nove tabele: reklamacije (1.2), purchase orders (1.6), payroll (1.3), work_order_labor (3.2)
+4. ~~Nove tabele: reklamacije (1.2), purchase orders (1.6), payroll (1.3), work_order_labor (3.2)~~ ✅
 5. Appointments: queue, source, trajanje, no_show (1.4) + odluka o walk-in nalozima (1.5)
 6. Manji nalazi (3.1–3.4)
 

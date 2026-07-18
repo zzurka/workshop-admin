@@ -17,7 +17,6 @@ CREATE TABLE IF NOT EXISTS hr.employees (
     employment_type_id SMALLINT     NOT NULL,
     hire_date          DATE         NOT NULL,
     termination_date   DATE,
-    hourly_rate        NUMERIC(10,2),
     notes              TEXT,
     created_at         TIMESTAMPTZ  NOT NULL DEFAULT NOW(),
     created_by         UUID,
@@ -42,8 +41,7 @@ COMMENT ON COLUMN hr.employees.tenant_id          IS 'The tenant (workshop) this
 COMMENT ON COLUMN hr.employees.user_id            IS 'Link to auth.users — every employee must have a login account. Unique per (tenant_id, user_id); the same person can be employed at multiple tenants, one employee row per tenant. (user_id, tenant_id) must be an auth.user_tenants membership (composite FK). Name, email, phone are on auth.users.';
 COMMENT ON COLUMN hr.employees.employment_type_id IS 'FK to codebook.employment_types (salaried, hourly).';
 COMMENT ON COLUMN hr.employees.hire_date          IS 'Date the employee started working.';
-COMMENT ON COLUMN hr.employees.termination_date   IS 'Date the employee left. NULL if still employed.';
-COMMENT ON COLUMN hr.employees.hourly_rate        IS 'Hourly rate for hourly employees. NULL for salaried employees. Used for time entry cost calculations.';
+COMMENT ON COLUMN hr.employees.termination_date   IS 'Date the employee left. NULL if still employed. Compensation (monthly salary or hourly rate) lives in hr.employee_compensations as a dated history.';
 COMMENT ON COLUMN hr.employees.notes              IS 'Internal HR notes about this employee. Not visible to the employee.';
 COMMENT ON COLUMN hr.employees.created_by         IS 'User who created this record. NULL for system/seed records.';
 COMMENT ON COLUMN hr.employees.updated_at         IS 'NULL on creation. Set on any update, including soft-delete.';

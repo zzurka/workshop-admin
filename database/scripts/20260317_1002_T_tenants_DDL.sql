@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS tenant.tenants (
     company_registration_number VARCHAR(20),
     is_vat_registered           BOOLEAN      NOT NULL DEFAULT FALSE,
     bank_account_number         VARCHAR(50),
+    default_labor_rate          NUMERIC(10,2),
     address_line1               VARCHAR(255),
     address_line2               VARCHAR(255),
     city                        VARCHAR(100),
@@ -37,7 +38,8 @@ CREATE TABLE IF NOT EXISTS tenant.tenants (
     CONSTRAINT pk_tenant_tenants                       PRIMARY KEY (id),
     CONSTRAINT uq_tenant_tenants_slug                  UNIQUE (slug),
     CONSTRAINT fk_tenant_tenants_subscription_plan_id  FOREIGN KEY (subscription_plan_id) REFERENCES tenant.subscription_plans(id),
-    CONSTRAINT fk_tenant_tenants_default_currency_id   FOREIGN KEY (default_currency_id)  REFERENCES codebook.currencies(id)
+    CONSTRAINT fk_tenant_tenants_default_currency_id   FOREIGN KEY (default_currency_id)  REFERENCES codebook.currencies(id),
+    CONSTRAINT ck_tenant_tenants_default_labor_rate    CHECK (default_labor_rate IS NULL OR default_labor_rate >= 0)
     -- created_by / updated_by FKs added in 20260317_1020_T_users_tenants_fk_DDL.sql (circular dependency)
 );
 
@@ -50,6 +52,7 @@ COMMENT ON COLUMN tenant.tenants.tax_id                      IS 'Serbian PIB (ta
 COMMENT ON COLUMN tenant.tenants.company_registration_number IS 'Serbian matični broj (company registration number).';
 COMMENT ON COLUMN tenant.tenants.is_vat_registered           IS 'TRUE = tenant is in the VAT system. FALSE = small business outside the VAT system (čl. 33 ZPDV) — all invoice lines then use the ''exempt'' tax rate and invoices carry a vat_note.';
 COMMENT ON COLUMN tenant.tenants.bank_account_number         IS 'Bank account (tekući račun) printed on invoices as the payment instruction.';
+COMMENT ON COLUMN tenant.tenants.default_labor_rate          IS 'Default billing rate per labor hour, in the tenant''s default currency. Prefills work_order_labor.hourly_rate (editable per entry). One rate per tenant in v1.';
 COMMENT ON COLUMN tenant.tenants.is_active                   IS 'FALSE = tenant suspended. Active users of this tenant cannot log in.';
 COMMENT ON COLUMN tenant.tenants.updated_at                  IS 'NULL on creation. Set on any update, including soft-delete.';
 COMMENT ON COLUMN tenant.tenants.is_deleted                  IS 'Soft delete flag. When TRUE, updated_at holds the deletion timestamp.';
