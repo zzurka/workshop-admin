@@ -97,23 +97,21 @@ Model je zanatski solidan: konvencije se dosledno poštuju (UUID v7, audit kolon
 
 ## 2. Sistemski rizik
 
-### 2.1 Cross-tenant integritet — 🔶 (rešeno samo za auth veze)
+### 2.1 Cross-tenant integritet — ✅ REŠENO (2026-07-18)
 
-**Problem:** Trigger `tr_vehicles_tenant_check` štiti samo vehicles↔customers. Isti problem svuda: appointment može referencirati customer/vehicle drugog tenanta, work_order tuđ appointment ili employee, invoice tuđeg customera, `work_order_parts` tuđ `parts_catalog`/`supplier`, itd.
+> **Plan:** [plans/2.1-cross-tenant-integritet.md](plans/2.1-cross-tenant-integritet.md) — implementirano 2026-07-18. 9 roditelja dobilo `UNIQUE (tenant_id, id)`, 14 dece prešlo na kompozitne FK-ove (uključujući `payments → invoices`, dopuna van prvobitne tabele plana — tabela je nastala u 1.7 posle pisanja plana), `work_order_parts` i `invoice_lines` dobili denormalizovan `tenant_id`, vehicles trigger obrisan (zamenjen kompozitnim FK-om). CLAUDE.md pravilo dopunjeno.
 
-**Urađeno (2026-07-16):** kompozitni FK-ovi `(user_id, tenant_id) → auth.user_tenants` na `customers`, `employees`, `user_roles`.
+**Verifikovano:** pun rebuild (98 skripti); 10 negativnih testova (svaka cross-tenant veza odbijena, uključujući stari trigger slučaj za vehicles) + pozitivan kompletan tok oba tenanta.
 
-**Ostaje:** sistemski pristup za domenske tabele — dodati `UNIQUE (tenant_id, id)` na roditelje i kompozitne FK-ove `(tenant_id, <parent>_id)` na decu (appointments, work_orders, invoices, work_order_parts, stock, stock_transactions, expenses, leave_*, time_entries...). Trigger za vehicles tada može da se zameni kompozitnim FK-om.
+**Prvobitni problem:** Trigger `tr_vehicles_tenant_check` je štitio samo vehicles↔customers; svuda drugde je appointment mogao referencirati customer/vehicle drugog tenanta, work_order tuđ appointment ili employee, itd. Kompozitni FK-ovi `(user_id, tenant_id) → auth.user_tenants` za `customers`/`employees`/`user_roles` su bili urađeni ranije (2026-07-16, stavka 1.1).
 
-> **Plan:** [plans/2.1-cross-tenant-integritet.md](plans/2.1-cross-tenant-integritet.md) — odluke potvrđene 2026-07-17, spreman za implementaciju. 9 roditelja dobija `UNIQUE (tenant_id, id)`, 13 dece prelazi na kompozitne FK-ove, `work_order_parts` i `invoice_lines` dobijaju denormalizovan `tenant_id`, vehicles trigger se briše.
+### 2.2 Row Level Security — 🔶 (DB strana rešena 2026-07-18; backend deo uz novi backend)
 
-### 2.2 Row Level Security — 📝 (odluka: DA)
+> **Plan:** [plans/2.2-rls.md](plans/2.2-rls.md) — odluka DA potvrđena 2026-07-17; DB strana implementirana 2026-07-18: skripta `20260523_1000_S_rls_policies_DDL.sql` — ENABLE RLS + `tenant_isolation` policy za `workshopadmin_app` na 22 tabele (19 direktnih po `tenant_id` uključujući `document.attachments`, 2 preko EXISTS ka roditelju: `appointment_services`, `supplier_contacts`, i `email_outbox` sa NULL-tenant redovima samo za platformu). Fail-closed; admin/migracije nezahvaćene.
 
-**Problem:** Row-based multi-tenancy se oslanja isključivo na aplikativno filtriranje — jedan zaboravljen `WHERE tenant_id = ...` u backendu je direktan data leak.
+**Verifikovano:** testovi kroz pravu konekciju kao `workshopadmin_app` — bez konteksta 0 redova, izolacija po tenantu (uklj. EXISTS child tabele i outbox), write-side odbijanje cross-tenant INSERT-a, platform-admin kontekst vidi sve, admin bypass.
 
-**Predlog:** razmotriti PostgreSQL RLS sa `app.current_tenant_id` session settingom kao odbranu u dubinu. Odluka (da/ne + obim) pre nego što backend naraste.
-
-> **Plan:** [plans/2.2-rls.md](plans/2.2-rls.md) — odluka DA potvrđena 2026-07-17. DB strana (policy skripta) ide odmah u implementacioni batch; backend deo (`SET LOCAL` interceptor) uz novi backend. Fail-closed policy dizajn, admin/migracije nezahvaćene.
+**Ostaje (uz novi backend):** `SET LOCAL app.current_tenant_id` interceptor u DB sloju — fail-closed dizajn ga čini tvrdim zahtevom od prvog dana.
 
 ---
 
@@ -121,7 +119,7 @@ Model je zanatski solidan: konvencije se dosledno poštuju (UUID v7, audit kolon
 
 ### 3.1 Auth — 📝
 
-> **Plan:** [plans/3.1-auth-sitnice.md](plans/3.1-auth-sitnice.md) — odluke potvrđene 2026-07-17, spreman za implementaciju. Partial unique na LOWER(email), email verifikacija (kolona + token tabela + template), lockout kolone, login_history za nepostojeće emaile, MFA checkovi.
+> **Plan:** [plans/3.1-auth-sitnice.md](plans/3.1-auth-sitnice.md) — odluke potvrđene 2026-07-17, spreman za implementaciju; dopuna E potvrđena 2026-07-18. Partial unique na LOWER(email), email verifikacija (kolona + token tabela + template), lockout kolone, login_history za nepostojeće emaile, MFA checkovi. **+ E:** RLS za `roles`/`role_permissions`/`user_roles` (custom role tenanta su tenant-scoped podaci — razdvojene policy po komandi; globalne role čitljive kao katalog, pisive samo platformi; transakcija izdavanja tokena u backendu radi sa platform kontekstom).
 - `uq_auth_users_email` nije partial index — soft-obrisan user zauvek zaključava email; `roles` to rešavaju sa `WHERE NOT is_deleted` (nekonzistentno)
 - Nema `email_verified_at` — nužno za samoregistraciju mušterija
 - Nema lockout kolona (`failed_login_count`, `locked_until`) iako `login_history.failure_reason` pominje `account_locked`
@@ -173,7 +171,7 @@ Baza (redosled stavki):
 
 1. ~~Multi-tenant identitet mušterije~~ ✅
 2. ~~Fakture: broj, PDV, valuta, plaćanja (1.7)~~ ✅
-3. Cross-tenant kompozitni FK-ovi (2.1) + odluka o RLS (2.2)
+3. ~~Cross-tenant kompozitni FK-ovi (2.1) + RLS DB strana (2.2)~~ ✅ (backend deo 2.2 uz novi backend)
 4. Nove tabele: reklamacije (1.2), purchase orders (1.6), payroll (1.3), work_order_labor (3.2)
 5. Appointments: queue, source, trajanje, no_show (1.4) + odluka o walk-in nalozima (1.5)
 6. Manji nalazi (3.1–3.4)

@@ -28,10 +28,11 @@ CREATE TABLE IF NOT EXISTS warehouse.parts_catalog (
     is_deleted          BOOLEAN       NOT NULL DEFAULT FALSE,
 
     CONSTRAINT pk_warehouse_parts_catalog                       PRIMARY KEY (id),
+    CONSTRAINT uq_warehouse_parts_catalog_tenant_id_id          UNIQUE (tenant_id, id),
     CONSTRAINT uq_warehouse_parts_catalog_tenant_barcode        UNIQUE (tenant_id, barcode),
     CONSTRAINT fk_warehouse_parts_catalog_tenant_id             FOREIGN KEY (tenant_id)          REFERENCES tenant.tenants(id),
     CONSTRAINT fk_warehouse_parts_catalog_unit_of_measure_id    FOREIGN KEY (unit_of_measure_id) REFERENCES codebook.units_of_measure(id),
-    CONSTRAINT fk_warehouse_parts_catalog_default_supplier_id   FOREIGN KEY (default_supplier_id) REFERENCES workshop.suppliers(id),
+    CONSTRAINT fk_warehouse_parts_catalog_default_supplier_id   FOREIGN KEY (tenant_id, default_supplier_id) REFERENCES workshop.suppliers(tenant_id, id),
     CONSTRAINT fk_warehouse_parts_catalog_created_by            FOREIGN KEY (created_by)         REFERENCES auth.users(id),
     CONSTRAINT fk_warehouse_parts_catalog_updated_by            FOREIGN KEY (updated_by)         REFERENCES auth.users(id),
     CONSTRAINT ck_warehouse_parts_catalog_cost_price            CHECK (cost_price >= 0),
@@ -47,7 +48,7 @@ COMMENT ON COLUMN warehouse.parts_catalog.name                    IS 'Human-read
 COMMENT ON COLUMN warehouse.parts_catalog.barcode                 IS 'EAN/UPC or internal barcode. Unique per tenant. NULL if not barcoded.';
 COMMENT ON COLUMN warehouse.parts_catalog.description             IS 'Optional detailed description of the part.';
 COMMENT ON COLUMN warehouse.parts_catalog.unit_of_measure_id      IS 'FK to codebook.units_of_measure (e.g. piece, liter, kg).';
-COMMENT ON COLUMN warehouse.parts_catalog.default_supplier_id     IS 'Optional FK to workshop.suppliers. Preferred supplier for reordering.';
+COMMENT ON COLUMN warehouse.parts_catalog.default_supplier_id     IS 'Optional FK to workshop.suppliers. Preferred supplier for reordering. Composite FK (tenant_id, default_supplier_id) guarantees the supplier belongs to the same tenant; check is skipped while NULL.';
 COMMENT ON COLUMN warehouse.parts_catalog.cost_price              IS 'Default purchase price (what you pay the supplier). NULL if not yet known.';
 COMMENT ON COLUMN warehouse.parts_catalog.selling_price           IS 'Default selling price (what you charge the customer). NULL if not yet set.';
 COMMENT ON COLUMN warehouse.parts_catalog.min_stock_level         IS 'Minimum stock threshold. When quantity_on_hand drops below this, trigger reorder alert.';

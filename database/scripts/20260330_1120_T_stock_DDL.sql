@@ -22,7 +22,7 @@ CREATE TABLE IF NOT EXISTS warehouse.stock (
     CONSTRAINT pk_warehouse_stock                    PRIMARY KEY (id),
     CONSTRAINT uq_warehouse_stock_tenant_part        UNIQUE (tenant_id, catalog_part_id),
     CONSTRAINT fk_warehouse_stock_tenant_id          FOREIGN KEY (tenant_id)       REFERENCES tenant.tenants(id),
-    CONSTRAINT fk_warehouse_stock_catalog_part_id    FOREIGN KEY (catalog_part_id) REFERENCES warehouse.parts_catalog(id),
+    CONSTRAINT fk_warehouse_stock_catalog_part_id    FOREIGN KEY (tenant_id, catalog_part_id) REFERENCES warehouse.parts_catalog(tenant_id, id),
     CONSTRAINT fk_warehouse_stock_created_by         FOREIGN KEY (created_by)      REFERENCES auth.users(id),
     CONSTRAINT fk_warehouse_stock_updated_by         FOREIGN KEY (updated_by)      REFERENCES auth.users(id),
     CONSTRAINT ck_warehouse_stock_quantity_on_hand    CHECK (quantity_on_hand >= 0)
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS warehouse.stock (
 COMMENT ON TABLE  warehouse.stock                      IS 'Current inventory levels. One row per part per tenant. Updated atomically with each stock_transaction.';
 COMMENT ON COLUMN warehouse.stock.id                   IS 'UUID v7 primary key (time-ordered).';
 COMMENT ON COLUMN warehouse.stock.tenant_id            IS 'The tenant (workshop) this stock belongs to.';
-COMMENT ON COLUMN warehouse.stock.catalog_part_id      IS 'FK to warehouse.parts_catalog. The part being tracked.';
+COMMENT ON COLUMN warehouse.stock.catalog_part_id      IS 'FK to warehouse.parts_catalog. The part being tracked. Composite FK (tenant_id, catalog_part_id) guarantees the part belongs to the same tenant.';
 COMMENT ON COLUMN warehouse.stock.quantity_on_hand      IS 'Current quantity in stock. Must be >= 0. Unit is defined by the part catalog entry.';
 COMMENT ON COLUMN warehouse.stock.bin_location          IS 'Physical location in the warehouse (e.g. "A3-12", "Shelf B"). NULL if not tracked.';
 COMMENT ON COLUMN warehouse.stock.created_by           IS 'User who created this record. NULL for system/seed records.';

@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS workshop.payments (
 
     CONSTRAINT pk_workshop_payments                   PRIMARY KEY (id),
     CONSTRAINT fk_workshop_payments_tenant_id         FOREIGN KEY (tenant_id)         REFERENCES tenant.tenants(id),
-    CONSTRAINT fk_workshop_payments_invoice_id        FOREIGN KEY (invoice_id)        REFERENCES workshop.invoices(id),
+    CONSTRAINT fk_workshop_payments_invoice_id        FOREIGN KEY (tenant_id, invoice_id) REFERENCES workshop.invoices(tenant_id, id),
     CONSTRAINT fk_workshop_payments_payment_method_id FOREIGN KEY (payment_method_id) REFERENCES codebook.payment_methods(id),
     CONSTRAINT fk_workshop_payments_created_by        FOREIGN KEY (created_by)        REFERENCES auth.users(id),
     CONSTRAINT fk_workshop_payments_updated_by        FOREIGN KEY (updated_by)        REFERENCES auth.users(id),
@@ -35,7 +35,7 @@ CREATE TABLE IF NOT EXISTS workshop.payments (
 COMMENT ON TABLE  workshop.payments                   IS 'Payments received against invoices. Supports partial payments. Positive amounts only — an incorrect entry is soft-deleted and re-entered. Refunds are handled via credit-note documents (out of scope, comes with complaints). Overpayment is prevented at the application level.';
 COMMENT ON COLUMN workshop.payments.id                IS 'UUID v7 primary key (time-ordered).';
 COMMENT ON COLUMN workshop.payments.tenant_id         IS 'The tenant (workshop) this payment belongs to.';
-COMMENT ON COLUMN workshop.payments.invoice_id        IS 'The invoice this payment settles (fully or partially).';
+COMMENT ON COLUMN workshop.payments.invoice_id        IS 'The invoice this payment settles (fully or partially). Composite FK (tenant_id, invoice_id) guarantees the invoice belongs to the same tenant.';
 COMMENT ON COLUMN workshop.payments.payment_method_id IS 'FK to codebook.payment_methods (cash, card, bank_transfer, other).';
 COMMENT ON COLUMN workshop.payments.amount            IS 'Amount paid, in the invoice currency. Always positive.';
 COMMENT ON COLUMN workshop.payments.paid_at           IS 'When the payment was made (bank statement date / cash receipt time), not when it was recorded.';

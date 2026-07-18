@@ -25,7 +25,7 @@ CREATE TABLE IF NOT EXISTS hr.leave_balances (
     CONSTRAINT pk_hr_leave_balances                PRIMARY KEY (id),
     CONSTRAINT uq_hr_leave_balances_emp_type_year  UNIQUE (tenant_id, employee_id, leave_type_id, year),
     CONSTRAINT fk_hr_leave_balances_tenant_id      FOREIGN KEY (tenant_id)     REFERENCES tenant.tenants(id),
-    CONSTRAINT fk_hr_leave_balances_employee_id    FOREIGN KEY (employee_id)   REFERENCES hr.employees(id),
+    CONSTRAINT fk_hr_leave_balances_employee_id    FOREIGN KEY (tenant_id, employee_id) REFERENCES hr.employees(tenant_id, id),
     CONSTRAINT fk_hr_leave_balances_leave_type_id  FOREIGN KEY (leave_type_id) REFERENCES codebook.leave_types(id),
     CONSTRAINT fk_hr_leave_balances_created_by     FOREIGN KEY (created_by)    REFERENCES auth.users(id),
     CONSTRAINT fk_hr_leave_balances_updated_by     FOREIGN KEY (updated_by)    REFERENCES auth.users(id),
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS hr.leave_balances (
 COMMENT ON TABLE  hr.leave_balances                   IS 'Annual leave entitlements. One row per employee per leave type per year.';
 COMMENT ON COLUMN hr.leave_balances.id                IS 'UUID v7 primary key (time-ordered).';
 COMMENT ON COLUMN hr.leave_balances.tenant_id         IS 'The tenant (workshop) this balance belongs to.';
-COMMENT ON COLUMN hr.leave_balances.employee_id       IS 'The employee this balance applies to.';
+COMMENT ON COLUMN hr.leave_balances.employee_id       IS 'The employee this balance applies to. Composite FK (tenant_id, employee_id) guarantees the employee belongs to the same tenant.';
 COMMENT ON COLUMN hr.leave_balances.leave_type_id     IS 'FK to codebook.leave_types (vacation, sick, personal, etc.).';
 COMMENT ON COLUMN hr.leave_balances.year              IS 'Calendar year this balance applies to (e.g. 2026).';
 COMMENT ON COLUMN hr.leave_balances.total_days        IS 'Total days allocated for this year. Supports half-days (e.g. 20.5).';

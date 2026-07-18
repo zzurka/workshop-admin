@@ -3,6 +3,10 @@
 --              on an invoice — parts (linked back to work_order_parts) and
 --              labor charges (linked back to work_orders). Prices are NET
 --              (excluding VAT); VAT is computed and rounded per line.
+--              Carries a denormalized tenant_id (exception to the child-table
+--              convention) because it references multiple tenant-scoped tables
+--              (invoices, work_orders, work_order_parts) — composite FKs need
+--              it to guarantee all references stay within one tenant.
 -- Author: WorkshopAdmin Team
 -- Date: 2026-03-30
 --
@@ -12,6 +16,7 @@ BEGIN;
 
 CREATE TABLE IF NOT EXISTS workshop.invoice_lines (
     id                  UUID          NOT NULL DEFAULT uuidv7(),
+    tenant_id           UUID          NOT NULL,
     invoice_id          UUID          NOT NULL,
     work_order_id       UUID,
     work_order_part_id  UUID,
@@ -30,9 +35,10 @@ CREATE TABLE IF NOT EXISTS workshop.invoice_lines (
     updated_by          UUID,
 
     CONSTRAINT pk_workshop_invoice_lines                        PRIMARY KEY (id),
-    CONSTRAINT fk_workshop_invoice_lines_invoice_id             FOREIGN KEY (invoice_id)         REFERENCES workshop.invoices(id),
-    CONSTRAINT fk_workshop_invoice_lines_work_order_id          FOREIGN KEY (work_order_id)      REFERENCES workshop.work_orders(id),
-    CONSTRAINT fk_workshop_invoice_lines_work_order_part_id     FOREIGN KEY (work_order_part_id) REFERENCES workshop.work_order_parts(id),
+    CONSTRAINT fk_workshop_invoice_lines_tenant_id              FOREIGN KEY (tenant_id)                     REFERENCES tenant.tenants(id),
+    CONSTRAINT fk_workshop_invoice_lines_invoice_id             FOREIGN KEY (tenant_id, invoice_id)         REFERENCES workshop.invoices(tenant_id, id),
+    CONSTRAINT fk_workshop_invoice_lines_work_order_id          FOREIGN KEY (tenant_id, work_order_id)      REFERENCES workshop.work_orders(tenant_id, id),
+    CONSTRAINT fk_workshop_invoice_lines_work_order_part_id     FOREIGN KEY (tenant_id, work_order_part_id) REFERENCES workshop.work_order_parts(tenant_id, id),
     CONSTRAINT fk_workshop_invoice_lines_tax_rate_id            FOREIGN KEY (tax_rate_id)        REFERENCES codebook.tax_rates(id),
     CONSTRAINT fk_workshop_invoice_lines_created_by             FOREIGN KEY (created_by)         REFERENCES auth.users(id),
     CONSTRAINT fk_workshop_invoice_lines_updated_by             FOREIGN KEY (updated_by)         REFERENCES auth.users(id),
@@ -45,9 +51,10 @@ CREATE TABLE IF NOT EXISTS workshop.invoice_lines (
 
 COMMENT ON TABLE  workshop.invoice_lines                        IS 'Individual line items on an invoice. Parts lines link to work_order_parts; labor lines link to work_orders. Walk-in invoice lines have no work order links. All prices are NET (excluding VAT).';
 COMMENT ON COLUMN workshop.invoice_lines.id                     IS 'UUID v7 primary key (time-ordered).';
-COMMENT ON COLUMN workshop.invoice_lines.invoice_id             IS 'The invoice this line belongs to.';
-COMMENT ON COLUMN workshop.invoice_lines.work_order_id          IS 'Optional link to the work order this line relates to. NULL for walk-in invoice lines.';
-COMMENT ON COLUMN workshop.invoice_lines.work_order_part_id     IS 'Optional link to the specific work_order_part. NULL for labor lines and walk-in lines.';
+COMMENT ON COLUMN workshop.invoice_lines.tenant_id              IS 'Denormalized tenant scope. Must match the tenant of the invoice, work order, and work order part — enforced by the composite FKs.';
+COMMENT ON COLUMN workshop.invoice_lines.invoice_id             IS 'The invoice this line belongs to. Composite FK (tenant_id, invoice_id) guarantees the invoice belongs to the same tenant.';
+COMMENT ON COLUMN workshop.invoice_lines.work_order_id          IS 'Optional link to the work order this line relates to. NULL for walk-in invoice lines; composite FK check is skipped while NULL.';
+COMMENT ON COLUMN workshop.invoice_lines.work_order_part_id     IS 'Optional link to the specific work_order_part. NULL for labor lines and walk-in lines; composite FK check is skipped while NULL.';
 COMMENT ON COLUMN workshop.invoice_lines.description            IS 'Line item description shown on the invoice (e.g. "Oil filter OEM 123-456" or "Labor: brake pad replacement").';
 COMMENT ON COLUMN workshop.invoice_lines.quantity               IS 'Number of units. Supports decimals for labor hours (e.g. 1.5 hours).';
 COMMENT ON COLUMN workshop.invoice_lines.unit_price             IS 'NET price per unit (excluding VAT). The UI may accept gross input and convert.';
@@ -59,6 +66,9 @@ COMMENT ON COLUMN workshop.invoice_lines.tax_amount             IS 'VAT for this
 COMMENT ON COLUMN workshop.invoice_lines.notes                  IS 'Optional notes for this line item.';
 COMMENT ON COLUMN workshop.invoice_lines.created_by             IS 'User who created this record. NULL for system/seed records.';
 COMMENT ON COLUMN workshop.invoice_lines.updated_at             IS 'NULL on creation. Set on any update.';
+
+CREATE INDEX IF NOT EXISTS ix_workshop_invoice_lines_tenant_id
+    ON workshop.invoice_lines (tenant_id);
 
 CREATE INDEX IF NOT EXISTS ix_workshop_invoice_lines_invoice_id
     ON workshop.invoice_lines (invoice_id);

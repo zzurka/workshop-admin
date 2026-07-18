@@ -2,7 +2,8 @@
 -- Description: Create the customer.vehicles table. Each vehicle belongs to one
 --              customer. tenant_id is denormalized to enable plate/VIN lookups
 --              scoped to a tenant without joining customer.customers.
---              A trigger (20260317_1330) enforces vehicles.tenant_id = customers.tenant_id.
+--              A composite FK (tenant_id, customer_id) enforces
+--              vehicles.tenant_id = customers.tenant_id.
 -- Author: WorkshopAdmin Team
 -- Date: 2026-03-17
 --
@@ -33,7 +34,8 @@ CREATE TABLE IF NOT EXISTS customer.vehicles (
     is_deleted           BOOLEAN      NOT NULL DEFAULT FALSE,
 
     CONSTRAINT pk_customer_vehicles                 	 PRIMARY KEY (id),
-    CONSTRAINT fk_customer_vehicles_customer_id     	 FOREIGN KEY (customer_id)     		REFERENCES customer.customers(id),
+    CONSTRAINT uq_customer_vehicles_tenant_id_id    	 UNIQUE (tenant_id, id),
+    CONSTRAINT fk_customer_vehicles_customer_id     	 FOREIGN KEY (tenant_id, customer_id)  REFERENCES customer.customers(tenant_id, id),
     CONSTRAINT fk_customer_vehicles_tenant_id       	 FOREIGN KEY (tenant_id)       		REFERENCES tenant.tenants(id),
     CONSTRAINT fk_customer_vehicles_fuel_type_id    	 FOREIGN KEY (fuel_type_id)    		REFERENCES codebook.fuel_types(id),
     CONSTRAINT fk_customer_vehicles_transmission_type_id FOREIGN KEY (transmission_type_id) REFERENCES codebook.transmission_types(id),
@@ -43,8 +45,8 @@ CREATE TABLE IF NOT EXISTS customer.vehicles (
 
 COMMENT ON TABLE  customer.vehicles                      IS 'Vehicles owned by customers. tenant_id is denormalized for efficient plate/VIN lookups within a tenant.';
 COMMENT ON COLUMN customer.vehicles.id                   IS 'UUID v7 primary key (time-ordered).';
-COMMENT ON COLUMN customer.vehicles.customer_id          IS 'The customer (owner) this vehicle belongs to.';
-COMMENT ON COLUMN customer.vehicles.tenant_id            IS 'Denormalized tenant scope. Must match customer.tenant_id — enforced by trigger tr_vehicles_tenant_check.';
+COMMENT ON COLUMN customer.vehicles.customer_id          IS 'The customer (owner) this vehicle belongs to. Composite FK (tenant_id, customer_id) guarantees the customer belongs to the same tenant.';
+COMMENT ON COLUMN customer.vehicles.tenant_id            IS 'Denormalized tenant scope. Must match customer.tenant_id — enforced by the composite FK.';
 COMMENT ON COLUMN customer.vehicles.vin                  IS 'Vehicle Identification Number (17 characters).';
 COMMENT ON COLUMN customer.vehicles.fuel_type_id         IS 'FK to codebook.fuel_types.';
 COMMENT ON COLUMN customer.vehicles.transmission_type_id IS 'FK to codebook.transmission_types.';

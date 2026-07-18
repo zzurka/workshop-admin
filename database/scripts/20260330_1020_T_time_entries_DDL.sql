@@ -23,7 +23,7 @@ CREATE TABLE IF NOT EXISTS hr.time_entries (
 
     CONSTRAINT pk_hr_time_entries              PRIMARY KEY (id),
     CONSTRAINT fk_hr_time_entries_tenant_id    FOREIGN KEY (tenant_id)   REFERENCES tenant.tenants(id),
-    CONSTRAINT fk_hr_time_entries_employee_id  FOREIGN KEY (employee_id) REFERENCES hr.employees(id),
+    CONSTRAINT fk_hr_time_entries_employee_id  FOREIGN KEY (tenant_id, employee_id) REFERENCES hr.employees(tenant_id, id),
     CONSTRAINT fk_hr_time_entries_created_by   FOREIGN KEY (created_by)  REFERENCES auth.users(id),
     CONSTRAINT fk_hr_time_entries_updated_by   FOREIGN KEY (updated_by)  REFERENCES auth.users(id),
     CONSTRAINT ck_hr_time_entries_clock_range  CHECK (clock_out IS NULL OR clock_out > clock_in),
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS hr.time_entries (
 COMMENT ON TABLE  hr.time_entries                     IS 'Employee clock-in/out records. Tracks daily work time per employee.';
 COMMENT ON COLUMN hr.time_entries.id                  IS 'UUID v7 primary key (time-ordered).';
 COMMENT ON COLUMN hr.time_entries.tenant_id           IS 'The tenant (workshop) this time entry belongs to.';
-COMMENT ON COLUMN hr.time_entries.employee_id         IS 'The employee who clocked in.';
+COMMENT ON COLUMN hr.time_entries.employee_id         IS 'The employee who clocked in. Composite FK (tenant_id, employee_id) guarantees the employee belongs to the same tenant.';
 COMMENT ON COLUMN hr.time_entries.clock_in            IS 'Timestamp when the employee clocked in.';
 COMMENT ON COLUMN hr.time_entries.clock_out           IS 'Timestamp when the employee clocked out. NULL if still clocked in.';
 COMMENT ON COLUMN hr.time_entries.break_duration_min  IS 'Total break time in minutes during this entry. Default 0.';

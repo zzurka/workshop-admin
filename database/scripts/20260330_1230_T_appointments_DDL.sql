@@ -27,9 +27,10 @@ CREATE TABLE IF NOT EXISTS workshop.appointments (
     is_deleted              BOOLEAN      NOT NULL DEFAULT FALSE,
 
     CONSTRAINT pk_workshop_appointments                        PRIMARY KEY (id),
+    CONSTRAINT uq_workshop_appointments_tenant_id_id           UNIQUE (tenant_id, id),
     CONSTRAINT fk_workshop_appointments_tenant_id              FOREIGN KEY (tenant_id)             REFERENCES tenant.tenants(id),
-    CONSTRAINT fk_workshop_appointments_customer_id            FOREIGN KEY (customer_id)           REFERENCES customer.customers(id),
-    CONSTRAINT fk_workshop_appointments_vehicle_id             FOREIGN KEY (vehicle_id)            REFERENCES customer.vehicles(id),
+    CONSTRAINT fk_workshop_appointments_customer_id            FOREIGN KEY (tenant_id, customer_id) REFERENCES customer.customers(tenant_id, id),
+    CONSTRAINT fk_workshop_appointments_vehicle_id             FOREIGN KEY (tenant_id, vehicle_id)  REFERENCES customer.vehicles(tenant_id, id),
     CONSTRAINT fk_workshop_appointments_appointment_status_id  FOREIGN KEY (appointment_status_id) REFERENCES codebook.appointment_statuses(id),
     CONSTRAINT fk_workshop_appointments_created_by             FOREIGN KEY (created_by)            REFERENCES auth.users(id),
     CONSTRAINT fk_workshop_appointments_updated_by             FOREIGN KEY (updated_by)            REFERENCES auth.users(id)
@@ -38,8 +39,8 @@ CREATE TABLE IF NOT EXISTS workshop.appointments (
 COMMENT ON TABLE  workshop.appointments                        IS 'Service appointments. Created when a customer calls or walks in to schedule vehicle service.';
 COMMENT ON COLUMN workshop.appointments.id                     IS 'UUID v7 primary key (time-ordered).';
 COMMENT ON COLUMN workshop.appointments.tenant_id              IS 'The tenant (workshop) this appointment belongs to.';
-COMMENT ON COLUMN workshop.appointments.customer_id            IS 'The customer requesting service.';
-COMMENT ON COLUMN workshop.appointments.vehicle_id             IS 'The vehicle to be serviced.';
+COMMENT ON COLUMN workshop.appointments.customer_id            IS 'The customer requesting service. Composite FK (tenant_id, customer_id) guarantees the customer belongs to the same tenant.';
+COMMENT ON COLUMN workshop.appointments.vehicle_id             IS 'The vehicle to be serviced. Composite FK (tenant_id, vehicle_id) guarantees the vehicle belongs to the same tenant.';
 COMMENT ON COLUMN workshop.appointments.appointment_status_id  IS 'FK to codebook.appointment_statuses (scheduled, confirmed, completed, cancelled).';
 COMMENT ON COLUMN workshop.appointments.preferred_date         IS 'Date the customer would prefer. NULL if no preference.';
 COMMENT ON COLUMN workshop.appointments.scheduled_at           IS 'Confirmed date/time. NULL until the workshop confirms a slot.';

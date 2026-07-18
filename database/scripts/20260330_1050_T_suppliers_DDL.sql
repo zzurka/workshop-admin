@@ -23,8 +23,9 @@ CREATE TABLE IF NOT EXISTS workshop.suppliers (
     updated_by    UUID,
     is_deleted    BOOLEAN      NOT NULL DEFAULT FALSE,
 
-    CONSTRAINT pk_workshop_suppliers              PRIMARY KEY (id),
-    CONSTRAINT uq_workshop_suppliers_tenant_name  UNIQUE (tenant_id, name),
+    CONSTRAINT pk_workshop_suppliers                 PRIMARY KEY (id),
+    CONSTRAINT uq_workshop_suppliers_tenant_id_id    UNIQUE (tenant_id, id),
+    CONSTRAINT uq_workshop_suppliers_tenant_name     UNIQUE (tenant_id, name),
     CONSTRAINT fk_workshop_suppliers_tenant_id    FOREIGN KEY (tenant_id)  REFERENCES tenant.tenants(id),
     CONSTRAINT fk_workshop_suppliers_created_by   FOREIGN KEY (created_by) REFERENCES auth.users(id),
     CONSTRAINT fk_workshop_suppliers_updated_by   FOREIGN KEY (updated_by) REFERENCES auth.users(id)

@@ -32,6 +32,7 @@ CREATE TABLE IF NOT EXISTS customer.customers (
     is_deleted    BOOLEAN      NOT NULL DEFAULT FALSE,
 
     CONSTRAINT pk_customer_customers                    PRIMARY KEY (id),
+    CONSTRAINT uq_customer_customers_tenant_id_id       UNIQUE (tenant_id, id),
     CONSTRAINT uq_customer_customers_tenant_id_user_id  UNIQUE (tenant_id, user_id),
     CONSTRAINT fk_customer_customers_tenant_id          FOREIGN KEY (tenant_id)  REFERENCES tenant.tenants(id),
     CONSTRAINT fk_customer_customers_user_id            FOREIGN KEY (user_id)    REFERENCES auth.users(id),

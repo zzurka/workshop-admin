@@ -28,10 +28,10 @@ CREATE TABLE IF NOT EXISTS hr.leave_requests (
 
     CONSTRAINT pk_hr_leave_requests                  PRIMARY KEY (id),
     CONSTRAINT fk_hr_leave_requests_tenant_id        FOREIGN KEY (tenant_id)       REFERENCES tenant.tenants(id),
-    CONSTRAINT fk_hr_leave_requests_employee_id      FOREIGN KEY (employee_id)     REFERENCES hr.employees(id),
+    CONSTRAINT fk_hr_leave_requests_employee_id      FOREIGN KEY (tenant_id, employee_id) REFERENCES hr.employees(tenant_id, id),
     CONSTRAINT fk_hr_leave_requests_leave_type_id    FOREIGN KEY (leave_type_id)   REFERENCES codebook.leave_types(id),
     CONSTRAINT fk_hr_leave_requests_leave_status_id  FOREIGN KEY (leave_status_id) REFERENCES codebook.leave_statuses(id),
-    CONSTRAINT fk_hr_leave_requests_reviewed_by      FOREIGN KEY (reviewed_by)     REFERENCES hr.employees(id),
+    CONSTRAINT fk_hr_leave_requests_reviewed_by      FOREIGN KEY (tenant_id, reviewed_by) REFERENCES hr.employees(tenant_id, id),
     CONSTRAINT fk_hr_leave_requests_created_by       FOREIGN KEY (created_by)      REFERENCES auth.users(id),
     CONSTRAINT fk_hr_leave_requests_updated_by       FOREIGN KEY (updated_by)      REFERENCES auth.users(id),
     CONSTRAINT ck_hr_leave_requests_date_range       CHECK (end_date >= start_date),
@@ -48,7 +48,7 @@ COMMENT ON COLUMN hr.leave_requests.start_date         IS 'First day of the requ
 COMMENT ON COLUMN hr.leave_requests.end_date           IS 'Last day of the requested leave period (inclusive).';
 COMMENT ON COLUMN hr.leave_requests.total_days         IS 'Number of leave days requested. Supports half-days (e.g. 0.5 for a half-day).';
 COMMENT ON COLUMN hr.leave_requests.notes              IS 'Optional reason or details for the leave request.';
-COMMENT ON COLUMN hr.leave_requests.reviewed_by        IS 'Employee (manager) who approved or rejected the request. NULL while pending.';
+COMMENT ON COLUMN hr.leave_requests.reviewed_by        IS 'Employee (manager) who approved or rejected the request. NULL while pending (composite FK check is skipped while NULL). Must belong to the same tenant.';
 COMMENT ON COLUMN hr.leave_requests.reviewed_at        IS 'Timestamp of the approval/rejection. NULL while pending.';
 COMMENT ON COLUMN hr.leave_requests.created_by         IS 'User who created this record. NULL for system/seed records.';
 COMMENT ON COLUMN hr.leave_requests.updated_at         IS 'NULL on creation. Set on any update, including soft-delete.';

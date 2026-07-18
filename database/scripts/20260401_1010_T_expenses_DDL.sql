@@ -27,8 +27,8 @@ CREATE TABLE IF NOT EXISTS workshop.expenses (
     CONSTRAINT pk_workshop_expenses                      PRIMARY KEY (id),
     CONSTRAINT fk_workshop_expenses_tenant_id            FOREIGN KEY (tenant_id)           REFERENCES tenant.tenants(id),
     CONSTRAINT fk_workshop_expenses_expense_category_id  FOREIGN KEY (expense_category_id) REFERENCES codebook.expense_categories(id),
-    CONSTRAINT fk_workshop_expenses_supplier_id          FOREIGN KEY (supplier_id)         REFERENCES workshop.suppliers(id),
-    CONSTRAINT fk_workshop_expenses_employee_id          FOREIGN KEY (employee_id)         REFERENCES hr.employees(id),
+    CONSTRAINT fk_workshop_expenses_supplier_id          FOREIGN KEY (tenant_id, supplier_id) REFERENCES workshop.suppliers(tenant_id, id),
+    CONSTRAINT fk_workshop_expenses_employee_id          FOREIGN KEY (tenant_id, employee_id) REFERENCES hr.employees(tenant_id, id),
     CONSTRAINT fk_workshop_expenses_created_by           FOREIGN KEY (created_by)          REFERENCES auth.users(id),
     CONSTRAINT fk_workshop_expenses_updated_by           FOREIGN KEY (updated_by)          REFERENCES auth.users(id),
     CONSTRAINT ck_workshop_expenses_amount               CHECK (amount > 0)
@@ -38,8 +38,8 @@ COMMENT ON TABLE  workshop.expenses                          IS 'Operational exp
 COMMENT ON COLUMN workshop.expenses.id                       IS 'UUID v7 primary key (time-ordered).';
 COMMENT ON COLUMN workshop.expenses.tenant_id                IS 'The tenant (workshop) this expense belongs to.';
 COMMENT ON COLUMN workshop.expenses.expense_category_id      IS 'FK to codebook.expense_categories (e.g. rent, utilities, tools).';
-COMMENT ON COLUMN workshop.expenses.supplier_id              IS 'Optional FK to workshop.suppliers. Set when the expense is from a known supplier.';
-COMMENT ON COLUMN workshop.expenses.employee_id              IS 'Optional FK to hr.employees. The employee who incurred or submitted the expense.';
+COMMENT ON COLUMN workshop.expenses.supplier_id              IS 'Optional FK to workshop.suppliers. Set when the expense is from a known supplier. Composite FK (tenant_id, supplier_id); check is skipped while NULL.';
+COMMENT ON COLUMN workshop.expenses.employee_id              IS 'Optional FK to hr.employees. The employee who incurred or submitted the expense. Composite FK (tenant_id, employee_id); check is skipped while NULL.';
 COMMENT ON COLUMN workshop.expenses.description              IS 'Short description of what the expense is for.';
 COMMENT ON COLUMN workshop.expenses.amount                   IS 'Expense amount. Must be positive.';
 COMMENT ON COLUMN workshop.expenses.expense_date             IS 'The date the expense occurred.';

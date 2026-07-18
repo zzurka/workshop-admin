@@ -40,11 +40,12 @@ CREATE TABLE IF NOT EXISTS workshop.invoices (
     is_deleted          BOOLEAN       NOT NULL DEFAULT FALSE,
 
     CONSTRAINT pk_workshop_invoices                       PRIMARY KEY (id),
+    CONSTRAINT uq_workshop_invoices_tenant_id_id          UNIQUE (tenant_id, id),
     CONSTRAINT uq_workshop_invoices_tenant_year_number    UNIQUE (tenant_id, invoice_year, invoice_number),
     CONSTRAINT fk_workshop_invoices_tenant_id             FOREIGN KEY (tenant_id)         REFERENCES tenant.tenants(id),
-    CONSTRAINT fk_workshop_invoices_customer_id           FOREIGN KEY (customer_id)       REFERENCES customer.customers(id),
-    CONSTRAINT fk_workshop_invoices_vehicle_id            FOREIGN KEY (vehicle_id)        REFERENCES customer.vehicles(id),
-    CONSTRAINT fk_workshop_invoices_appointment_id        FOREIGN KEY (appointment_id)    REFERENCES workshop.appointments(id),
+    CONSTRAINT fk_workshop_invoices_customer_id           FOREIGN KEY (tenant_id, customer_id)    REFERENCES customer.customers(tenant_id, id),
+    CONSTRAINT fk_workshop_invoices_vehicle_id            FOREIGN KEY (tenant_id, vehicle_id)     REFERENCES customer.vehicles(tenant_id, id),
+    CONSTRAINT fk_workshop_invoices_appointment_id        FOREIGN KEY (tenant_id, appointment_id) REFERENCES workshop.appointments(tenant_id, id),
     CONSTRAINT fk_workshop_invoices_invoice_status_id     FOREIGN KEY (invoice_status_id) REFERENCES codebook.invoice_statuses(id),
     CONSTRAINT fk_workshop_invoices_currency_id           FOREIGN KEY (currency_id)       REFERENCES codebook.currencies(id),
     CONSTRAINT fk_workshop_invoices_created_by            FOREIGN KEY (created_by)        REFERENCES auth.users(id),
@@ -56,9 +57,9 @@ CREATE TABLE IF NOT EXISTS workshop.invoices (
 COMMENT ON TABLE  workshop.invoices                       IS 'Customer invoices. Linked to an appointment for full service visits, or stand-alone for walk-in quick jobs. Application rules: status issued and later requires invoice_number/invoice_year assigned, totals recomputed from lines and frozen, and billed_to_* populated; paid_at is set when the sum of payments reaches total.';
 COMMENT ON COLUMN workshop.invoices.id                    IS 'UUID v7 primary key (time-ordered).';
 COMMENT ON COLUMN workshop.invoices.tenant_id             IS 'The tenant (workshop) this invoice belongs to.';
-COMMENT ON COLUMN workshop.invoices.customer_id           IS 'The customer being billed.';
-COMMENT ON COLUMN workshop.invoices.vehicle_id            IS 'The vehicle that was serviced.';
-COMMENT ON COLUMN workshop.invoices.appointment_id        IS 'Optional link to appointment. NULL for walk-in quick jobs (e.g. bulb change).';
+COMMENT ON COLUMN workshop.invoices.customer_id           IS 'The customer being billed. Composite FK (tenant_id, customer_id) guarantees the customer belongs to the same tenant.';
+COMMENT ON COLUMN workshop.invoices.vehicle_id            IS 'The vehicle that was serviced. Composite FK (tenant_id, vehicle_id) guarantees the vehicle belongs to the same tenant.';
+COMMENT ON COLUMN workshop.invoices.appointment_id        IS 'Optional link to appointment. NULL for walk-in quick jobs (e.g. bulb change); composite FK check is skipped while NULL.';
 COMMENT ON COLUMN workshop.invoices.invoice_status_id     IS 'FK to codebook.invoice_statuses (draft, issued, partially_paid, paid, cancelled). Transitions (application rule): draft -> issued -> partially_paid <-> paid; cancelled from draft/issued. ''overdue'' is derived from due_date + status, not stored.';
 COMMENT ON COLUMN workshop.invoices.invoice_number        IS 'Sequential invoice number, gapless per (tenant, invoice_year) — assigned from workshop.invoice_counters at issue time. NULL while draft, so cancelled drafts leave no numbering gaps; the UNIQUE constraint treats NULLs as distinct, allowing many drafts. Once assigned, never changes (a cancelled issued invoice keeps its number). Displayed as {number}/{year}, e.g. 125/2026.';
 COMMENT ON COLUMN workshop.invoices.invoice_year          IS 'Numbering year for invoice_number. Always set together with invoice_number (ck_workshop_invoices_number_year).';

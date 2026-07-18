@@ -22,10 +22,10 @@ CREATE TABLE IF NOT EXISTS warehouse.stock_transactions (
 
     CONSTRAINT pk_warehouse_stock_transactions                       PRIMARY KEY (id),
     CONSTRAINT fk_warehouse_stock_transactions_tenant_id             FOREIGN KEY (tenant_id)           REFERENCES tenant.tenants(id),
-    CONSTRAINT fk_warehouse_stock_transactions_catalog_part_id       FOREIGN KEY (catalog_part_id)     REFERENCES warehouse.parts_catalog(id),
-    CONSTRAINT fk_warehouse_stock_transactions_transaction_type_id   FOREIGN KEY (transaction_type_id) REFERENCES codebook.stock_transaction_types(id),
-    CONSTRAINT fk_warehouse_stock_transactions_work_order_id         FOREIGN KEY (work_order_id)       REFERENCES workshop.work_orders(id),
-    CONSTRAINT fk_warehouse_stock_transactions_supplier_id           FOREIGN KEY (supplier_id)         REFERENCES workshop.suppliers(id),
+    CONSTRAINT fk_warehouse_stock_transactions_catalog_part_id       FOREIGN KEY (tenant_id, catalog_part_id) REFERENCES warehouse.parts_catalog(tenant_id, id),
+    CONSTRAINT fk_warehouse_stock_transactions_transaction_type_id   FOREIGN KEY (transaction_type_id)        REFERENCES codebook.stock_transaction_types(id),
+    CONSTRAINT fk_warehouse_stock_transactions_work_order_id         FOREIGN KEY (tenant_id, work_order_id)   REFERENCES workshop.work_orders(tenant_id, id),
+    CONSTRAINT fk_warehouse_stock_transactions_supplier_id           FOREIGN KEY (tenant_id, supplier_id)     REFERENCES workshop.suppliers(tenant_id, id),
     CONSTRAINT fk_warehouse_stock_transactions_created_by            FOREIGN KEY (created_by)          REFERENCES auth.users(id),
     CONSTRAINT ck_warehouse_stock_transactions_quantity               CHECK (quantity <> 0)
 );
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS warehouse.stock_transactions (
 COMMENT ON TABLE  warehouse.stock_transactions                          IS 'Immutable audit log of all stock movements. Positive quantity = stock in, negative = stock out.';
 COMMENT ON COLUMN warehouse.stock_transactions.id                       IS 'UUID v7 primary key (time-ordered).';
 COMMENT ON COLUMN warehouse.stock_transactions.tenant_id                IS 'The tenant (workshop) this transaction belongs to.';
-COMMENT ON COLUMN warehouse.stock_transactions.catalog_part_id          IS 'FK to warehouse.parts_catalog. The part being moved.';
+COMMENT ON COLUMN warehouse.stock_transactions.catalog_part_id          IS 'FK to warehouse.parts_catalog. The part being moved. Composite FKs (tenant_id, ...) on part/work order/supplier guarantee all references stay within one tenant.';
 COMMENT ON COLUMN warehouse.stock_transactions.transaction_type_id      IS 'FK to codebook.stock_transaction_types (receipt, issue, return, adjustment_in, adjustment_out).';
 COMMENT ON COLUMN warehouse.stock_transactions.quantity                 IS 'Quantity moved. Positive for stock in (receipt, return, adjustment_in), negative for stock out (issue, adjustment_out). Cannot be zero.';
 COMMENT ON COLUMN warehouse.stock_transactions.work_order_id            IS 'FK to workshop.work_orders. Set when parts are issued to or returned from a work order. NULL otherwise.';

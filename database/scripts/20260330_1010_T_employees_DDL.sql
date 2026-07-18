@@ -26,6 +26,7 @@ CREATE TABLE IF NOT EXISTS hr.employees (
     is_deleted         BOOLEAN      NOT NULL DEFAULT FALSE,
 
     CONSTRAINT pk_hr_employees                    PRIMARY KEY (id),
+    CONSTRAINT uq_hr_employees_tenant_id_id       UNIQUE (tenant_id, id),
     CONSTRAINT uq_hr_employees_tenant_id_user_id  UNIQUE (tenant_id, user_id),
     CONSTRAINT fk_hr_employees_tenant_id          FOREIGN KEY (tenant_id)          REFERENCES tenant.tenants(id),
     CONSTRAINT fk_hr_employees_user_id            FOREIGN KEY (user_id)            REFERENCES auth.users(id),
