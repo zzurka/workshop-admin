@@ -1,16 +1,35 @@
 <Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".editorconfig" />
+    <File Path="Directory.Build.props" />
+    <File Path="Directory.Packages.props" />
+  </Folder>
   <Folder Name="/src/">
     <Project Path="src/WorkshopAdmin.Api/WorkshopAdmin.Api.csproj" />
     <Project Path="src/WorkshopAdmin.SharedKernel/WorkshopAdmin.SharedKernel.csproj" />
   </Folder>
-  <Folder Name="/src/Modules/">
+  <Folder Name="/src/Modules/Auth/">
     <Project Path="src/Modules/WorkshopAdmin.Modules.Auth/WorkshopAdmin.Modules.Auth.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Codebook/">
     <Project Path="src/Modules/WorkshopAdmin.Modules.Codebook/WorkshopAdmin.Modules.Codebook.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Customers/">
     <Project Path="src/Modules/WorkshopAdmin.Modules.Customers/WorkshopAdmin.Modules.Customers.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Hr/">
     <Project Path="src/Modules/WorkshopAdmin.Modules.Hr/WorkshopAdmin.Modules.Hr.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Notifications/">
     <Project Path="src/Modules/WorkshopAdmin.Modules.Notifications/WorkshopAdmin.Modules.Notifications.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Tenants/">
     <Project Path="src/Modules/WorkshopAdmin.Modules.Tenants/WorkshopAdmin.Modules.Tenants.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Warehouse/">
     <Project Path="src/Modules/WorkshopAdmin.Modules.Warehouse/WorkshopAdmin.Modules.Warehouse.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/Workshop/">
     <Project Path="src/Modules/WorkshopAdmin.Modules.Workshop/WorkshopAdmin.Modules.Workshop.csproj" />
   </Folder>
   <Folder Name="/tests/">
