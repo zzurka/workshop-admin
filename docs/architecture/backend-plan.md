@@ -178,7 +178,7 @@ Preduslov: implementacioni batch šeme iz model-review (bar stavke 2–4: faktur
 |---|---|---|
 | **F1 — Skeleton** ✅ *(završeno 2026-07-19)* ([detaljan plan](plans/f1-skeleton.md)) | Solucija, SharedKernel (IDbSession + RLS `SET LOCAL`, EF osnova — konvencije/interceptori, ProblemDetails, validacioni filter, events), host sa IModule registracijom, Serilog, OpenAPI, arch testovi, Testcontainers fixture sa runnerom migracija + EF drift test, CI | prazan monolit koji se builduje, testira i drži RLS kontekst |
 | **F2 — Codebook + Tenants** ✅ *(završeno 2026-07-19)* ([detaljan plan](plans/f2-codebook-tenants.md)) | najprostiji moduli — dokaz obrasca: šifarnici (list + admin CRUD, keš), tenant CRUD, subscription plans/istorija | prvi end-to-end slice-ovi |
-| **F3 — Notifications + Auth** | outbox + dispatcher port; ceo auth tok iz sekcije 7 (login/select/switch, rotacija, reset, verifikacija, OIDC, permisije) | prijava sa izborom servisa; mejlovi rade |
+| **F3 — Notifications + Auth** ([detaljan plan](plans/f3-notifications-auth.md)) | outbox + dispatcher port; ceo auth tok iz sekcije 7 (login/select/switch, rotacija, reset, verifikacija, OIDC, permisije) | prijava sa izborom servisa; mejlovi rade |
 | **F4 — Customers** | customers (person/company — B2B 3.3), vehicles, pretraga (tablica/VIN) | evidencija mušterija |
 | **F5 — Hr osnovno + Appointments** | employees CRUD + kompenzacije (bez payroll obračuna); appointments: zakazivanje, dnevni queue + preslaganje, source, walk-in prijem (1.4/1.5), statusi, prisustvo vozila + podsetnik za dovoz (v. napomenu ispod) | prijem vozila funkcioniše |
 | **F6 — Warehouse** | parts_catalog, stock, purchase orders + prijem (1.6), stock_transactions | magacin i nabavka |
