@@ -93,36 +93,32 @@ Model je zanatski solidan: konvencije se dosledno poštuju (UUID v7, audit kolon
 
 ## 3. Manji nalazi
 
-### 3.1 Auth — 📝
+### 3.1 Auth — ✅ REŠENO (2026-07-19)
 
-> **Plan:** [plans/3.1-auth-sitnice.md](plans/3.1-auth-sitnice.md) — odluke potvrđene 2026-07-17, spreman za implementaciju; dopuna E potvrđena 2026-07-18. Partial unique na LOWER(email), email verifikacija (kolona + token tabela + template), lockout kolone, login_history za nepostojeće emaile, MFA checkovi. **+ E:** RLS za `roles`/`role_permissions`/`user_roles` (custom role tenanta su tenant-scoped podaci — razdvojene policy po komandi; globalne role čitljive kao katalog, pisive samo platformi; transakcija izdavanja tokena u backendu radi sa platform kontekstom).
+> **Plan:** [plans/3.1-auth-sitnice.md](plans/3.1-auth-sitnice.md) — implementirano 2026-07-19. Partial unique na `LOWER(email)` (soft-delete oslobađa email), `email` VARCHAR(320), `email_verified_at`, lockout kolone (`failed_login_count`/`locked_until`), MFA CHECK-ovi; `login_history.user_id` nullable + `attempted_email` + CHECK identiteta; nova tabela `email_verification_tokens` (obrazac password_reset) + seed template. **+ E:** RLS za `roles`/`role_permissions`/`user_roles` u posebnoj skripti `20260523_1010_S_rls_policies_auth_DDL.sql` — role po komandi (select širi od write), role_permissions preko EXISTS ka roli, user_roles kao email_outbox obrazac (NULL tenant = platform-only).
 - `uq_auth_users_email` nije partial index — soft-obrisan user zauvek zaključava email; `roles` to rešavaju sa `WHERE NOT is_deleted` (nekonzistentno)
 - Nema `email_verified_at` — nužno za samoregistraciju mušterija
 - Nema lockout kolona (`failed_login_count`, `locked_until`) iako `login_history.failure_reason` pominje `account_locked`
 - `login_history.user_id NOT NULL` — ne može se zabeležiti pokušaj sa nepostojećim emailom; predlog: nullable + `attempted_email`
 - `mfa_method` nema CHECK (totp/sms/email); `users.email` VARCHAR(255) vs `external_logins.email` VARCHAR(320) — ujednačiti
 
-### 3.2 Workshop / Warehouse — 🔶 (work_order_labor rešen 2026-07-18)
+### 3.2 Workshop / Warehouse — ✅ REŠENO (2026-07-19; work_order_labor rešen 2026-07-18)
 
-> **Plan (ostatak sekcije):** [plans/3.2b-workshop-warehouse-sitnice.md](plans/3.2b-workshop-warehouse-sitnice.md) — odluke potvrđene 2026-07-17, spreman za implementaciju. Quantity → NUMERIC, index na tablicu, awaiting_approval status + approval kolone na nalogu, rezervacije kao view v_stock_availability, part_status `issued`.
-- `work_order_parts.quantity` SMALLINT, a stock i invoice linije NUMERIC(10,2) — ne može 1,5 l ulja na nalog; ujednačiti na NUMERIC
-- Nedostaje index na `vehicles.license_plate` — a denormalizacija `tenant_id` je obrazložena baš plate/VIN pretragom (VIN ima index, tablica nema)
+> **Plan (ostatak sekcije):** [plans/3.2b-workshop-warehouse-sitnice.md](plans/3.2b-workshop-warehouse-sitnice.md) — implementirano 2026-07-19. `work_order_parts.quantity` SMALLINT→NUMERIC(10,2); index na `vehicles.license_plate`; status `awaiting_approval` (novi redosled u `work_order_statuses`) + `work_orders.customer_approved_at`/`customer_approval_note`; `part_statuses` dobio `issued`; novi derivirani view `warehouse.v_stock_availability` (rezervacije bez dual-write kolone).
+- ~~`work_order_parts.quantity` SMALLINT, a stock i invoice linije NUMERIC(10,2)~~ ✅ ujednačeno na NUMERIC(10,2)
+- ~~Nedostaje index na `vehicles.license_plate`~~ ✅ dodat
 - ~~Nema strukture za sate rada po nalogu~~ ✅ REŠENO (2026-07-18)
   > **Plan:** [plans/3.2-work-order-labor.md](plans/3.2-work-order-labor.md) — implementirano 2026-07-18. Tabela work_order_labor (sati × naplatna satnica, snapshot), invoice_lines.work_order_labor_id, default_labor_rate na tenantu. Test plan prolazi.
-- Nema odobrenja mušterije za dodatne popravke (`approved_at`/`approved_by` na work orderu) — scenario iz zahteva
-- Stock nema koncept rezervacije (deo "in_stock" na nalogu ne umanjuje raspoloživo)
+- ~~Nema odobrenja mušterije za dodatne popravke~~ ✅ `awaiting_approval` status + `customer_approved_at`/`customer_approval_note` na work orderu
+- ~~Stock nema koncept rezervacije~~ ✅ `warehouse.v_stock_availability` (deo `in_stock`/`received` na živom nalogu umanjuje `quantity_available`; `issued` deo je već odbijen sa `quantity_on_hand`)
 
-### 3.3 Customer — 📝
+### 3.3 Customer — ✅ REŠENO (2026-07-19)
 
-> **Plan:** [plans/3.3-b2b-kupci.md](plans/3.3-b2b-kupci.md) — odluke potvrđene 2026-07-17, spreman za implementaciju. Customer_type diskriminator (person/company), company_name + PIB/MB, CHECK identiteta; otključava billed_to_tax_id iz 1.7.
-- `first_name`/`last_name` NOT NULL — nema podrške za pravna lica (naziv firme, PIB/MB); flotni B2B klijenti su česti kod servisa
+> **Plan:** [plans/3.3-b2b-kupci.md](plans/3.3-b2b-kupci.md) — implementirano 2026-07-19. `customer_type` diskriminator (person/company) na `customer.customers`, `company_name`/`tax_id`/`company_registration_number`, `first_name`/`last_name` postali nullable, CHECK identiteta po tipu; otključava `billed_to_tax_id` iz 1.7.
 
-### 3.4 Tenant / ostalo — 🔶 (attachments rešeni 2026-07-18)
+### 3.4 Tenant / ostalo — ✅ REŠENO (2026-07-19; attachments rešeni 2026-07-18)
 
-> **Plan:** [plans/3.4-tenant-ostalo.md](plans/3.4-tenant-ostalo.md) — odluke potvrđene 2026-07-17. **Deo B (šema document + attachments) implementiran 2026-07-18** — izvučen ranije zbog čuvanja PDF-a izdate fakture (`invoices.pdf_attachment_id`); RLS (2.2) će novu šemu pokriti u istom prolazu. Ostaje: tenant_subscriptions istorija (jedna tekuća po tenantu) i email_outbox template_code + related_entity.
-- Nema istorije pretplate (`tenant_subscriptions`: plan, period, trial, status) — promene plana i naplata platforme se ne mogu pratiti
-- `subscription_plans.max_storage_mb` implicira attachmente, a tabela za dokumente/slike ne postoji
-- `email_outbox` nema vezu ka izvornom entitetu (`related_entity_type/id`) ni `template_code` — otežava dijagnostiku i idempotentnost slanja
+> **Plan:** [plans/3.4-tenant-ostalo.md](plans/3.4-tenant-ostalo.md) — implementirano u celosti 2026-07-19. **Deo B (šema document + attachments) implementiran 2026-07-18** — izvučen ranije zbog čuvanja PDF-a izdate fakture (`invoices.pdf_attachment_id`); RLS (2.2) ga je pokrio u istom prolazu. **Deo A** (2026-07-19): nova tabela `tenant.tenant_subscriptions` (istorija perioda, partial unique jedna tekuća po tenantu); van RLS-a kao i ostatak `tenant` šeme (isti razlog: registry/katalog podaci van tenant konteksta). **Deo C** (2026-07-19): `email_outbox` dobio `template_code` + `related_entity_type`/`related_entity_id` + index.
 
 ---
 
@@ -150,6 +146,6 @@ Baza (redosled stavki):
 3. ~~Cross-tenant kompozitni FK-ovi (2.1) + RLS DB strana (2.2)~~ ✅ (backend deo 2.2 uz novi backend)
 4. ~~Nove tabele: reklamacije (1.2), purchase orders (1.6), payroll (1.3), work_order_labor (3.2)~~ ✅
 5. ~~Appointments: queue, source, trajanje, no_show (1.4) + odluka o walk-in nalozima (1.5)~~ ✅
-6. Manji nalazi (3.1–3.4)
+6. ~~Manji nalazi (3.1–3.4)~~ ✅
 
 Backend ide kao zaseban kolosek: novi modular monolith od nule (4.1) — ima smisla krenuti tek kada se šema stabilizuje (bar stavke 2–4), da se novi kod ne piše dva puta.

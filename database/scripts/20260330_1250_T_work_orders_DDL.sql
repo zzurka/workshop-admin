@@ -15,6 +15,8 @@ CREATE TABLE IF NOT EXISTS workshop.work_orders (
     appointment_id         UUID         NOT NULL,
     employee_id            UUID         NOT NULL,
     work_order_status_id   SMALLINT     NOT NULL,
+    customer_approved_at   TIMESTAMPTZ,
+    customer_approval_note VARCHAR(255),
     description            TEXT,
     started_at             TIMESTAMPTZ,
     completed_at           TIMESTAMPTZ,
@@ -36,12 +38,14 @@ CREATE TABLE IF NOT EXISTS workshop.work_orders (
     CONSTRAINT ck_workshop_work_orders_completed_range       CHECK (completed_at IS NULL OR completed_at >= started_at)
 );
 
-COMMENT ON TABLE  workshop.work_orders                       IS 'Work orders created after vehicle inspection. Multiple per appointment (different mechanics/jobs). Tracks status from pending_parts through completion.';
+COMMENT ON TABLE  workshop.work_orders                       IS 'Work orders created after vehicle inspection. Multiple per appointment (different mechanics/jobs). Tracks status from pending_parts through completion. Application rule: work discovered mid-repair that needs customer sign-off gets status awaiting_approval; customer_approved_at set (e.g. via portal, or staff records a phone/in-person approval with customer_approval_note) moves it to pending_parts/ready, while a refusal moves it to cancelled. Work orders created straight from initial intake skip awaiting_approval entirely.';
 COMMENT ON COLUMN workshop.work_orders.id                    IS 'UUID v7 primary key (time-ordered).';
 COMMENT ON COLUMN workshop.work_orders.tenant_id             IS 'The tenant (workshop) this work order belongs to.';
 COMMENT ON COLUMN workshop.work_orders.appointment_id        IS 'The appointment this work order was created from. Multiple work orders can reference the same appointment. Composite FK (tenant_id, appointment_id) guarantees the appointment belongs to the same tenant.';
 COMMENT ON COLUMN workshop.work_orders.employee_id           IS 'The mechanic/employee assigned to this work order. Composite FK (tenant_id, employee_id) guarantees the employee belongs to the same tenant.';
-COMMENT ON COLUMN workshop.work_orders.work_order_status_id  IS 'FK to codebook.work_order_statuses (pending_parts, ready, in_progress, completed, cancelled).';
+COMMENT ON COLUMN workshop.work_orders.work_order_status_id  IS 'FK to codebook.work_order_statuses (awaiting_approval, pending_parts, ready, in_progress, completed, cancelled).';
+COMMENT ON COLUMN workshop.work_orders.customer_approved_at  IS 'NULL = approval not requested, or requested but not yet given. Set when the customer approves additional work found mid-repair (status awaiting_approval); a portal approval stamps this automatically.';
+COMMENT ON COLUMN workshop.work_orders.customer_approval_note IS 'How approval was obtained, e.g. "phone call 14:30", "in person", "portal". NULL when approval was never requested.';
 COMMENT ON COLUMN workshop.work_orders.description           IS 'Description of the work to be done on this order.';
 COMMENT ON COLUMN workshop.work_orders.started_at            IS 'Timestamp when work actually started. NULL until in_progress.';
 COMMENT ON COLUMN workshop.work_orders.completed_at          IS 'Timestamp when work was completed. NULL until completed.';

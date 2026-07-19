@@ -8,11 +8,12 @@
 BEGIN;
 
 INSERT INTO codebook.work_order_statuses (code, label, sort_order) VALUES
-    ('pending_parts', '{"en": "Pending parts", "sr": "Čekanje delova"}', 1),
-    ('ready',         '{"en": "Ready",         "sr": "Spremno"}',        2),
-    ('in_progress',   '{"en": "In progress",   "sr": "U toku"}',         3),
-    ('completed',     '{"en": "Completed",     "sr": "Završeno"}',       4),
-    ('cancelled',     '{"en": "Cancelled",     "sr": "Otkazano"}',       5)
+    ('awaiting_approval', '{"en": "Awaiting approval", "sr": "Čeka odobrenje"}', 1),
+    ('pending_parts',     '{"en": "Pending parts",     "sr": "Čekanje delova"}', 2),
+    ('ready',             '{"en": "Ready",             "sr": "Spremno"}',        3),
+    ('in_progress',       '{"en": "In progress",       "sr": "U toku"}',         4),
+    ('completed',         '{"en": "Completed",         "sr": "Završeno"}',       5),
+    ('cancelled',         '{"en": "Cancelled",         "sr": "Otkazano"}',       6)
 ON CONFLICT (code) DO NOTHING;
 
 COMMIT;

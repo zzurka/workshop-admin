@@ -69,4 +69,7 @@ CREATE INDEX IF NOT EXISTS ix_customer_vehicles_is_deleted
 CREATE INDEX IF NOT EXISTS ix_customer_vehicles_vin
     ON customer.vehicles (vin);
 
+CREATE INDEX IF NOT EXISTS ix_customer_vehicles_license_plate
+    ON customer.vehicles (license_plate);
+
 COMMIT;

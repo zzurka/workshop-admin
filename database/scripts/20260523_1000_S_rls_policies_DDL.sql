@@ -14,9 +14,12 @@
 --              tables and bypasses RLS (no FORCE) — migrations and manual
 --              admin queries are unaffected.
 --
---              Out of scope: auth and tenant schemas (login and tenant
---              selection happen BEFORE the context is set; users is a global
---              identity), codebook (shared data), migration.
+--              Out of scope here: auth (login and tenant selection happen
+--              BEFORE the context is set; users is a global identity) and
+--              tenant schemas, codebook (shared data), migration. Exception:
+--              auth.roles/role_permissions/user_roles mix platform-shared
+--              and tenant-scoped rows (custom roles) and DO get RLS — see
+--              the companion script 20260523_1010_S_rls_policies_auth_DDL.sql.
 -- Author: WorkshopAdmin Team
 -- Date: 2026-07-18
 --

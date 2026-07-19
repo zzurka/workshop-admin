@@ -21,7 +21,7 @@ CREATE TABLE IF NOT EXISTS workshop.work_order_parts (
     part_status_id  SMALLINT      NOT NULL,
     part_name       VARCHAR(255)  NOT NULL,
     part_number     VARCHAR(100),
-    quantity        SMALLINT      NOT NULL DEFAULT 1,
+    quantity        NUMERIC(10,2) NOT NULL DEFAULT 1,
     unit_price      NUMERIC(10,2),
     notes           TEXT,
     created_at      TIMESTAMPTZ   NOT NULL DEFAULT NOW(),
@@ -48,10 +48,10 @@ COMMENT ON COLUMN workshop.work_order_parts.tenant_id        IS 'Denormalized te
 COMMENT ON COLUMN workshop.work_order_parts.work_order_id    IS 'The work order this part belongs to. Composite FK (tenant_id, work_order_id) guarantees the work order belongs to the same tenant.';
 COMMENT ON COLUMN workshop.work_order_parts.catalog_part_id  IS 'FK to warehouse.parts_catalog. Set when part comes from warehouse stock. NULL if externally sourced. Composite FK check is skipped while NULL.';
 COMMENT ON COLUMN workshop.work_order_parts.supplier_id      IS 'FK to workshop.suppliers. NULL if supplier not yet determined or part is from warehouse. Composite FK check is skipped while NULL.';
-COMMENT ON COLUMN workshop.work_order_parts.part_status_id   IS 'FK to codebook.part_statuses (in_stock, ordered, received).';
+COMMENT ON COLUMN workshop.work_order_parts.part_status_id   IS 'FK to codebook.part_statuses (in_stock, ordered, received, issued, returned, cancelled). ''issued'' means physically pulled from warehouse stock (stock_transactions reduced quantity_on_hand) — warehouse.v_stock_availability treats in_stock/received as still-reserved but not issued, since issued parts are already reflected in quantity_on_hand.';
 COMMENT ON COLUMN workshop.work_order_parts.part_name        IS 'Human-readable part name (e.g. "Oil filter for BMW 320d").';
 COMMENT ON COLUMN workshop.work_order_parts.part_number      IS 'Manufacturer or supplier part number. NULL if unknown.';
-COMMENT ON COLUMN workshop.work_order_parts.quantity         IS 'Number of units needed. Must be at least 1.';
+COMMENT ON COLUMN workshop.work_order_parts.quantity         IS 'Number of units needed. NUMERIC to support fractional quantities (e.g. 1.5 L of oil), consistent with stock and invoice line quantities. Must be positive.';
 COMMENT ON COLUMN workshop.work_order_parts.unit_price       IS 'Price per unit. NULL if not yet quoted.';
 COMMENT ON COLUMN workshop.work_order_parts.notes            IS 'Notes about this part (e.g. "OEM only, no aftermarket").';
 COMMENT ON COLUMN workshop.work_order_parts.created_by       IS 'User who created this record. NULL for system/seed records.';
