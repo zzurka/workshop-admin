@@ -179,12 +179,17 @@ Preduslov: implementacioni batch šeme iz model-review (bar stavke 2–4: faktur
 | **F2 — Codebook + Tenants** ([detaljan plan](plans/f2-codebook-tenants.md)) | najprostiji moduli — dokaz obrasca: šifarnici (list + admin CRUD, keš), tenant CRUD, subscription plans/istorija | prvi end-to-end slice-ovi |
 | **F3 — Notifications + Auth** | outbox + dispatcher port; ceo auth tok iz sekcije 7 (login/select/switch, rotacija, reset, verifikacija, OIDC, permisije) | prijava sa izborom servisa; mejlovi rade |
 | **F4 — Customers** | customers (person/company — B2B 3.3), vehicles, pretraga (tablica/VIN) | evidencija mušterija |
-| **F5 — Hr osnovno + Appointments** | employees CRUD + kompenzacije (bez payroll obračuna); appointments: zakazivanje, dnevni queue + preslaganje, source, walk-in prijem (1.4/1.5), statusi | prijem vozila funkcioniše |
+| **F5 — Hr osnovno + Appointments** | employees CRUD + kompenzacije (bez payroll obračuna); appointments: zakazivanje, dnevni queue + preslaganje, source, walk-in prijem (1.4/1.5), statusi, prisustvo vozila + podsetnik za dovoz (v. napomenu ispod) | prijem vozila funkcioniše |
 | **F6 — Warehouse** | parts_catalog, stock, purchase orders + prijem (1.6), stock_transactions | magacin i nabavka |
 | **F7 — Work orders** | nalozi iz appointmenta, mehaničari, labor (3.2), delovi sa lagera (veza ka Warehouse), odobrenja, complaints (1.2) | radionica funkcioniše |
 | **F8 — Invoicing** | fakture (broj, PDV, valuta — 1.7), payments, expenses | naplata |
 | **F9 — Hr puno** | time_entries (veza ka nalozima), leave, payroll obračun (1.3) | HR kompletan |
 | **F10 — Cutover** | Angular frontend prelazi na novi API; brisanje legacy backenda; ažuriranje CLAUDE.md/DOCS.md; hardening (rate limiting, health checks, CORS) | stari backend obrisan |
+
+Napomena za F5 — prisustvo vozila i podsetnik za dovoz *(dodato 2026-07-19)*:
+
+- **„Vozilo u servisu" nije poseban boolean** — izvedeno je iz `appointments.arrived_at IS NOT NULL`. Portal zakazivanje nikad ne postavlja `arrived_at` (uvek „nije u servisu"); pri ličnom zakazivanju, ako vozilo nije u voznom stanju i odmah ostaje u servisu, UI nudi opciju „vozilo ostaje" koja postavlja `arrived_at = NOW()` već pri kreiranju termina. Dnevni queue prikazuje koja vozila su već tu.
+- **Podsetnik za dovoz:** hosted service (Workshop modul) jednom dnevno nalazi termine sa `scheduled_date = danas + tenants.arrival_reminder_lead_days` (konfigurabilno po tenantu; `NULL` = isključeno, default 1 dan), `arrived_at IS NULL` i `arrival_reminder_sent_at IS NULL`, pa u **istoj transakciji** upisuje mejl (`appointment_arrival_reminder` šablon) u `notification.email_outbox` i postavlja `arrival_reminder_sent_at` (at-most-once). DB strana urađena 2026-07-19: migracije `20260719_1300`–`1320`.
 
 Frontend napomena *(izmenjena 2026-07-19)*: postojeći Angular kod se tretira kao prototip — **nema obaveze kompatibilnosti sa starim API-jem**; rute i oblici odgovora novog backenda se dizajniraju slobodno, a frontend se piše/prilagođava na njih u F10.
 
