@@ -7,7 +7,7 @@ namespace WorkshopAdmin.SharedKernel.Persistence;
 
 /// <summary>
 /// Fills audit columns from <see cref="ICurrentUser"/> on every SaveChanges — one place
-/// instead of per-query discipline. Manual Dapper SQL must set them explicitly.
+/// instead of per-query discipline. Manual SQL (if ever used) must set them explicitly.
 /// </summary>
 public sealed class AuditSaveChangesInterceptor(ICurrentUser currentUser) : SaveChangesInterceptor
 {

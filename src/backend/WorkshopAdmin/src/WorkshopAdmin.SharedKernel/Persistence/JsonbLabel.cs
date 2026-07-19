@@ -8,7 +8,7 @@ namespace WorkshopAdmin.SharedKernel.Persistence;
 
 /// <summary>
 /// Multi-language JSONB labels (<c>{"en": "...", "sr": "..."}</c>) map to
-/// <c>Dictionary&lt;string, string&gt;</c> — same shape the legacy Dapper handler used.
+/// <c>Dictionary&lt;string, string&gt;</c> — same shape the legacy backend used.
 /// </summary>
 public static class JsonbLabel
 {

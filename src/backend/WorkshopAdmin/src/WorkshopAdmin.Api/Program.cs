@@ -36,7 +36,6 @@ try
     builder.Services.AddScoped<ICurrentUser, ClaimsCurrentUser>();
     builder.Services.AddDbSession(builder.Configuration);
     builder.Services.AddScoped<IDomainEventDispatcher, DomainEventDispatcher>();
-    DapperTypeHandlers.Register();
 
     // Composition root: explicit module list — the compiler guards it, no assembly scanning.
     IModule[] modules =

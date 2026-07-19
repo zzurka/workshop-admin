@@ -1,6 +1,7 @@
 # Plan F1 — Skeleton novog backenda
 
 **Status:** ✅ završeno 2026-07-19 — svi testovi zeleni lokalno (19 unit + 3 arch + 16 integracionih kroz lokalni PG18 režim); Testcontainers putanja se verifikuje na prvom CI runu
+**Dopuna 2026-07-19:** odlukom o izmeni D1 (samo EF Core) Dapper je naknadno uklonjen iz F1 koda — obrisan `DapperTypeHandlers`, paket izbačen iz props/csproj; JSONB mapiranje ostaje kroz EF value converter
 **Datum plana:** 2026-07-19
 **Referenca:** [backend-plan.md](../backend-plan.md) §11 (F1) · povezano: [2.2-rls.md](../../database/plans/2.2-rls.md)
 

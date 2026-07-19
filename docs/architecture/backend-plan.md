@@ -1,7 +1,7 @@
 # Plan — Novi backend: modular monolith
 
-**Status:** 📝 plan potvrđen — spreman za implementaciju (F1 može odmah, ostalo kad šema uđe u batch)
-**Datum plana:** 2026-07-17 · **Odluke potvrđene:** 2026-07-18 (D1 izmenjen — EF Core + Dapper; hasher — libsodium)
+**Status:** 🔶 u implementaciji — F1 (skeleton) ✅ završen 2026-07-19; sledeće: F2 ([plan](plans/f2-codebook-tenants.md))
+**Datum plana:** 2026-07-17 · **Odluke potvrđene:** 2026-07-18 (hasher — libsodium) · **D1 izmenjen 2026-07-19:** samo EF Core (Dapper izbačen)
 **Referenca:** [model-review.md](../database/model-review.md) §4.1 · povezano: [2.2-rls.md](../database/plans/2.2-rls.md), [2.1-cross-tenant-integritet.md](../database/plans/2.1-cross-tenant-integritet.md)
 
 ---
@@ -61,7 +61,7 @@ src/backend/WorkshopAdmin/
 **Sprovođenje granica — kombinacija dva mehanizma:**
 
 1. **Compiler:** svaki modul je zaseban projekat; sve u modulu je `internal` osim `Contracts/` foldera (public). Moduli **ne referenciraju jedni druge** — referenciraju samo `SharedKernel`. Cross-module pozivi idu preko contract interfejsa registrovanih u DI (implementacija je internal u modulu-vlasniku, host sve povezuje). Time drugi modul fizički ne može da dohvati tuđe internale.
-2. **Arhitekturni testovi** (NetArchTest): modul sme da zavisi samo od SharedKernel; ručni SQL (Dapper) u modulu sme da gađa samo svoju šemu + `codebook` (regex provera je best-effort — primarna odbrana je code review + RLS). EF stranu granice čuva sam modulski DbContext — mapira isključivo svoju šemu.
+2. **Arhitekturni testovi** (NetArchTest): modul sme da zavisi samo od SharedKernel; eventualni ručni SQL (EF `SqlQuery`/`FromSql`) u modulu sme da gađa samo svoju šemu + `codebook` (regex provera je best-effort — primarna odbrana je code review + RLS). EF stranu granice čuva sam modulski DbContext — mapira isključivo svoju šemu.
 
 ## 4. Arhitektura unutar modula
 
@@ -93,7 +93,7 @@ WorkshopAdmin.Modules.Workshop/
 └── WorkshopModule.cs           # IModule: DI registracija + MapEndpoints + event subscribe
 ```
 
-**Jedan slice = jedan use case:** endpoint (minimal API), request/response DTO, FluentValidation validator, handler klasa. Handler radi nad modulskim `DbContext`-om (LINQ); za složenije upite i izveštaje pada na Dapper sa čistim SQL-om preko iste konekcije. Logika živi u handleru; u lokalni `Infrastructure/` repo se izvlači tek kad je dele 2+ slice-a. Bez mediatora — endpoint direktno poziva handler iz DI (v. odluku D3).
+**Jedan slice = jedan use case:** endpoint (minimal API), request/response DTO, FluentValidation validator, handler klasa. Handler radi nad modulskim `DbContext`-om (LINQ); za složenije upite i izveštaje EF `SqlQuery<T>`/`FromSql` sa čistim SQL-om preko iste konekcije. Logika živi u handleru; u lokalni `Infrastructure/` repo se izvlači tek kad je dele 2+ slice-a. Bez mediatora — endpoint direktno poziva handler iz DI (v. odluku D3).
 
 **Gde očekujemo `Domain/`:** Workshop (prelazi statusa naloga/reklamacija, obračun fakture, odobrenja), Warehouse (pravila izdavanja/prijema, raspoloživost), Auth (tok tokena je u servisima, ali pravila lockout/rotacije mogu u domen). Tenants, Codebook, Customers, Notifications, Hr (v1) su transaction-script slice-ovi bez domena.
 
@@ -103,7 +103,7 @@ WorkshopAdmin.Modules.Workshop/
 |---|---|---|
 | Runtime | .NET 10 (LTS) | kao stari backend; Directory.Packages.props se prenosi |
 | HTTP | **Minimal APIs** + route groups po modulu | idiomatski za VSA; stari je imao controllere (D2) |
-| Pristup podacima | **EF Core (Npgsql) + Dapper po potrebi** | DbContext po modulu; Dapper za složene upite — v. odluku D1 |
+| Pristup podacima | **EF Core (Npgsql)** | DbContext po modulu; za složene upite EF `SqlQuery`/`FromSql` — v. odluku D1 (izmenjena 2026-07-19: bez Dappera) |
 | Validacija | FluentValidation preko endpoint filtera | automatski 400 + ProblemDetails |
 | Mediator | **nema** | v. odluku D3 |
 | Auth | JWT Bearer + Argon2id (libsodium) + refresh rotacija + OIDC | hasher nov — `Sodium.Core`; ostalo port iz starog backenda |
@@ -128,12 +128,12 @@ public interface IDbSession : IAsyncDisposable
 ```
 
 - Pri prvom pristupu: otvori konekciju (`workshopadmin_app`), `BEGIN`, pa `SET LOCAL app.current_tenant_id = '<uuid>'` iz claima aktivnog tenanta, odnosno `SET LOCAL app.is_platform_admin = 'true'` za platform-scope zahteve. Parametri idu kroz `set_config(...)`, ne konkatenacijom.
-- **EF Core se kači na istu sesiju:** svaki modul ima svoj `DbContext` (mapira isključivo svoju šemu + read-only šifarnike); pri kreiranju dobija konekciju i transakciju iz `IDbSession` (`UseNpgsql(session.Connection)` + `Database.UseTransaction(...)`). Dapper upiti idu preko iste konekcije — RLS kontekst važi za oba puta.
+- **EF Core se kači na istu sesiju:** svaki modul ima svoj `DbContext` (mapira isključivo svoju šemu + read-only šifarnike); pri kreiranju dobija konekciju i transakciju iz `IDbSession` (`UseNpgsql(session.Connection)` + `Database.UseTransaction(...)`). Eventualni čisti SQL (`SqlQuery`/`FromSql`) ide kroz isti DbContext — RLS kontekst važi uvek.
 - **Jedna transakcija po HTTP zahtevu**, deljena kroz sve module (i sve DbContext-e) koje zahtev dotakne (cross-module konzistentnost „besplatno“ — v. D6). Commit na uspeh (endpoint filter/middleware), rollback na izuzetak.
 - Auth slice-ovi pre logina (login, refresh, password reset) rade bez tenant konteksta — `auth`/`tenant` šeme su najvećim delom van RLS obuhvata, pa fail-closed ne smeta. Izuzetak (dopuna 2026-07-18, detalji u [plan 3.1 §E](../database/plans/3.1-auth-sitnice.md)): `roles`/`role_permissions`/`user_roles` dobijaju RLS zbog custom rola tenanta — transakcija izdavanja tokena (građenje claim-ova) se zato izvršava sa `SET LOCAL app.is_platform_admin = 'true'` kao jedno privilegovano, revidirano mesto u auth modulu.
 - **DB-first mapiranje:** SQL skripte ostaju izvor istine; EF model se piše/održava ručno (inicijalni scaffold sme da posluži kao polazna tačka), **bez EF migracija**. snake_case preko `EFCore.NamingConventions`; JSONB labele preko value convertera iz SharedKernel; `uuidv7()`/`NOW()` defaulti su DB-generated (`ValueGeneratedOnAdd`).
-- **Audit kolone:** `SaveChanges` interceptor puni `created_by`/`updated_at`/`updated_by` iz `ICurrentUser` — jedno mesto umesto discipline po upitu. Ručni Dapper SQL ih postavlja eksplicitno.
-- **Soft delete:** globalni query filter `HasQueryFilter(e => !e.IsDeleted)` na svim entitetima — EF strana pokrivena automatski; ručni Dapper SQL i dalje nosi `AND NOT is_deleted` (stavka code-review checkliste + testovi).
+- **Audit kolone:** `SaveChanges` interceptor puni `created_by`/`updated_at`/`updated_by` iz `ICurrentUser` — jedno mesto umesto discipline po upitu. Eventualni ručni SQL ih postavlja eksplicitno.
+- **Soft delete:** globalni query filter `HasQueryFilter(e => !e.IsDeleted)` na svim entitetima — EF strana pokrivena automatski; eventualni ručni SQL i dalje nosi `AND NOT is_deleted` (stavka code-review checkliste + testovi).
 
 ## 7. Auth modul — tok prijave (membership model)
 
@@ -160,7 +160,7 @@ Pravila (čuvaju ih arhitekturni testovi + review):
 
 ## 9. SharedKernel — sadržaj
 
-Namerno mali (nije „Common“ đubrište): `IModule`, `IDbSession` + implementacija, `ICurrentUser` (user id, tenant id, permisije iz claimova), zajednička EF Core osnova (bazni entitet sa audit kolonama, snake_case konvencije, audit `SaveChanges` interceptor, soft-delete filter helper, JSONB label value converter), Result/Error tipovi + mapiranje na ProblemDetails, exception → ProblemDetails middleware, FluentValidation endpoint filter, paginacija (`PagedRequest`/`PagedResponse`), JSONB label tip + Dapper type handler (port `JsonbTypeHandler`, za Dapper deo), bazni tipovi domenskih događaja + dispatcher, permission autorizacija (`HasPermission` atribut/ekstenzija, policy provider — port).
+Namerno mali (nije „Common“ đubrište): `IModule`, `IDbSession` + implementacija, `ICurrentUser` (user id, tenant id, permisije iz claimova), zajednička EF Core osnova (bazni entitet sa audit kolonama, snake_case konvencije, audit `SaveChanges` interceptor, soft-delete filter helper, JSONB label value converter), Result/Error tipovi + mapiranje na ProblemDetails, exception → ProblemDetails middleware, FluentValidation endpoint filter, paginacija (`PagedRequest`/`PagedResponse`), JSONB label tip (EF value converter), bazni tipovi domenskih događaja + dispatcher, permission autorizacija (`HasPermission` atribut/ekstenzija, policy provider — port).
 
 ## 10. Testiranje
 
@@ -176,7 +176,7 @@ Preduslov: implementacioni batch šeme iz model-review (bar stavke 2–4: faktur
 | Faza | Obim | Izlaz |
 |---|---|---|
 | **F1 — Skeleton** ([detaljan plan](plans/f1-skeleton.md)) | Solucija, SharedKernel (IDbSession + RLS `SET LOCAL`, EF osnova — konvencije/interceptori, ProblemDetails, validacioni filter, events), host sa IModule registracijom, Serilog, OpenAPI, arch testovi, Testcontainers fixture sa runnerom migracija + EF drift test, CI | prazan monolit koji se builduje, testira i drži RLS kontekst |
-| **F2 — Codebook + Tenants** | najprostiji moduli — dokaz obrasca: šifarnici (list + admin CRUD, keš), tenant CRUD, subscription plans/istorija | prvi end-to-end slice-ovi |
+| **F2 — Codebook + Tenants** ([detaljan plan](plans/f2-codebook-tenants.md)) | najprostiji moduli — dokaz obrasca: šifarnici (list + admin CRUD, keš), tenant CRUD, subscription plans/istorija | prvi end-to-end slice-ovi |
 | **F3 — Notifications + Auth** | outbox + dispatcher port; ceo auth tok iz sekcije 7 (login/select/switch, rotacija, reset, verifikacija, OIDC, permisije) | prijava sa izborom servisa; mejlovi rade |
 | **F4 — Customers** | customers (person/company — B2B 3.3), vehicles, pretraga (tablica/VIN) | evidencija mušterija |
 | **F5 — Hr osnovno + Appointments** | employees CRUD + kompenzacije (bez payroll obračuna); appointments: zakazivanje, dnevni queue + preslaganje, source, walk-in prijem (1.4/1.5), statusi | prijem vozila funkcioniše |
@@ -186,15 +186,15 @@ Preduslov: implementacioni batch šeme iz model-review (bar stavke 2–4: faktur
 | **F9 — Hr puno** | time_entries (veza ka nalozima), leave, payroll obračun (1.3) | HR kompletan |
 | **F10 — Cutover** | Angular frontend prelazi na novi API; brisanje legacy backenda; ažuriranje CLAUDE.md/DOCS.md; hardening (rate limiting, health checks, CORS) | stari backend obrisan |
 
-Frontend napomena: rute i oblici odgovora za auth/users/roles/tenants se drže **što bliže starom API-ju** (frontend je već integrisan na njih); svako odstupanje se evidentira za F10.
+Frontend napomena *(izmenjena 2026-07-19)*: postojeći Angular kod se tretira kao prototip — **nema obaveze kompatibilnosti sa starim API-jem**; rute i oblici odgovora novog backenda se dizajniraju slobodno, a frontend se piše/prilagođava na njih u F10.
 
 ## 12. Odluke — ✅ potvrđene 2026-07-18
 
-D2–D7 potvrđeni po preporuci; **D1 izmenjen** — EF Core kao primarni pristup podacima, Dapper po potrebi za složene upite sa čistim SQL-om. Dodatno potvrđeno: password hashing prelazi na **libsodium (Argon2id)** umesto Konscious biblioteke (v. sekciju 13).
+D2–D7 potvrđeni po preporuci; **D1 dvaput izmenjen** — 2026-07-18: EF Core + Dapper; **2026-07-19: samo EF Core** (Dapper izbačen iz steka — frontend/API još ne postoje, pa je pojednostavljenje bilo bezbolno; implementirano u F1 kodu istog dana). Dodatno potvrđeno: password hashing prelazi na **libsodium (Argon2id)** umesto Konscious biblioteke (v. sekciju 13).
 
 | # | Pitanje | Odluka | Alternativa |
 |---|---|---|---|
-| **D1** | Pristup podacima | **EF Core (Npgsql) primarno + Dapper po potrebi** — change tracking, globalni query filteri (soft delete), audit interceptor; Dapper za složenije upite/izveštaje preko iste konekcije i transakcije | čist Dapper (prvobitna preporuka — odbačeno) |
+| **D1** | Pristup podacima | **Samo EF Core (Npgsql)** — change tracking, globalni query filteri (soft delete), audit interceptor. Za eventualne složene upite/izveštaje: EF `SqlQuery<T>`/`FromSql` preko iste konekcije i transakcije (isti RLS kontekst). *Izmena 2026-07-19: Dapper izbačen iz steka — jedan način pristupa podacima umesto dva.* | EF + Dapper (odluka od 2026-07-18 — zamenjena); čist Dapper (prvobitna preporuka — odbačeno) |
 | **D2** | HTTP sloj | **Minimal APIs** + route groups, endpoint po slice-u | Controllers (kao stari backend) |
 | **D3** | Mediator | **Bez mediatora** — endpoint → handler direktno iz DI; cross-cutting kroz endpoint filtere. MediatR je od v13 komercijalan; apstrakcija ne donosi ništa na ovoj veličini | Wolverine / MediatR |
 | **D4** | Granice modula | **Projekat po modulu**, `internal` sve osim `Contracts/` | jedan projekat + samo arch testovi (slabija garancija) |
@@ -204,6 +204,6 @@ D2–D7 potvrđeni po preporuci; **D1 izmenjen** — EF Core kao primarni pristu
 
 ## 13. Šta se prenosi iz starog backenda (port, ne referenca)
 
-Proverena tehnička rešenja koja se kopiraju/prilagođavaju u nove module: JWT token service, refresh rotacija sa detekcijom krađe, permission policy provider/handler + `HasPermission`, email outbox + MailKit dispatcher + template renderer, OIDC external auth klijent (state/handoff cache), exception middleware (prerada na ProblemDetails), Serilog konfiguracija, `JsonbTypeHandler`, paging modeli, `Directory.Packages.props` verzije (uz dodatak `EFCore.NamingConventions`; `Npgsql.EntityFrameworkCore.PostgreSQL` već postoji u props-u).
+Proverena tehnička rešenja koja se kopiraju/prilagođavaju u nove module: JWT token service, refresh rotacija sa detekcijom krađe, permission policy provider/handler + `HasPermission`, email outbox + MailKit dispatcher + template renderer, OIDC external auth klijent (state/handoff cache), exception middleware (prerada na ProblemDetails), Serilog konfiguracija, JSONB label mapiranje (legacy Dapper `JsonbTypeHandler` → EF value converter), paging modeli, `Directory.Packages.props` verzije (uz dodatak `EFCore.NamingConventions`; `Npgsql.EntityFrameworkCore.PostgreSQL` već postoji u props-u).
 
 **Ne prenosi se:** Argon2 hasher (Konscious) — novi backend koristi **libsodium** preko `Sodium.Core` paketa: `crypto_pwhash_str` (Argon2id), standardni PHC format hasha, verifikacija + needs-rehash provera pri loginu. Kompatibilnost sa starim hashovima nije potrebna (nema produkcijskih podataka).

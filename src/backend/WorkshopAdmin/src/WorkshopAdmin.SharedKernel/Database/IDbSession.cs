@@ -6,7 +6,7 @@ namespace WorkshopAdmin.SharedKernel.Database;
 /// The single place where a DB connection, transaction and tenant (RLS) context are
 /// established for a request. Request-scoped and lazy: nothing is opened until the
 /// first <see cref="GetOpenConnectionAsync"/> call. All data access in a request —
-/// every module's DbContext and every Dapper query — shares this connection and
+/// every module's DbContext and any raw SQL — shares this connection and
 /// transaction (backend plan §6, D6).
 /// </summary>
 public interface IDbSession : IAsyncDisposable

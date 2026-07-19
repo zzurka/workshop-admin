@@ -7,7 +7,7 @@ namespace WorkshopAdmin.SharedKernel.Persistence;
 
 /// <summary>
 /// Base for per-module DbContexts. Attaches to the request's <see cref="IDbSession"/>
-/// transaction (same connection, same RLS context as Dapper) and applies the shared
+/// transaction (one connection and RLS context per request) and applies the shared
 /// conventions: DB-generated defaults and soft-delete query filters. The EF model is
 /// maintained by hand against the SQL schema — no EF migrations (DB-first).
 /// </summary>
