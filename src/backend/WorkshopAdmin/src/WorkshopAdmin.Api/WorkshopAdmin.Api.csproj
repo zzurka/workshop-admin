@@ -1,0 +1,19 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
+    <PackageReference Include="Microsoft.OpenApi" />
+    <PackageReference Include="Scalar.AspNetCore" />
+    <PackageReference Include="Serilog.AspNetCore" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\WorkshopAdmin.SharedKernel\WorkshopAdmin.SharedKernel.csproj" />
+    <ProjectReference Include="..\Modules\WorkshopAdmin.Modules.Tenants\WorkshopAdmin.Modules.Tenants.csproj" />
+    <ProjectReference Include="..\Modules\WorkshopAdmin.Modules.Auth\WorkshopAdmin.Modules.Auth.csproj" />
+    <ProjectReference Include="..\Modules\WorkshopAdmin.Modules.Codebook\WorkshopAdmin.Modules.Codebook.csproj" />
+    <ProjectReference Include="..\Modules\WorkshopAdmin.Modules.Customers\WorkshopAdmin.Modules.Customers.csproj" />
+    <ProjectReference Include="..\Modules\WorkshopAdmin.Modules.Hr\WorkshopAdmin.Modules.Hr.csproj" />
+    <ProjectReference Include="..\Modules\WorkshopAdmin.Modules.Workshop\WorkshopAdmin.Modules.Workshop.csproj" />
+    <ProjectReference Include="..\Modules\WorkshopAdmin.Modules.Warehouse\WorkshopAdmin.Modules.Warehouse.csproj" />
+    <ProjectReference Include="..\Modules\WorkshopAdmin.Modules.Notifications\WorkshopAdmin.Modules.Notifications.csproj" />
+  </ItemGroup>
+</Project>

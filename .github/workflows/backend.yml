@@ -1,0 +1,38 @@
+name: backend
+
+on:
+  push:
+    branches: [master, develop, 'develop*']
+    paths:
+      - 'src/backend/WorkshopAdmin/**'
+      - 'database/**'
+      - '.github/workflows/backend.yml'
+  pull_request:
+    paths:
+      - 'src/backend/WorkshopAdmin/**'
+      - 'database/**'
+      - '.github/workflows/backend.yml'
+
+jobs:
+  build-test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: src/backend/WorkshopAdmin
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 10.0.x
+
+      - name: Restore
+        run: dotnet restore
+
+      - name: Build
+        run: dotnet build --no-restore -c Release
+
+      # Integration tests run real migrations from database/scripts against a
+      # Testcontainers postgres:18 container (Docker is available on ubuntu runners)
+      - name: Test
+        run: dotnet test --no-build -c Release

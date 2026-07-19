@@ -1,0 +1,21 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/WorkshopAdmin.Api/WorkshopAdmin.Api.csproj" />
+    <Project Path="src/WorkshopAdmin.SharedKernel/WorkshopAdmin.SharedKernel.csproj" />
+  </Folder>
+  <Folder Name="/src/Modules/">
+    <Project Path="src/Modules/WorkshopAdmin.Modules.Auth/WorkshopAdmin.Modules.Auth.csproj" />
+    <Project Path="src/Modules/WorkshopAdmin.Modules.Codebook/WorkshopAdmin.Modules.Codebook.csproj" />
+    <Project Path="src/Modules/WorkshopAdmin.Modules.Customers/WorkshopAdmin.Modules.Customers.csproj" />
+    <Project Path="src/Modules/WorkshopAdmin.Modules.Hr/WorkshopAdmin.Modules.Hr.csproj" />
+    <Project Path="src/Modules/WorkshopAdmin.Modules.Notifications/WorkshopAdmin.Modules.Notifications.csproj" />
+    <Project Path="src/Modules/WorkshopAdmin.Modules.Tenants/WorkshopAdmin.Modules.Tenants.csproj" />
+    <Project Path="src/Modules/WorkshopAdmin.Modules.Warehouse/WorkshopAdmin.Modules.Warehouse.csproj" />
+    <Project Path="src/Modules/WorkshopAdmin.Modules.Workshop/WorkshopAdmin.Modules.Workshop.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/WorkshopAdmin.ArchitectureTests/WorkshopAdmin.ArchitectureTests.csproj" />
+    <Project Path="tests/WorkshopAdmin.IntegrationTests/WorkshopAdmin.IntegrationTests.csproj" />
+    <Project Path="tests/WorkshopAdmin.UnitTests/WorkshopAdmin.UnitTests.csproj" />
+  </Folder>
+</Solution>

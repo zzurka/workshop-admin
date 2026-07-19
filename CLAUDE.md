@@ -6,7 +6,9 @@ Multi-tenant workshop management application for auto repair shops.
 
 ```
 database/           Database migrations, setup scripts, runners
-src/backend/        .NET backend (WorkshopAdmin)
+src/backend/
+    WorkshopAdmin/  New .NET backend — modular monolith (see docs/architecture/backend-plan.md)
+    legacy/         Old .NET backend — reference only, do not modify (targets the dropped auth.users.tenant_id schema)
 src/frontend/       Angular frontend (workshop-admin-app)
 docs/               Documentation
 ```

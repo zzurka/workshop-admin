@@ -175,7 +175,7 @@ Preduslov: implementacioni batch šeme iz model-review (bar stavke 2–4: faktur
 
 | Faza | Obim | Izlaz |
 |---|---|---|
-| **F1 — Skeleton** | Solucija, SharedKernel (IDbSession + RLS `SET LOCAL`, EF osnova — konvencije/interceptori, ProblemDetails, validacioni filter, events), host sa IModule registracijom, Serilog, OpenAPI, arch testovi, Testcontainers fixture sa runnerom migracija + EF drift test, CI | prazan monolit koji se builduje, testira i drži RLS kontekst |
+| **F1 — Skeleton** ([detaljan plan](plans/f1-skeleton.md)) | Solucija, SharedKernel (IDbSession + RLS `SET LOCAL`, EF osnova — konvencije/interceptori, ProblemDetails, validacioni filter, events), host sa IModule registracijom, Serilog, OpenAPI, arch testovi, Testcontainers fixture sa runnerom migracija + EF drift test, CI | prazan monolit koji se builduje, testira i drži RLS kontekst |
 | **F2 — Codebook + Tenants** | najprostiji moduli — dokaz obrasca: šifarnici (list + admin CRUD, keš), tenant CRUD, subscription plans/istorija | prvi end-to-end slice-ovi |
 | **F3 — Notifications + Auth** | outbox + dispatcher port; ceo auth tok iz sekcije 7 (login/select/switch, rotacija, reset, verifikacija, OIDC, permisije) | prijava sa izborom servisa; mejlovi rade |
 | **F4 — Customers** | customers (person/company — B2B 3.3), vehicles, pretraga (tablica/VIN) | evidencija mušterija |
