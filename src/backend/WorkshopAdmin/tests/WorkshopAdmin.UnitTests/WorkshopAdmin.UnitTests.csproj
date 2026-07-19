@@ -9,5 +9,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\src\WorkshopAdmin.SharedKernel\WorkshopAdmin.SharedKernel.csproj" />
+    <ProjectReference Include="..\..\src\Modules\WorkshopAdmin.Modules.Codebook\WorkshopAdmin.Modules.Codebook.csproj" />
+    <ProjectReference Include="..\..\src\Modules\WorkshopAdmin.Modules.Tenants\WorkshopAdmin.Modules.Tenants.csproj" />
   </ItemGroup>
 </Project>

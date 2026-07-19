@@ -1,11 +1,12 @@
 using System.Reflection;
-using NetArchTest.Rules;
 using WorkshopAdmin.Modules.Auth;
 using WorkshopAdmin.Modules.Codebook;
+using WorkshopAdmin.Modules.Codebook.Contracts;
 using WorkshopAdmin.Modules.Customers;
 using WorkshopAdmin.Modules.Hr;
 using WorkshopAdmin.Modules.Notifications;
 using WorkshopAdmin.Modules.Tenants;
+using WorkshopAdmin.Modules.Tenants.Contracts;
 using WorkshopAdmin.Modules.Warehouse;
 using WorkshopAdmin.Modules.Workshop;
 using WorkshopAdmin.SharedKernel.Modules;
@@ -14,8 +15,12 @@ using Xunit;
 namespace WorkshopAdmin.ArchitectureTests;
 
 /// <summary>
-/// Enforces backend plan §3: modules depend only on SharedKernel, never on each other,
-/// and expose nothing publicly except their Contracts folder and the IModule class.
+/// Enforces backend plan §3/§8: a module's public contract surface lives in its own
+/// <c>WorkshopAdmin.Modules.X.Contracts</c> project (created lazily, once a consumer
+/// exists — decision refined in F2). A module may reference SharedKernel and Contracts
+/// projects of other modules, never another module itself — which also keeps mutual
+/// contract consumption (e.g. Workshop ⇄ Warehouse in F6/F7) acyclic. Everything
+/// outside Contracts stays internal, so the compiler enforces the rest.
 /// </summary>
 public sealed class ModuleBoundaryTests
 {
@@ -31,33 +36,14 @@ public sealed class ModuleBoundaryTests
         (typeof(NotificationsModule).Assembly, "WorkshopAdmin.Modules.Notifications")
     ];
 
-    [Fact]
-    public void Modules_DoNotDependOnOtherModules()
-    {
-        List<string> violations = [];
-
-        foreach ((Assembly assembly, string ownNamespace) in Modules)
-        {
-            string[] otherModuleNamespaces = Modules
-                .Where(m => m.Namespace != ownNamespace)
-                .Select(m => m.Namespace)
-                .ToArray();
-
-            TestResult result = Types.InAssembly(assembly)
-                .ShouldNot().HaveDependencyOnAny(otherModuleNamespaces)
-                .GetResult();
-
-            if (!result.IsSuccessful)
-            {
-                violations.AddRange(result.FailingTypeNames.Select(t => $"{ownNamespace}: {t}"));
-            }
-        }
-
-        Assert.Empty(violations);
-    }
+    private static readonly Assembly[] ContractsAssemblies =
+    [
+        typeof(ICodebookLookup).Assembly,
+        typeof(TenantSubscriptionChanged).Assembly
+    ];
 
     [Fact]
-    public void Modules_ReferenceOnlySharedKernel_AmongWorkshopAdminAssemblies()
+    public void Modules_ReferenceOnlySharedKernelAndContracts_AmongWorkshopAdminAssemblies()
     {
         List<string> violations = [];
 
@@ -66,7 +52,8 @@ public sealed class ModuleBoundaryTests
             IEnumerable<string> forbidden = assembly.GetReferencedAssemblies()
                 .Select(a => a.Name!)
                 .Where(name => name.StartsWith("WorkshopAdmin", StringComparison.Ordinal)
-                               && name != "WorkshopAdmin.SharedKernel");
+                               && name != "WorkshopAdmin.SharedKernel"
+                               && !name.EndsWith(".Contracts", StringComparison.Ordinal));
 
             violations.AddRange(forbidden.Select(name => $"{ownNamespace} references {name}"));
         }
@@ -75,15 +62,32 @@ public sealed class ModuleBoundaryTests
     }
 
     [Fact]
-    public void Modules_ExposePubliclyOnlyContractsAndTheModuleClass()
+    public void ContractsProjects_ReferenceOnlySharedKernel_AmongWorkshopAdminAssemblies()
+    {
+        List<string> violations = [];
+
+        foreach (Assembly assembly in ContractsAssemblies)
+        {
+            IEnumerable<string> forbidden = assembly.GetReferencedAssemblies()
+                .Select(a => a.Name!)
+                .Where(name => name.StartsWith("WorkshopAdmin", StringComparison.Ordinal)
+                               && name != "WorkshopAdmin.SharedKernel");
+
+            violations.AddRange(forbidden.Select(name => $"{assembly.GetName().Name} references {name}"));
+        }
+
+        Assert.Empty(violations);
+    }
+
+    [Fact]
+    public void Modules_ExposePubliclyOnlyTheModuleClass()
     {
         List<string> violations = [];
 
         foreach ((Assembly assembly, string ownNamespace) in Modules)
         {
             IEnumerable<Type> offenders = assembly.GetExportedTypes()
-                .Where(type => !typeof(IModule).IsAssignableFrom(type)
-                               && !(type.Namespace ?? "").Contains(".Contracts"));
+                .Where(type => !typeof(IModule).IsAssignableFrom(type));
 
             violations.AddRange(offenders.Select(type => $"{ownNamespace}: {type.FullName}"));
         }

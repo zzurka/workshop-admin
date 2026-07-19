@@ -1,6 +1,6 @@
 # Plan — Novi backend: modular monolith
 
-**Status:** 🔶 u implementaciji — F1 (skeleton) ✅ završen 2026-07-19; sledeće: F2 ([plan](plans/f2-codebook-tenants.md))
+**Status:** 🔶 u implementaciji — F1 (skeleton) ✅ i F2 (Codebook + Tenants) ✅ završeni 2026-07-19; sledeće: F3 (Notifications + Auth)
 **Datum plana:** 2026-07-17 · **Odluke potvrđene:** 2026-07-18 (hasher — libsodium) · **D1 izmenjen 2026-07-19:** samo EF Core (Dapper izbačen)
 **Referenca:** [model-review.md](../database/model-review.md) §4.1 · povezano: [2.2-rls.md](../database/plans/2.2-rls.md), [2.1-cross-tenant-integritet.md](../database/plans/2.1-cross-tenant-integritet.md)
 
@@ -60,7 +60,7 @@ src/backend/WorkshopAdmin/
 
 **Sprovođenje granica — kombinacija dva mehanizma:**
 
-1. **Compiler:** svaki modul je zaseban projekat; sve u modulu je `internal` osim `Contracts/` foldera (public). Moduli **ne referenciraju jedni druge** — referenciraju samo `SharedKernel`. Cross-module pozivi idu preko contract interfejsa registrovanih u DI (implementacija je internal u modulu-vlasniku, host sve povezuje). Time drugi modul fizički ne može da dohvati tuđe internale.
+1. **Compiler** *(precizirano 2026-07-19, F2)*: svaki modul je zaseban projekat i sve u njemu je `internal`; javna contract površina živi u **zasebnom projektu `WorkshopAdmin.Modules.X.Contracts`** (kreira se lenjo — tek kad prvi potrošač nastane). Modul sme da referencira samo `SharedKernel` i **tuđe Contracts projekte**, nikad drugi modul direktno — potrošač fizički ne vidi tuđe internale, a uzajamna potrošnja contract-a (npr. Workshop ⇄ Warehouse u F6/F7) ne pravi ciklus jer Contracts projekti ne referenciraju module. Cross-module pozivi idu preko contract interfejsa registrovanih u DI (implementacija je internal u modulu-vlasniku, host sve povezuje).
 2. **Arhitekturni testovi** (NetArchTest): modul sme da zavisi samo od SharedKernel; eventualni ručni SQL (EF `SqlQuery`/`FromSql`) u modulu sme da gađa samo svoju šemu + `codebook` (regex provera je best-effort — primarna odbrana je code review + RLS). EF stranu granice čuva sam modulski DbContext — mapira isključivo svoju šemu.
 
 ## 4. Arhitektura unutar modula
@@ -74,10 +74,11 @@ src/backend/WorkshopAdmin/
 Struktura modula:
 
 ```
+WorkshopAdmin.Modules.Workshop.Contracts/   # PUBLIC — jedini izlaz modula (zaseban projekat, v. §3.1)
+├── IWorkOrderLookup.cs         #   interfejsi za druge module
+└── WorkOrderRef.cs             #   DTO-ovi koje ti interfejsi vraćaju
+
 WorkshopAdmin.Modules.Workshop/
-├── Contracts/                  # PUBLIC — jedini izlaz modula
-│   ├── IWorkOrderLookup.cs     #   interfejsi za druge module
-│   └── WorkOrderRef.cs         #   DTO-ovi koje ti interfejsi vraćaju
 ├── Features/                   # internal — vertical slices, po funkcionalnim oblastima
 │   ├── Appointments/
 │   │   ├── ScheduleAppointment/   # Endpoint + Request/Response + Validator + Handler
@@ -175,8 +176,8 @@ Preduslov: implementacioni batch šeme iz model-review (bar stavke 2–4: faktur
 
 | Faza | Obim | Izlaz |
 |---|---|---|
-| **F1 — Skeleton** ([detaljan plan](plans/f1-skeleton.md)) | Solucija, SharedKernel (IDbSession + RLS `SET LOCAL`, EF osnova — konvencije/interceptori, ProblemDetails, validacioni filter, events), host sa IModule registracijom, Serilog, OpenAPI, arch testovi, Testcontainers fixture sa runnerom migracija + EF drift test, CI | prazan monolit koji se builduje, testira i drži RLS kontekst |
-| **F2 — Codebook + Tenants** ([detaljan plan](plans/f2-codebook-tenants.md)) | najprostiji moduli — dokaz obrasca: šifarnici (list + admin CRUD, keš), tenant CRUD, subscription plans/istorija | prvi end-to-end slice-ovi |
+| **F1 — Skeleton** ✅ *(završeno 2026-07-19)* ([detaljan plan](plans/f1-skeleton.md)) | Solucija, SharedKernel (IDbSession + RLS `SET LOCAL`, EF osnova — konvencije/interceptori, ProblemDetails, validacioni filter, events), host sa IModule registracijom, Serilog, OpenAPI, arch testovi, Testcontainers fixture sa runnerom migracija + EF drift test, CI | prazan monolit koji se builduje, testira i drži RLS kontekst |
+| **F2 — Codebook + Tenants** ✅ *(završeno 2026-07-19)* ([detaljan plan](plans/f2-codebook-tenants.md)) | najprostiji moduli — dokaz obrasca: šifarnici (list + admin CRUD, keš), tenant CRUD, subscription plans/istorija | prvi end-to-end slice-ovi |
 | **F3 — Notifications + Auth** | outbox + dispatcher port; ceo auth tok iz sekcije 7 (login/select/switch, rotacija, reset, verifikacija, OIDC, permisije) | prijava sa izborom servisa; mejlovi rade |
 | **F4 — Customers** | customers (person/company — B2B 3.3), vehicles, pretraga (tablica/VIN) | evidencija mušterija |
 | **F5 — Hr osnovno + Appointments** | employees CRUD + kompenzacije (bez payroll obračuna); appointments: zakazivanje, dnevni queue + preslaganje, source, walk-in prijem (1.4/1.5), statusi, prisustvo vozila + podsetnik za dovoz (v. napomenu ispod) | prijem vozila funkcioniše |

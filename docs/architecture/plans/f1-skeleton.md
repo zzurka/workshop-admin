@@ -77,7 +77,7 @@ Najvažnija stavka faze (backend plan §6, zahtev iz plana 2.2):
 - [x] Bazna `DbContext` klasa koja se kači na `IDbSession` konekciju + transakciju (`UseNpgsql(session.Connection)` + `Database.UseTransaction`), snake_case preko `EFCore.NamingConventions`, `ValueGeneratedOnAdd` za DB defaulte (`uuidv7()`, `NOW()`)
 - [x] Audit `SaveChanges` interceptor: puni `created_by`/`updated_at`/`updated_by` iz `ICurrentUser`
 - [x] Soft-delete: helper za globalni `HasQueryFilter(e => !e.IsDeleted)` po baznom entitetu
-- [x] JSONB label tip (`{"en": ..., "sr": ...}`): EF value converter + Dapper `JsonbTypeHandler` (port iz legacy)
+- [x] JSONB label tip (`{"en": ..., "sr": ...}`): EF value converter (logika portovana iz legacy Dapper `JsonbTypeHandler`-a; sam Dapper handler naknadno uklonjen izmenom D1)
 - [x] **Bez EF migracija** — DB-first, model se održava ručno
 
 **DoD:** integracioni smoke test: mini test-DbContext nad postojećom tabelom (npr. `codebook` šifarnik) — čitanje kroz `IDbSession`, snake_case mapiranje i JSONB labela rade.

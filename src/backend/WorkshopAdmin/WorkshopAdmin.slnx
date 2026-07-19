@@ -13,6 +13,7 @@
   </Folder>
   <Folder Name="/src/Modules/Codebook/">
     <Project Path="src/Modules/WorkshopAdmin.Modules.Codebook/WorkshopAdmin.Modules.Codebook.csproj" />
+    <Project Path="src/Modules/WorkshopAdmin.Modules.Codebook.Contracts/WorkshopAdmin.Modules.Codebook.Contracts.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Customers/">
     <Project Path="src/Modules/WorkshopAdmin.Modules.Customers/WorkshopAdmin.Modules.Customers.csproj" />
@@ -25,6 +26,7 @@
   </Folder>
   <Folder Name="/src/Modules/Tenants/">
     <Project Path="src/Modules/WorkshopAdmin.Modules.Tenants/WorkshopAdmin.Modules.Tenants.csproj" />
+    <Project Path="src/Modules/WorkshopAdmin.Modules.Tenants.Contracts/WorkshopAdmin.Modules.Tenants.Contracts.csproj" />
   </Folder>
   <Folder Name="/src/Modules/Warehouse/">
     <Project Path="src/Modules/WorkshopAdmin.Modules.Warehouse/WorkshopAdmin.Modules.Warehouse.csproj" />

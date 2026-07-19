@@ -1,0 +1,6 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <!-- Public contract surface of the Tenants module — the only thing other modules may reference. -->
+  <ItemGroup>
+    <ProjectReference Include="..\..\WorkshopAdmin.SharedKernel\WorkshopAdmin.SharedKernel.csproj" />
+  </ItemGroup>
+</Project>

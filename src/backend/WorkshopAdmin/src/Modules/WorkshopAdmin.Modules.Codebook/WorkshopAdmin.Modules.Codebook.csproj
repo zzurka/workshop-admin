@@ -4,5 +4,9 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\WorkshopAdmin.SharedKernel\WorkshopAdmin.SharedKernel.csproj" />
+    <ProjectReference Include="..\WorkshopAdmin.Modules.Codebook.Contracts\WorkshopAdmin.Modules.Codebook.Contracts.csproj" />
+  </ItemGroup>
+  <ItemGroup>
+    <InternalsVisibleTo Include="WorkshopAdmin.UnitTests" />
   </ItemGroup>
 </Project>
