@@ -41,27 +41,17 @@ Model je zanatski solidan: konvencije se dosledno poštuju (UUID v7, audit kolon
 
 > **Plan:** [plans/1.3-payroll.md](plans/1.3-payroll.md) — implementirano 2026-07-18. Compensations istorija (mesečna/satnica, jedna otvorena po zaposlenom — partial unique), mesečni payroll_runs (jedan po tenantu i mesecu) + payslips (jedan po zaposlenom u run-u); obim v1 = evidencija bez poreskog obračuna; `employees.hourly_rate` obrisan. Test plan prolazi.
 
-### 1.4 Redosled zakazivanja — 📝
+### 1.4 Redosled zakazivanja — ✅ REŠENO (2026-07-19)
 
 **Problem:** Zahtev: redosled zakazivanja se poštuje i po njemu se vozila uzimaju u rad; poseban slučaj je dan zakazan mnogo unapred koji se naknadno raspoređuje. `workshop.appointments` ima samo `preferred_date` i `scheduled_at` — nema mehanizma za redosled unutar dana.
 
-**Predlog:**
-- `queue_position` (redosled unutar dana po tenantu) — preslaganje bez menjanja vremena; ili svesna odluka da je redosled = `scheduled_at` + `created_at` tie-break (dokumentovati)
-- `source` kolona (walk_in / phone / portal) — dva kanala zakazivanja postoje u zahtevima
-- `estimated_duration_min` (ili default trajanje na `codebook.service_types`) — bez toga se kapacitet dana ne planira
-- Statusi: dodati `in_progress` i `no_show` u `codebook.appointment_statuses`
+> **Plan:** [plans/1.4-appointments-queue.md](plans/1.4-appointments-queue.md) — implementirano 2026-07-19. `scheduled_at` uklonjen; dodati `scheduled_date`/`scheduled_time`/`queue_position`/`estimated_duration_min`/`arrived_at`/`source` (CHECK staff/portal/walk_in), index `(tenant_id, scheduled_date, queue_position)`, pravila reda dokumentovana u COMMENT-ima. `service_types.default_duration_min` (CHECK > 0) + seed trajanja. Statusi `in_progress`/`no_show` dodati u `appointment_statuses` (redosled: scheduled→confirmed→in_progress→completed·no_show·cancelled).
 
-> **Plan:** [plans/1.4-appointments-queue.md](plans/1.4-appointments-queue.md) — odluke potvrđene 2026-07-17, spreman za implementaciju. Zakazuje se DAN + eksplicitna queue_position (scheduled_at → scheduled_date/time), source, arrived_at, default trajanja na service_types, statusi in_progress/no_show.
-
-### 1.5 Brze popravke (walk-in) vs. radni nalozi — 📝
+### 1.5 Brze popravke (walk-in) vs. radni nalozi — ✅ REŠENO (2026-07-19)
 
 **Problem:** Faktura može bez appointmenta (`invoices.appointment_id` NULL — dobro), ali `work_orders.appointment_id` je NOT NULL. Brza popravka zato ne može imati radni nalog → nema mehaničara, nema `work_order_parts`, izdavanje sa lagera ostaje nevezano.
 
-**Predlog (odabrati jedno):**
-- `work_orders.appointment_id` nullable + direktni `customer_id`/`vehicle_id` na work orderu, ili
-- uvek kreirati "implicitni" appointment sa `source = walk_in` (oslanja se na 1.4)
-
-> **Plan:** [plans/1.5-walk-in.md](plans/1.5-walk-in.md) — odluka (opcija B) potvrđena 2026-07-17. Implicitni walk-in appointment; appointment = univerzalni „prijem vozila", nalog ostaje NOT NULL, brza popravka može appointment → invoice bez naloga. Bez novih izmena šeme — sve donosi 1.4.
+> **Plan:** [plans/1.5-walk-in.md](plans/1.5-walk-in.md) — odluka (opcija B) implementirana 2026-07-19. Implicitni walk-in appointment (`source='walk_in'`); appointment = univerzalni „prijem vozila", `work_orders.appointment_id` ostaje NOT NULL, brza popravka može appointment → invoice bez naloga. Bez novih izmena šeme — nosi je 1.4; pravila toka dokumentovana u `COMMENT ON TABLE workshop.appointments`.
 
 ### 1.6 Poručivanje delova (purchase orders) — ✅ REŠENO (2026-07-18)
 
@@ -159,7 +149,7 @@ Baza (redosled stavki):
 2. ~~Fakture: broj, PDV, valuta, plaćanja (1.7)~~ ✅
 3. ~~Cross-tenant kompozitni FK-ovi (2.1) + RLS DB strana (2.2)~~ ✅ (backend deo 2.2 uz novi backend)
 4. ~~Nove tabele: reklamacije (1.2), purchase orders (1.6), payroll (1.3), work_order_labor (3.2)~~ ✅
-5. Appointments: queue, source, trajanje, no_show (1.4) + odluka o walk-in nalozima (1.5)
+5. ~~Appointments: queue, source, trajanje, no_show (1.4) + odluka o walk-in nalozima (1.5)~~ ✅
 6. Manji nalazi (3.1–3.4)
 
 Backend ide kao zaseban kolosek: novi modular monolith od nule (4.1) — ima smisla krenuti tek kada se šema stabilizuje (bar stavke 2–4), da se novi kod ne piše dva puta.
