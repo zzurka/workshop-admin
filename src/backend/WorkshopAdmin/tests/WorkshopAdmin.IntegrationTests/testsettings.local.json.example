@@ -1,0 +1,8 @@
+{
+  "//": "Local no-Docker mode for integration tests. One-time setup: (1) as the postgres superuser run: CREATE DATABASE workshopadmin_test OWNER workshopadmin_admin; GRANT CONNECT ON DATABASE workshopadmin_test TO workshopadmin_app; (2) copy this file to testsettings.local.json (git-ignored) and fill in the passwords of the existing local roles. The fixture DROPS ALL SCHEMAS in this database and re-runs every migration on each test run — never point it at the real workshopadmin database (the name must contain 'test').",
+  "Host": "localhost",
+  "Port": 5432,
+  "Name": "workshopadmin_test",
+  "AdminPassword": "",
+  "AppPassword": ""
+}

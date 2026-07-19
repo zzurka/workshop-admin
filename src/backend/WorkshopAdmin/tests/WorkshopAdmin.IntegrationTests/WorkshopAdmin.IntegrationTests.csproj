@@ -12,4 +12,8 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\WorkshopAdmin.Api\WorkshopAdmin.Api.csproj" />
   </ItemGroup>
+  <ItemGroup>
+    <!-- Opt-in local (no-Docker) test database config; git-ignored -->
+    <None Include="testsettings.local.json" CopyToOutputDirectory="PreserveNewest" Condition="Exists('testsettings.local.json')" />
+  </ItemGroup>
 </Project>

@@ -89,6 +89,7 @@ coverage/
 appsettings.Local.json
 secrets.json
 .usersecrets
+testsettings.local.json
 
 # ==========================================================
 # Operating System

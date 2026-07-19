@@ -1,6 +1,6 @@
 # Plan F1 — Skeleton novog backenda
 
-**Status:** 🔶 implementirano 2026-07-19 — build + unit + arch testovi zeleni lokalno; integracioni testovi (RLS/EF/events/drift) čekaju Docker (lokalno nije instaliran) ili prvi CI run
+**Status:** ✅ završeno 2026-07-19 — svi testovi zeleni lokalno (19 unit + 3 arch + 16 integracionih kroz lokalni PG18 režim); Testcontainers putanja se verifikuje na prvom CI runu
 **Datum plana:** 2026-07-19
 **Referenca:** [backend-plan.md](../backend-plan.md) §11 (F1) · povezano: [2.2-rls.md](../../database/plans/2.2-rls.md)
 
@@ -90,6 +90,8 @@ Najvažnija stavka faze (backend plan §6, zahtev iz plana 2.2):
 - [x] `WebApplicationFactory` integracija: API testovi gađaju host povezan na kontejnersku bazu
 
 **DoD:** fixture podigne bazu sa svih ~117 skripti < ~30s; RLS testovi iz stavke 7 zeleni kroz nju.
+
+> **Dopuna (2026-07-19) — lokalni režim bez Dockera:** fixture ima i opt-in lokalni režim: ako postoji `tests/WorkshopAdmin.IntegrationTests/testsettings.local.json` (git-ignored; v. `.example`), umesto kontejnera koristi **namensku lokalnu test bazu** (`workshopadmin_test` na lokalnom PG 18): obriše sve šeme pa izvrši sve migracije. Ime baze mora sadržati „test“ (zaštita od brisanja prave baze). Jednokratni setup: `CREATE DATABASE workshopadmin_test OWNER workshopadmin_admin` kao superuser + popuniti lozinke u json. CI i mašine sa Dockerom i dalje idu kroz Testcontainers (default).
 
 ## 10. Domenski događaji
 
