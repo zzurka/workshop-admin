@@ -1,6 +1,7 @@
 using System.Text.Json;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using WorkshopAdmin.Modules.Codebook.Contracts;
@@ -22,7 +23,9 @@ internal static class CreateSubscriptionPlan
                 CancellationToken cancellationToken) =>
             (await handler.HandleAsync(request, cancellationToken))
                 .ToCreatedResult(plan => $"/api/subscription-plans/{plan.Id}"))
-            .WithValidation<CreateSubscriptionPlanRequest>();
+            .WithValidation<CreateSubscriptionPlanRequest>()
+            .WithSummary("Create subscription plan")
+            .WithDescription("Creates a billable plan: pricing, billing cadence, trial days, usage limits and feature flags. Currency and billing period must be active codebook entries.");
 }
 
 internal sealed record CreateSubscriptionPlanRequest(

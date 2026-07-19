@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using WorkshopAdmin.Modules.Codebook.Contracts;
@@ -21,7 +22,9 @@ internal static class CreateTenant
                 CancellationToken cancellationToken) =>
             (await handler.HandleAsync(request, cancellationToken))
                 .ToCreatedResult(tenant => $"/api/tenants/{tenant.Id}"))
-            .WithValidation<CreateTenantRequest>();
+            .WithValidation<CreateTenantRequest>()
+            .WithSummary("Create tenant")
+            .WithDescription("Creates a workshop on the chosen subscription plan and opens its initial subscription period (with trial when the plan grants one) in the same transaction. The slug is permanent.");
 }
 
 internal sealed record CreateTenantRequest(

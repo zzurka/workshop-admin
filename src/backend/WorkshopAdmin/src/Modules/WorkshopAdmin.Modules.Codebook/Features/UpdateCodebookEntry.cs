@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using WorkshopAdmin.Modules.Codebook.Persistence;
 using WorkshopAdmin.SharedKernel.Results;
@@ -20,7 +21,9 @@ internal static class UpdateCodebookEntry
                 UpdateCodebookEntryHandler handler,
                 CancellationToken cancellationToken) =>
             (await handler.HandleAsync(type, id, request, cancellationToken)).ToHttpResult())
-            .WithValidation<UpdateCodebookEntryRequest>();
+            .WithValidation<UpdateCodebookEntryRequest>()
+            .WithSummary("Update entry")
+            .WithDescription("Updates an entry's label and sort order. The code is immutable.");
 }
 
 internal sealed record UpdateCodebookEntryRequest(Dictionary<string, string> Label, short SortOrder = 0);

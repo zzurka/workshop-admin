@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using WorkshopAdmin.Modules.Tenants.Contracts;
@@ -24,7 +25,9 @@ internal static class ChangeTenantSubscription
                 CancellationToken cancellationToken) =>
             (await handler.HandleAsync(id, request, cancellationToken))
                 .ToCreatedResult(_ => $"/api/tenants/{id}/subscriptions"))
-            .WithValidation<ChangeTenantSubscriptionRequest>();
+            .WithValidation<ChangeTenantSubscriptionRequest>()
+            .WithSummary("Change subscription plan")
+            .WithDescription("Closes the current period, opens a new one from the given date (default today) and re-points the tenant to the new plan — all in one transaction.");
 }
 
 /// <param name="ValidFrom">First day of the new period; defaults to today (UTC).</param>

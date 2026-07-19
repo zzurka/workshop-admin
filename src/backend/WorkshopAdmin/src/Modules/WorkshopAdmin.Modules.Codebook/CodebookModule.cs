@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -37,7 +38,7 @@ public sealed class CodebookModule : IModule
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints)
     {
-        RouteGroupBuilder group = endpoints.MapGroup("/codebook");
+        RouteGroupBuilder group = endpoints.MapGroup("/codebook").WithTags("Codebook");
 
         ListCodebook.Map(group);
         CreateCodebookEntry.Map(group);

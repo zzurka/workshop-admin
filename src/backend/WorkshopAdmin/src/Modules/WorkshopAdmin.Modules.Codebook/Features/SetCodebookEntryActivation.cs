@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using WorkshopAdmin.Modules.Codebook.Persistence;
 using WorkshopAdmin.SharedKernel.Results;
@@ -17,7 +18,9 @@ internal static class SetCodebookEntryActivation
                 SetCodebookEntryActivationRequest request,
                 SetCodebookEntryActivationHandler handler,
                 CancellationToken cancellationToken) =>
-            (await handler.HandleAsync(type, id, request, cancellationToken)).ToHttpResult());
+            (await handler.HandleAsync(type, id, request, cancellationToken)).ToHttpResult())
+            .WithSummary("Activate / deactivate entry")
+            .WithDescription("Codebook entries are never deleted (historical rows reference them) — deactivation hides them from pickers while keeping references valid.");
 }
 
 internal sealed record SetCodebookEntryActivationRequest(bool IsActive);

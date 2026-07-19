@@ -32,7 +32,9 @@ internal static class ListTenantSubscriptions
                     .ToListAsync(cancellationToken);
 
                 return TypedResults.Ok(history);
-            });
+            })
+            .WithSummary("Subscription history")
+            .WithDescription("All subscription periods of a tenant, newest first. The open period (no end date) is the current plan.");
 }
 
 internal sealed record TenantSubscriptionResponse(

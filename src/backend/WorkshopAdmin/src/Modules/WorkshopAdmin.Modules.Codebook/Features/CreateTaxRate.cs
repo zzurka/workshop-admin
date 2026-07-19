@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using WorkshopAdmin.Modules.Codebook.Contracts;
@@ -21,7 +22,9 @@ internal static class CreateTaxRate
                 CancellationToken cancellationToken) =>
             (await handler.HandleAsync(request, cancellationToken))
                 .ToCreatedResult(rate => $"/api/codebook/{CodebookTypes.TaxRates}/{rate.Id}"))
-            .WithValidation<CreateTaxRateRequest>();
+            .WithValidation<CreateTaxRateRequest>()
+            .WithSummary("Create tax rate")
+            .WithDescription("Adds a VAT rate (0–100%). Invoice lines snapshot the percentage at line creation, so later changes never affect existing invoices.");
 }
 
 internal sealed record CreateTaxRateRequest(string Code, Dictionary<string, string> Label, decimal Rate, short SortOrder = 0);

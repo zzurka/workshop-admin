@@ -24,5 +24,7 @@ internal static class GetTenantById
                 return tenant is null
                     ? ResultHttpExtensions.ToProblem(Error.NotFound("tenant.not_found", $"Tenant {id} does not exist."))
                     : TypedResults.Ok(TenantResponse.From(tenant));
-            });
+            })
+            .WithSummary("Get tenant")
+            .WithDescription("Full tenant detail: contact, address, fiscal data (PIB, VAT status, bank account), operational settings and the current subscription plan.");
 }

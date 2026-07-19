@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using WorkshopAdmin.Modules.Tenants.Persistence;
 using WorkshopAdmin.SharedKernel.Results;
@@ -16,7 +17,9 @@ internal static class SetSubscriptionPlanActivation
                 SetSubscriptionPlanActivationRequest request,
                 SetSubscriptionPlanActivationHandler handler,
                 CancellationToken cancellationToken) =>
-            (await handler.HandleAsync(id, request, cancellationToken)).ToHttpResult());
+            (await handler.HandleAsync(id, request, cancellationToken)).ToHttpResult())
+            .WithSummary("Retire / reactivate plan")
+            .WithDescription("Retired plans stay valid for tenants already on them but cannot be selected by new tenants.");
 }
 
 internal sealed record SetSubscriptionPlanActivationRequest(bool IsActive);

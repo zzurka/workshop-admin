@@ -9,6 +9,7 @@ using WorkshopAdmin.Modules.Tenants.Features.Tenants;
 using WorkshopAdmin.Modules.Tenants.Persistence;
 using WorkshopAdmin.SharedKernel.Modules;
 using WorkshopAdmin.SharedKernel.Persistence;
+using Microsoft.AspNetCore.Http;
 
 namespace WorkshopAdmin.Modules.Tenants;
 
@@ -33,13 +34,13 @@ public sealed class TenantsModule : IModule
 
     public void MapEndpoints(IEndpointRouteBuilder endpoints)
     {
-        RouteGroupBuilder plans = endpoints.MapGroup("/subscription-plans");
+        RouteGroupBuilder plans = endpoints.MapGroup("/subscription-plans").WithTags("Subscription plans");
         ListSubscriptionPlans.Map(plans);
         CreateSubscriptionPlan.Map(plans);
         UpdateSubscriptionPlan.Map(plans);
         SetSubscriptionPlanActivation.Map(plans);
 
-        RouteGroupBuilder tenants = endpoints.MapGroup("/tenants");
+        RouteGroupBuilder tenants = endpoints.MapGroup("/tenants").WithTags("Tenants");
         ListTenants.Map(tenants);
         GetTenantById.Map(tenants);
         CreateTenant.Map(tenants);

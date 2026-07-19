@@ -1,6 +1,7 @@
 using System.Text.Json;
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using WorkshopAdmin.Modules.Codebook.Contracts;
 using WorkshopAdmin.Modules.Tenants.Persistence;
@@ -20,7 +21,9 @@ internal static class UpdateSubscriptionPlan
                 UpdateSubscriptionPlanHandler handler,
                 CancellationToken cancellationToken) =>
             (await handler.HandleAsync(id, request, cancellationToken)).ToHttpResult())
-            .WithValidation<UpdateSubscriptionPlanRequest>();
+            .WithValidation<UpdateSubscriptionPlanRequest>()
+            .WithSummary("Update subscription plan")
+            .WithDescription("Updates a plan's pricing, limits and features. The code is immutable. Changes affect what the plan offers going forward; tenant subscription history is untouched.");
 }
 
 internal sealed record UpdateSubscriptionPlanRequest(

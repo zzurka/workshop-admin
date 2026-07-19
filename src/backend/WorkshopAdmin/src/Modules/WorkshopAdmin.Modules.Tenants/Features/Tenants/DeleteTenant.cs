@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using WorkshopAdmin.Modules.Tenants.Persistence;
@@ -16,7 +17,9 @@ internal static class DeleteTenant
                 Guid id,
                 DeleteTenantHandler handler,
                 CancellationToken cancellationToken) =>
-            (await handler.HandleAsync(id, cancellationToken)).ToHttpResult());
+            (await handler.HandleAsync(id, cancellationToken)).ToHttpResult())
+            .WithSummary("Delete tenant")
+            .WithDescription("Soft delete: the tenant disappears from lists and lookups while history stays intact for audit.");
 }
 
 internal sealed class DeleteTenantHandler(TenantsDbContext db)

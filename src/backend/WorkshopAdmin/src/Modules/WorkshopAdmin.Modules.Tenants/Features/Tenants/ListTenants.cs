@@ -50,5 +50,7 @@ internal static class ListTenants
                     Offset = offset,
                     Limit = limit
                 });
-            });
+            })
+            .WithSummary("List tenants")
+            .WithDescription("Paged list of workshops. search matches name or slug (case-insensitive substring); isActive filters suspended tenants.");
 }

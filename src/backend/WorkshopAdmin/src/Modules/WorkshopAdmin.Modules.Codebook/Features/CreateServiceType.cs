@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using WorkshopAdmin.Modules.Codebook.Contracts;
@@ -21,7 +22,9 @@ internal static class CreateServiceType
                 CancellationToken cancellationToken) =>
             (await handler.HandleAsync(request, cancellationToken))
                 .ToCreatedResult(serviceType => $"/api/codebook/{CodebookTypes.ServiceTypes}/{serviceType.Id}"))
-            .WithValidation<CreateServiceTypeRequest>();
+            .WithValidation<CreateServiceTypeRequest>()
+            .WithSummary("Create service type")
+            .WithDescription("Adds a service type. The optional default duration (minutes) prefills appointment duration estimates for day-capacity planning.");
 }
 
 internal sealed record CreateServiceTypeRequest(

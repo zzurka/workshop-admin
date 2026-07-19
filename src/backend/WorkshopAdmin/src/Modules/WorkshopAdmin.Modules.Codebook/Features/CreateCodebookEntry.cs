@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using WorkshopAdmin.Modules.Codebook.Persistence;
 using WorkshopAdmin.SharedKernel.Results;
@@ -21,7 +22,9 @@ internal static class CreateCodebookEntry
                 CancellationToken cancellationToken) =>
             (await handler.HandleAsync(type, request, cancellationToken))
                 .ToCreatedResult(entry => $"/api/codebook/{type}/{entry.Id}"))
-            .WithValidation<CreateCodebookEntryRequest>();
+            .WithValidation<CreateCodebookEntryRequest>()
+            .WithSummary("Create entry")
+            .WithDescription("Adds an entry to a codebook. The code is the stable machine-readable key (lowercase, digits, underscores) and cannot be changed later. Label must contain at least an 'en' translation.");
 }
 
 internal sealed record CreateCodebookEntryRequest(string Code, Dictionary<string, string> Label, short SortOrder = 0);

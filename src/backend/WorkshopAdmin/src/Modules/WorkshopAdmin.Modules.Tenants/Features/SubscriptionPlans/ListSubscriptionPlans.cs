@@ -22,5 +22,7 @@ internal static class ListSubscriptionPlans
                     .ToListAsync(cancellationToken);
 
                 return TypedResults.Ok(plans.Select(SubscriptionPlanResponse.From).ToList());
-            });
+            })
+            .WithSummary("List subscription plans")
+            .WithDescription("Returns active plans sorted for the pricing table. Publicly readable — onboarding shows the offer before signup. includeInactive=true adds retired plans (admin UI).");
 }

@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using WorkshopAdmin.Modules.Codebook.Contracts;
@@ -21,7 +22,9 @@ internal static class UpdateTenant
                 UpdateTenantHandler handler,
                 CancellationToken cancellationToken) =>
             (await handler.HandleAsync(id, request, cancellationToken)).ToHttpResult())
-            .WithValidation<UpdateTenantRequest>();
+            .WithValidation<UpdateTenantRequest>()
+            .WithSummary("Update tenant")
+            .WithDescription("Updates contact, address, fiscal data (PIB, VAT status, bank account) and operational settings (default labor rate, arrival-reminder lead days). Slug and plan are not changed here.");
 }
 
 internal sealed record UpdateTenantRequest(

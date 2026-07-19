@@ -13,7 +13,9 @@ internal static class ListCodebook
     public static void Map(RouteGroupBuilder group)
     {
         // TODO(F3): permission "codebook:read"
-        group.MapGet("/", (CodebookRegistry registry) => TypedResults.Ok(registry.Slugs));
+        group.MapGet("/", (CodebookRegistry registry) => TypedResults.Ok(registry.Slugs))
+            .WithSummary("List codebook types")
+            .WithDescription("Returns the slugs of all available codebook types, for the admin UI type picker.");
 
         // TODO(F3): permission "codebook:read"
         group.MapGet("/{type}", async (
@@ -21,7 +23,9 @@ internal static class ListCodebook
                 ListCodebookHandler handler,
                 CancellationToken cancellationToken,
                 bool includeInactive = false) =>
-            (await handler.HandleAsync(type, includeInactive, cancellationToken)).ToHttpResult());
+            (await handler.HandleAsync(type, includeInactive, cancellationToken)).ToHttpResult())
+            .WithSummary("List entries")
+            .WithDescription("Returns one codebook's entries (cached), sorted by sort order then code. Inactive entries are hidden unless includeInactive=true.");
     }
 }
 

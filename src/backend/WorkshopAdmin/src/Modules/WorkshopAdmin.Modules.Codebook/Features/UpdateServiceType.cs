@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using WorkshopAdmin.Modules.Codebook.Contracts;
@@ -20,7 +21,9 @@ internal static class UpdateServiceType
                 UpdateServiceTypeHandler handler,
                 CancellationToken cancellationToken) =>
             (await handler.HandleAsync(id, request, cancellationToken)).ToHttpResult())
-            .WithValidation<UpdateServiceTypeRequest>();
+            .WithValidation<UpdateServiceTypeRequest>()
+            .WithSummary("Update service type")
+            .WithDescription("Updates a service type's label, default duration and sort order.");
 }
 
 internal sealed record UpdateServiceTypeRequest(

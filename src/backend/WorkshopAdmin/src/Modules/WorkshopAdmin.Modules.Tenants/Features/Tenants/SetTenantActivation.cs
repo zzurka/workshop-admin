@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using WorkshopAdmin.Modules.Tenants.Persistence;
@@ -17,7 +18,9 @@ internal static class SetTenantActivation
                 SetTenantActivationRequest request,
                 SetTenantActivationHandler handler,
                 CancellationToken cancellationToken) =>
-            (await handler.HandleAsync(id, request, cancellationToken)).ToHttpResult());
+            (await handler.HandleAsync(id, request, cancellationToken)).ToHttpResult())
+            .WithSummary("Suspend / reactivate tenant")
+            .WithDescription("Suspension keeps all data but blocks the tenant's users from logging in (enforced by the Auth module).");
 }
 
 internal sealed record SetTenantActivationRequest(bool IsActive);

@@ -1,5 +1,6 @@
 using FluentValidation;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Routing;
 using Microsoft.EntityFrameworkCore;
 using WorkshopAdmin.Modules.Codebook.Contracts;
@@ -21,7 +22,9 @@ internal static class UpdateTaxRate
                 UpdateTaxRateHandler handler,
                 CancellationToken cancellationToken) =>
             (await handler.HandleAsync(id, request, cancellationToken)).ToHttpResult())
-            .WithValidation<UpdateTaxRateRequest>();
+            .WithValidation<UpdateTaxRateRequest>()
+            .WithSummary("Update tax rate")
+            .WithDescription("Updates a VAT rate's label, percentage and sort order. Existing invoices are unaffected — lines snapshot the rate.");
 }
 
 internal sealed record UpdateTaxRateRequest(Dictionary<string, string> Label, decimal Rate, short SortOrder = 0);
